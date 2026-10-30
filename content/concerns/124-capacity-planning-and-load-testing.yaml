@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 124
+name: Capacity planning and load testing
+category: scaling
+order: 100
+ownership: own
+definition: Estimating the load a system must carry and proving by testing that it can, with room to spare.
+how_it_works: "Capacity planning starts from expected peak demand and growth, turns it into resource
+  needs, and compares that with what the system sustains. Load tests prove it. Match the load model
+  to real clients: an open model, sending requests at a set arrival rate, for many independent
+  users, and a closed model for a fixed set of clients. Waiting for each response in an open-traffic
+  test hides slow results (coordinated omission). State targets as a percentile latency and an error
+  rate, and check the generator is not the bottleneck. Use production-sized data and realistic
+  stubs."
+where_it_appears: Load test scripts and reports, capacity plans and traffic forecasts, autoscaling
+  limits, pipeline stages that run performance tests, and dashboards of saturation and headroom.
+review_question: What load test shows the system sustains its target peak load within latency targets?
+trade_off: Realistic load testing finds limits before customers do but needs a production-like
+  environment and ongoing effort.
+why_it_matters: Capacity limits found in production arrive as outages in the busiest moments, and
+  scaling and cost decisions made without them are guesses.
+red_flags:
+  - No estimate of peak load or growth
+  - Load tests only at normal traffic, or run once and never repeated
+  - Load generators that wait for each response, hiding slow results
+  - Tests that call real payment, email or other third-party services
+  - Load tests against production or shared environments with no abort criteria, cost limit or
+    notice to the providers involved
+  - A test environment far smaller or different from production, with no allowance for it
+good_looks_like:
+  - Expected peak and growth stated in numbers, with headroom for peak load with one zone or
+    instance lost and during deployments
+  - Load tests that find the highest sustainable rate within latency targets, and the point of
+    failure
+  - Tests run regularly and before major changes, on production-sized data including cold-cache runs
+  - External services stubbed with realistic latency and limits, or sandboxed
+  - Tests have abort thresholds and a cost limit, and follow the provider’s testing policy
+  - Results used to set scaling limits and alerts
+related:
+  - 45
+  - 88
+  - 92
+  - 93
+agent_check:
+  level: partial
+  search_hints:
+    - k6/http
+    - locustfile
+    - from locust
+    - io.gatling
+    - .jmx
+    - artillery.yml
+    - nbomber
+    - wrk2
+    - vegeta attack
+    - ghz --proto
+    - hyperfoil
+    - maxReplicas
+  evidence_to_request:
+    - The latest load test report and the environment it ran in
+    - The capacity plan with expected peak, growth and headroom

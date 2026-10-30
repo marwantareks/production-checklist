@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 22
+name: WebSockets
+category: traffic
+order: 50
+ownership: own
+definition: Persistent two-way connection for real-time data.
+how_it_works: A WebSocket is a long-lived two-way connection between client and server, opened with
+  an HTTP upgrade request. It lets the server push data at any time with low latency, which suits
+  chat, live dashboards and collaboration. Each open connection holds server resources, so capacity
+  is planned by connection count, not request rate. Deployments and failures drop connections in
+  bulk, so clients reconnect with backoff and jitter and servers close connections gradually.
+where_it_appears: WebSocket server libraries and handlers, load balancer and proxy settings for
+  upgrades and idle timeouts, and client reconnection code.
+review_question: Do you need two-way real-time, and how do connections scale and reconnect?
+trade_off: Low latency and two-way flow cost stateful connections that are harder to load-balance and scale.
+why_it_matters: Connections are stateful, so scaling, deployments and failures behave differently
+  from ordinary request and response traffic.
+red_flags:
+  - No reconnection with backoff and jitter in the client
+  - No heartbeat or idle timeout handling
+  - Connection state kept only in the memory of one instance
+  - No authentication when the connection opens, or no limit on message size
+  - Origin header not checked on the upgrade request for cookie-authenticated connections, or tokens
+    passed in the connection URL
+  - No bound on outgoing messages queued for a slow client
+good_looks_like:
+  - Authentication checked when the connection opens and when the token expires, with a short-lived
+    ticket instead of a token in the URL
+  - Client reconnects with backoff and jitter, and resumes from its last sequence number where the
+    server keeps a replay buffer
+  - Heartbeats run more often than the shortest idle timeout on any proxy or balancer
+  - A shared channel such as pub/sub lets any instance reach any connection
+  - Connection counts and message rates are monitored, with limits set
+decide_between: WebSockets or server-sent events. Use WebSockets when the client must also send
+  frequent messages. Server-sent events are simpler and proxy-friendly when only server-to-client
+  push is needed.
+applies_when: Applies when the system keeps WebSocket connections open to clients or other services.
+related:
+  - 24
+  - 3
+  - 45
+agent_check:
+  level: partial
+  search_hints:
+    - WebSocketServer
+    - wss://
+    - socket.io
+    - "@WebSocketGateway"
+    - "@ServerEndpoint"
+    - WebSocketHandler
+    - SimpMessagingTemplate
+    - AsyncWebsocketConsumer
+    - MapHub
+    - gorilla/websocket
+    - proxy_set_header Upgrade
+    - maxPayload
+    - checkOrigin
+    - "Upgrade: websocket"
+    - SignalR
+  evidence_to_request:
+    - Load balancer and proxy idle timeouts for the WebSocket path
+    - Peak connection counts and the limits set

@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 104
+name: Infrastructure as code
+category: scaling
+order: 90
+ownership: guardrail
+definition: Defining infrastructure in version-controlled code.
+how_it_works: Infrastructure as code defines servers, networks, databases and permissions in files
+  that are version-controlled, reviewed and applied by tools, so environments are reproducible and
+  changes are traceable. State files can hold secrets in plain text, so state needs encryption,
+  locking and restricted access, and only the pipeline should apply changes.
+where_it_appears: Terraform, Pulumi, CloudFormation, Bicep or similar files, pipeline steps that
+  apply them, and state storage settings.
+review_question: Could you recreate production from version-controlled code alone, through a reviewed pipeline?
+trade_off: Repeatability and auditability versus upfront effort and drift management.
+why_it_matters: Manual changes cause drift and undocumented environments, and rebuilding after a
+  disaster depends on having the definition.
+red_flags:
+  - Resources created by hand in the console
+  - State stored locally or without locking
+  - Secrets in code, or state that holds secrets without encryption and restricted access
+  - No review or plan step before applying changes
+  - Stateful resources without destroy or deletion protection
+  - Plans that destroy or replace resources applied without explicit approval
+good_looks_like:
+  - All environments defined and created from code
+  - Remote state encrypted, locked and readable only by the pipeline and a few people
+  - Changes reviewed through pull requests with a plan output, and the reviewed plan applied by the
+    pipeline with short-lived least-privilege credentials
+  - Provider and module versions pinned and the lock file committed
+  - Drift detection and policy checks in the pipeline
+also_fits: Build, deployment and release
+related:
+  - 6
+  - 81
+  - 67
+  - 83
+agent_check:
+  level: code
+  search_hints:
+    - "*.tf"
+    - .terraform.lock.hcl
+    - terraform.tfstate
+    - AWSTemplateFormatVersion
+    - Pulumi.yaml
+    - "*.bicep"
+    - cdk.json
+    - opentofu
+    - google_
+    - crossplane
+    - prevent_destroy
+    - deletion_protection
+    - use_lockfile
+    - backend "s3"
+    - DeletionPolicy

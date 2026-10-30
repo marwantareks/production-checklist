@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 55
+name: Rollbacks
+category: delivery
+order: 60
+ownership: own
+definition: Reverting quickly to the last good version.
+how_it_works: "A rollback returns the system to the last good version after a bad release. It is
+  quick when the previous artifact is kept, deployment is automated and data changes are compatible
+  with the previous version. Rollback restores code, not its effects: data written in a new format,
+  events already published and external calls already made stay, so roll back configuration and flag
+  changes with the code. The hardest part is data: a migration that dropped a column cannot simply
+  be undone."
+where_it_appears: Pipeline rollback steps or commands, artifact retention settings, database
+  migration scripts and release runbooks.
+review_question: Is rollback tested, and does it still work after a schema change?
+trade_off: Fast recovery requires that every change, including migrations, keeps the previous
+  version working, which slows down schema changes.
+why_it_matters: If rollback takes hours or is untested, teams keep a broken release in production
+  while trying to fix forward.
+red_flags:
+  - Previous versions not retained
+  - Migrations that the previous version cannot run against, or down migrations that would delete
+    data written since the release
+  - Rollback never practiced
+  - Rollback that depends on one person’s knowledge
+good_looks_like:
+  - Previous artifacts kept and redeployable in minutes
+  - Data changes designed so the previous version still works
+  - Rollback procedure automated and rehearsed
+  - Post-deploy smoke checks that trigger a rollback when they fail
+  - Clear criteria for when to roll back
+decide_between: Turn off a flag, roll back or fix forward. Turning off a flag is fastest when the
+  change is behind one. Rollback is the default when the release is the likely cause and the
+  previous version still works with the data. Fix forward when data has already changed so a
+  rollback would cause damage, and only when the fix can ship quickly through the normal gates.
+also_fits: Resilience
+related:
+  - 81
+  - 52
+  - 53
+  - 51
+agent_check:
+  level: partial
+  search_hints:
+    - helm rollback
+    - kubectl rollout undo
+    - auto_rollback_configuration
+    - deployment_circuit_breaker
+    - autoRollback
+    - rollback_on_failure
+    - revisionHistoryLimit
+    - alembic downgrade
+    - flyway undo
+    - migrate:rollback
+    - db:rollback
+    - keep_releases
+    - artifact retention
+    - git revert
+    - lifecycle policy

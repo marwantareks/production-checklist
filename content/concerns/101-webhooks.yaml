@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 101
+name: Webhooks
+category: traffic
+order: 70
+ownership: own
+definition: Server-to-server HTTP callbacks triggered by events.
+how_it_works: A webhook is an HTTP callback one system sends to another when an event happens. As a
+  receiver you expose an endpoint, verify the signature over the raw request body with a
+  constant-time comparison, reject stale timestamps, respond quickly and process the work
+  asynchronously. Accept both old and new secrets during rotation. As a sender you must sign
+  requests, retry failed deliveries, set a request timeout and never send to internal addresses.
+where_it_appears: Webhook endpoint handlers, signature verification code, queue or job code that
+  processes events, and outbound delivery code with retry settings.
+review_question: How are deliveries authenticated, retried and deduplicated?
+trade_off: Cheap to integrate, but you inherit retry, ordering and replay problems on the receiving side.
+why_it_matters: Webhooks arrive late, twice and out of order, and anyone can call a public endpoint,
+  so unsafe handling causes duplicates, missed events and spoofed requests.
+red_flags:
+  - No signature or secret verification on incoming webhooks
+  - Long processing done inside the request handler
+  - No deduplication of event ids
+  - Outbound webhooks to user-supplied URLs without blocking private, loopback and metadata
+    addresses, including after redirects
+  - Outbound deliveries with no request timeout or retry limit, or failing endpoints never disabled
+  - Outbound webhooks with no delivery log
+good_looks_like:
+  - Every incoming webhook verified by signature using a constant-time comparison and checked for
+    replay
+  - The handler stores the event, returns quickly and processes asynchronously
+  - Event ids deduplicated with a unique constraint, and handlers that do not rely on delivery order
+  - Failed deliveries retried with backoff and visible in a delivery log
+  - Outbound delivery goes through an egress path that blocks internal addresses
+also_fits: Messaging and async
+applies_when: Applies when the system sends or receives webhooks.
+related:
+  - 14
+  - 20
+  - 80
+  - 11
+agent_check:
+  level: code
+  search_hints:
+    - webhook
+    - X-Hub-Signature-256
+    - Stripe-Signature
+    - constructEvent
+    - X-Slack-Signature
+    - X-Shopify-Hmac-Sha256
+    - webhook-signature
+    - svix
+    - timingSafeEqual
+    - compare_digest
+    - hmac.Equal
+    - MessageDigest.isEqual
+    - express.raw
+    - rawBody

@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 120
+name: Multi-tenant data isolation
+category: databases
+order: 200
+ownership: own
+definition: Keeping each customer’s data separate when several customers share one system.
+how_it_works: Several customers share one application and often one database. Isolation can be by
+  database, by schema, or by a tenant column on shared tables. Weaker separation depends on every
+  query carrying the tenant filter. Controls include one central enforcement layer, row-level
+  security, tenant-scoped credentials and limits against noisy tenants. In PostgreSQL, the table
+  owner and superusers skip row-level security unless it is forced, and tenant context kept on a
+  pooled connection must be set per transaction. Caches, search indexes and logs must carry the
+  tenant.
+where_it_appears: Query layers and ORM scopes, row-level security policies, tenant resolution in
+  middleware, database and schema layout, cache keys, search indexes, background jobs, and
+  per-tenant backup and export code.
+review_question: How is tenant separation enforced, and what stops a query from running without a tenant filter?
+trade_off: Shared infrastructure is cheaper to run, while stronger isolation per tenant costs more
+  and complicates operations.
+why_it_matters: A cross-tenant leak is a serious breach that affects several customers at once, and
+  it is easy to cause with one missing filter.
+red_flags:
+  - Tenant filter added by hand in each query, or bypassed by raw SQL or filter overrides
+  - Cache keys, search indexes or files with no tenant in the key or path
+  - Background jobs and reports that run across tenants with no scoping
+  - Admin or support tools that read any tenant without audit
+  - One tenant able to use all connections, storage or compute (see 122)
+  - Tenant id taken from a client-supplied value without checking it
+good_looks_like:
+  - Tenant context set once and enforced centrally, for example by row-level security that applies
+    to the application’s role, or a scoped data layer
+  - Unique constraints and foreign keys that include the tenant id
+  - Automated tests that try to reach another tenant’s data
+  - Cache, queue, storage and search data separated by tenant
+  - Per-tenant limits on resource use
+  - Support access to tenant data approved and logged
+decide_between: Separate databases, separate schemas or a shared schema with a tenant column.
+  Separate databases give the strongest isolation and easy per-tenant backup, but cost more at
+  scale. Schemas sit between and strain migrations and catalogs past a few thousand tenants. A
+  shared schema is cheapest to scale and depends fully on correct filtering.
+applies_when: Applies when one deployment, or any shared component such as logging, analytics,
+  search or support tooling, serves more than one customer or organization.
+related:
+  - 109
+  - 122
+  - 30
+  - 115
+agent_check:
+  level: partial
+  search_hints:
+    - tenant_id
+    - org_id
+    - organization_id
+    - account_id
+    - workspace_id
+    - acts_as_tenant
+    - HasQueryFilter
+    - IgnoreQueryFilters
+    - CREATE POLICY
+    - FORCE ROW LEVEL SECURITY
+    - BYPASSRLS
+    - current_setting(
+    - SET LOCAL
+    - search_path
+    - X-Tenant-ID
+  look_for:
+    - A query on a shared table with no tenant condition and no row-level security policy
+  evidence_to_request:
+    - The tenant isolation model and how it is enforced
+    - Tests or reviews that tried to cross tenant boundaries

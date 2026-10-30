@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 52
+name: Blue-green deployment
+category: delivery
+order: 30
+ownership: own
+definition: Two identical environments; switch traffic to the new one.
+how_it_works: Blue-green deployment keeps two production environments. The live one serves traffic
+  while the new version is deployed and tested on the other, then traffic is switched over. Rollback
+  is switching back, as long as the old environment is still running and the data the new version
+  wrote is still readable by the old version. Database changes must be compatible with both
+  versions, since they share data, and background jobs and message consumers must not run in both at
+  once.
+where_it_appears: Deployment pipeline and infrastructure code with two environments or target
+  groups, traffic switching rules and database migration steps.
+review_question: Can the previous version still run against the data after the switch, if you need to switch back?
+trade_off: Fast switch and rollback at the cost of duplicate capacity. The switch is near instant at
+  a load balancer or router, and slower with DNS because of caching.
+why_it_matters: It reduces downtime and gives instant rollback, but it doubles capacity during the
+  switch and needs data changes to be backward compatible.
+red_flags:
+  - Database changes that break the older version
+  - No smoke tests on the idle environment before the switch
+  - Long-lived sessions or jobs lost during the switch
+  - Background jobs or message consumers active in both environments at the same time
+  - Idle environment configuration drifting from the live one, or traffic switched by DNS with a
+    long TTL
+  - No tested rollback
+good_looks_like:
+  - Both versions work with the current database schema
+  - Automated checks before traffic switches
+  - A plan for sessions and in-flight work
+  - Rollback exercised
+applies_when: Applies when the system can run two full production environments and switch traffic
+  between them at a load balancer, router or platform slot.
+related:
+  - 55
+  - 53
+  - 54
+  - 81
+agent_check:
+  level: partial
+  search_hints:
+    - blue-green
+    - blue_green
+    - BlueGreen
+    - activeService
+    - previewService
+    - autoPromotionEnabled
+    - deployment_style
+    - deployment slot
+    - slot swap
+    - aws_lb_listener_rule
+    - target_group
+    - codedeploy
+    - traffic_routing
+    - production-slot
+    - staging-slot

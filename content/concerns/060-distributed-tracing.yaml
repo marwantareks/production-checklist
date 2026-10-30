@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 60
+name: Distributed tracing
+category: observability
+order: 30
+ownership: own
+definition: Following a single request across services (OpenTelemetry, Jaeger).
+how_it_works: Distributed tracing follows one request across services. A trace context, with the
+  trace id, the parent span id and sampling flags, is created at the entry point and passed along
+  every call, and for messages it travels in message headers. Each step records a span with timing.
+  Head sampling decides at the start of a request, so keeping all errors and slow requests needs
+  tail sampling in a collector. Standards such as OpenTelemetry define the formats.
+where_it_appears: Tracing library setup (OpenTelemetry and similar), HTTP and messaging
+  instrumentation, context propagation in queues and background jobs, and the trace backend
+  configuration.
+review_question: Is a trace id propagated across every service and queue?
+trade_off: End-to-end visibility versus instrumentation effort and sampling trade-offs.
+why_it_matters: In a system of many services, logs and metrics alone make it very hard to find which
+  hop caused a slow or failed request.
+red_flags:
+  - Trace context lost at queues, async jobs or some services
+  - Only some services instrumented
+  - Sampling that drops all errors or slow requests
+  - Trace ids not present in logs
+  - Personal data or secrets in span attributes or baggage
+  - Trace context from untrusted callers accepted without limits
+good_looks_like:
+  - Trace context propagated through HTTP calls, messages and jobs
+  - All services instrumented with a common standard
+  - Tail sampling that keeps errors and slow requests
+  - Trace ids included in logs
+applies_when: Applies when requests cross more than one service, queue or background job.
+related:
+  - 59
+  - 94
+  - 17
+agent_check:
+  level: partial
+  search_hints:
+    - "@opentelemetry/"
+    - opentelemetry-instrumentation
+    - OTEL_EXPORTER_OTLP_ENDPOINT
+    - OTEL_TRACES_SAMPLER
+    - tail_sampling
+    - TracerProvider
+    - TextMapPropagator
+    - ActivitySource
+    - traceparent
+    - tracestate
+    - dd-trace
+    - aws-xray-sdk
+    - jaeger
+    - zipkin
+  evidence_to_request:
+    - The sampling rules and collector configuration
+    - A trace that crosses a queue or background job

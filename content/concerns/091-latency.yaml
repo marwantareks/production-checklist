@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 91
+name: Latency
+category: caching
+order: 50
+ownership: own
+definition: Time to complete a request.
+how_it_works: "Latency is the time a request takes from start to finish, measured at the user and at
+  each hop. It is reported as percentiles, not averages. Targets come from the user journey: how
+  fast a page, search or payment must feel, and how much of that budget each component may use.
+  Latency rises steeply as a component nears full utilization, because requests queue, and load
+  tests must send requests at a fixed rate rather than wait for each response, or they hide the
+  slowest results."
+where_it_appears: Performance requirements, monitoring dashboards, load test results, and tracing
+  data for the main user journeys.
+review_question: What are the latency budgets per user journey and per hop?
+trade_off: Lower latency usually costs more in caching, replication or closer deployment.
+why_it_matters: Slow responses lose users and cause timeouts and retries elsewhere. Latency usually
+  gets worse under load, so it has to be designed and measured, not assumed.
+red_flags:
+  - No latency target for important journeys
+  - Only average latency reported
+  - Latency measured at the server but not at the user
+  - Latency of failed and successful requests measured together, so fast errors hide slow successes
+  - Budgets never broken down by component
+good_looks_like:
+  - Latency targets set for each journey and agreed
+  - Percentiles (P50, P95, P99) tracked using histograms or sketches, never averaged across nodes
+  - Real user monitoring captures client-side network and rendering delays
+  - Load tests that show latency at expected peak, sending requests at a fixed rate
+  - A per-hop latency budget used in design
+also_fits: Observability
+related:
+  - 93
+  - 94
+  - 92
+  - 63
+agent_check:
+  level: people
+  evidence_to_request:
+    - The latency targets for the main user journeys
+    - The dashboard showing current percentiles
+    - The most recent load test results

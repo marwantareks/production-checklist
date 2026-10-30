@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 96
+name: Clock skew
+category: resilience
+order: 130
+ownership: guardrail
+definition: Machines disagree on the time, breaking ordering and expiry logic.
+how_it_works: Clock skew is the difference between the clocks of different machines. Logic that
+  compares timestamps from different machines, such as expiry, ordering, locks and token validity,
+  can go wrong when clocks differ. Systems reduce the risk with synchronized time, tolerances, and
+  logical clocks or version numbers. A single machine’s clock can also jump when synchronization
+  corrects it or a virtual machine pauses, so measure durations with a monotonic clock, whose
+  readings only mean something on the machine that took them.
+where_it_appears: Code using the current time for expiry, ordering or locking, token validation
+  settings, distributed lock code and time synchronization configuration.
+review_question: Does any logic rely on wall-clock time across machines?
+trade_off: Logical clocks and versioning avoid skew problems but add complexity versus plain timestamps.
+why_it_matters: Wrong time produces hard-to-reproduce bugs such as tokens rejected as expired,
+  events in the wrong order and locks held too long.
+red_flags:
+  - Ordering of events decided by wall-clock timestamps from several machines
+  - A lock or lease that protects writes with no fencing token, relying only on expiry time
+  - Token validation with zero clock tolerance
+  - No time synchronization on self-managed hosts
+good_looks_like:
+  - Time synchronized on all hosts and monitored
+  - A small tolerance on token and certificate checks, usually seconds and not minutes, chosen
+    deliberately
+  - Version numbers or logical clocks for ordering where it matters
+  - Locks and leases protected by fencing tokens, so a holder whose lease has expired cannot still
+    write
+  - Durations and timeouts measured with a monotonic clock
+also_fits: Concurrency, Databases
+related:
+  - 36
+  - 70
+  - 38
+  - 86
+agent_check:
+  level: partial
+  search_hints:
+    - clockTolerance
+    - ClockSkew
+    - leeway
+    - setAllowedClockSkewSeconds
+    - acceptLeeway
+    - time.monotonic
+    - System.nanoTime
+    - performance.now
+    - process.hrtime
+    - CLOCK_MONOTONIC
+    - Stopwatch
+    - ntp.conf
+    - chronyd
+    - timesyncd
+    - pool.ntp.org

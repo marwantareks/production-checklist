@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 94
+name: Tail latency
+category: caching
+order: 80
+ownership: own
+definition: The slowest requests in the distribution, which dominate perceived slowness at scale.
+how_it_works: "Tail latency is the behavior of the slowest requests in the distribution. It grows
+  when requests fan out to many services, because the response waits for the slowest: with 100
+  backend calls per page, about 63 percent of pages include a call slower than the backend’s P99.
+  Causes include queueing near saturation, pool or lock waits, garbage collection pauses, background
+  jobs, noisy neighbors and cold caches. Mitigations include timeouts, reducing fan-out and hedged
+  requests for idempotent reads only."
+where_it_appears: Distributed traces, latency histograms, service dependency maps and load test results.
+review_question: Which components cause slow outliers, and does fan-out amplify them?
+trade_off: Fan-out multiplies the chance of a slow call; mitigations like hedged requests add load.
+why_it_matters: At scale a small fraction of slow calls hits most users, so tail behavior, not the
+  average, sets the experience.
+red_flags:
+  - High fan-out from one request to many services with no timeout
+  - Retries added with no limit on the extra load
+  - No tracing to show where slow requests spend time
+  - Tail measured only in test, not in production
+good_looks_like:
+  - Fan-out calls have timeouts and a defined partial-result behavior
+  - Hedged requests only for idempotent reads, after a delay such as the P95, with cancellation when
+    the first reply arrives and a quota on extra load
+  - Traces show where the slowest requests wait
+  - Tail latency tracked in production across percentiles up to P99.9
+also_fits: Observability
+related:
+  - 93
+  - 11
+  - 60
+  - 12
+agent_check:
+  level: people
+  evidence_to_request:
+    - Traces or reports of the slowest requests
+    - The fan-out for the busiest request path
+    - Any hedging or timeout policy in place

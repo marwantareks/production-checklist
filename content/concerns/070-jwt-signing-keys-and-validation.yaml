@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 70
+name: JWT signing keys and validation
+category: security
+order: 40
+ownership: own
+definition: Managing the keys that sign JSON Web Tokens, validating tokens safely and limiting how
+  long a stolen token works.
+how_it_works: JSON Web Tokens are signed so services can trust them without calling the issuer.
+  Rotation means adding a new signing key, publishing it before it is used, and removing the old key
+  only after the tokens it signed have expired. Asymmetric keys are published as a key set such as a
+  JWKS, and verifiers refetch it, with a rate limit, when they see an unknown key id. Symmetric
+  secrets must be distributed to every verifier securely. Revocation needs extra design because
+  tokens are valid until they expire.
+where_it_appears: Token issuing and verification code, key storage and key set endpoints, token
+  lifetime settings and refresh token handling.
+review_question: How are signing keys rotated and tokens revoked?
+trade_off: Short lifetimes limit exposure but increase refresh traffic.
+why_it_matters: A leaked or never-rotated signing key lets an attacker create valid tokens indefinitely.
+red_flags:
+  - A symmetric signing secret shared by several services, so any of them can create valid tokens
+  - Signing keys in source code or configuration files
+  - Verifiers that take the algorithm from the token header instead of a fixed allow list, or that
+    accept none
+  - Long-lived access tokens with no way to revoke
+  - Tokens decoded without signature verification
+  - Tokens accepted without checking issuer, audience and expiry
+good_looks_like:
+  - Keys rotated on a schedule and on suspicion of exposure
+  - Key ids and a public key set so rotation does not break verifiers
+  - Short access token lifetimes with refresh tokens
+  - A plan to revoke sessions and tokens
+  - Validation of issuer, audience, signature and expiry on every token
+related:
+  - 69
+  - 67
+  - 96
+agent_check:
+  level: partial
+  search_hints:
+    - jwt
+    - jsonwebtoken
+    - jwks
+    - HS256
+    - RS256
+    - algorithms=
+    - jwt.decode(
+    - verify_signature
+    - ignoreExpiration
+    - ValidateIssuer
+    - ValidateAudience
+    - clockTolerance
+    - nimbus
+    - JwtBearer
+    - refresh token

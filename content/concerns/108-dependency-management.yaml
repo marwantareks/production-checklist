@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 108
+name: Dependency management
+category: delivery
+order: 110
+ownership: guardrail
+definition: How third-party libraries are chosen, pinned, updated and checked, including conflicting
+  version requirements.
+how_it_works: Dependency management means recording exact resolved versions, with a lockfile where
+  the ecosystem has one, and installing from it in CI in a mode that fails on drift, such as npm ci.
+  Lockfiles in libraries do not protect their consumers. It also means scanning for vulnerabilities
+  and licenses, updating regularly in small steps, keeping the dependency tree small, and treating
+  install scripts and package registries as part of the attack surface.
+where_it_appears: Package manifests and lock files, dependency update tooling configuration,
+  vulnerability scan results in CI, and build files with version overrides.
+review_question: How are dependency versions pinned, scanned and updated?
+trade_off: Pinning gives stability but delays security fixes; frequent updates cost testing effort.
+why_it_matters: Unmanaged dependencies bring security holes, surprise breakages on upgrade and
+  builds that differ between machines.
+red_flags:
+  - No lock file, or a lock file that is not committed or not used by CI installs
+  - Floating versions not covered by a lockfile, such as latest base images, CI actions referenced
+    by tag, or unpinned installs in build scripts
+  - Known vulnerable or abandoned packages still in use
+  - Dependency installs that run package install scripts in jobs with secrets
+  - Internal package names that can resolve from a public registry
+  - Version overrides or forks added to work around conflicts and never revisited
+good_looks_like:
+  - Lock files committed and used for builds in a frozen mode
+  - Install scripts disabled or allowed per package, and internal packages scoped to a private
+    registry
+  - Automated vulnerability scanning and update proposals
+  - Small, frequent upgrades backed by tests
+  - Dependencies reviewed for need, maintenance and license
+decide_between: Update dependencies continuously in small steps, or in scheduled batches. Continuous
+  updates keep each change small and security fixes quick. Batches reduce noise but make each
+  upgrade larger and riskier. Many teams apply security fixes at once, batch the rest, and wait a
+  few days after a release before adopting it.
+related:
+  - 103
+  - 6
+  - 67
+  - 107
+agent_check:
+  level: partial
+  search_hints:
+    - package-lock.json
+    - pnpm-lock.yaml
+    - Cargo.lock
+    - composer.lock
+    - uv.lock
+    - gradle.lockfile
+    - --frozen-lockfile
+    - npm ci
+    - ignore-scripts
+    - --hash=
+    - renovate.json
+    - dependabot.yml
+    - pip-audit
+    - govulncheck
+    - osv-scanner
+  look_for:
+    - A manifest with version ranges and no committed lockfile
+    - An install command in CI that can change the lockfile
+  evidence_to_request:
+    - The latest vulnerability scan results
+    - The dependency update cadence and the oldest outstanding update

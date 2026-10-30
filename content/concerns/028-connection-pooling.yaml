@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 28
+name: Connection pooling
+category: databases
+order: 40
+ownership: guardrail
+definition: Reusing DB connections instead of opening one per request.
+how_it_works: A connection pool keeps a set of open database connections and hands them out to
+  requests, so each request does not pay to open a new one. The pool has a maximum size, a wait
+  timeout and checks for dead connections. Total connections across all instances must stay below
+  the database limit. Size the budget for the maximum instance count during autoscaling and rolling
+  deployments, plus jobs, migrations and reserved admin connections. Larger pools are not faster,
+  because a database handles only a limited number of active queries well.
+where_it_appears: Database client and ORM configuration, pool settings, proxy or pooler
+  configuration (such as PgBouncer or RDS Proxy) and serverless function database code.
+review_question: Is pool size set against database connection limits across all instances?
+trade_off: Pools cut connection overhead but can exhaust the database when instances scale out.
+why_it_matters: Opening a connection per request is slow, and too many connections can exhaust the
+  database, particularly when instances scale out or functions run in parallel.
+red_flags:
+  - A new connection opened for every request
+  - Pool size set without computing instances times pool size against the database limit, or set so
+    high that the database thrashes
+  - Connection wait timeout unbounded or longer than the request timeout
+  - Connections not returned on error paths, with no leak detection
+  - Serverless functions each opening their own connections with no pooler
+good_looks_like:
+  - Pooling enabled with explicit size and timeout settings
+  - Total possible connections calculated against the database maximum
+  - Connection validation and recycling set
+  - A pooler or proxy used for serverless or high instance counts
+  - Pooling mode checked against session features the code uses, such as session settings, advisory
+    locks, LISTEN and prepared statements
+also_fits: Performance
+related:
+  - 45
+  - 29
+  - 90
+  - 54
+agent_check:
+  level: code
+  search_hints:
+    - maximumPoolSize
+    - maxPoolSize
+    - connectionTimeout
+    - leakDetectionThreshold
+    - max_overflow
+    - pool_timeout
+    - pool_pre_ping
+    - pool_recycle
+    - connection_limit
+    - Max Pool Size
+    - SetMaxOpenConns
+    - CONN_MAX_AGE
+    - pgbouncer
+    - rds proxy
+    - HikariCP

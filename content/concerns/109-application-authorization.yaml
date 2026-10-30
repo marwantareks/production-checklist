@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 109
+name: Application authorization
+category: security
+order: 150
+ownership: own
+definition: Deciding what an authenticated user may see or do, and enforcing it on every request.
+how_it_works: Authorization checks whether the caller may perform this action on this specific
+  resource, and on each field of it. Checks must run on the server for every request, close to the
+  data, not only in the interface. Common models are roles, attributes and relationships. Typical
+  failures are endpoints with no check, identifiers or roles taken from the request so one user can
+  read another’s record or set their own role, and a gap between what the interface hides and what
+  the API allows. Rules should be central, testable and deny by default.
+where_it_appears: Route and controller guards, middleware, policy or permission files, query filters
+  that scope data to the user or tenant, API gateway rules, and tests for access rules.
+review_question: Where is access checked for each resource, and how is it tested?
+trade_off: Central policy is easier to audit but adds a dependency and a learning cost, while checks
+  scattered in code drift apart.
+why_it_matters: Broken access control is among the most common serious web flaws, and it is
+  invisible until someone exploits it. One missing check can expose every customer’s data.
+red_flags:
+  - Endpoints that check login but not whether the caller may access the specific record
+  - Resource ids, roles or tenant values taken from the request instead of the verified session or
+    token
+  - Request bodies bound directly to models, so a caller can set fields such as role, owner or tenant
+  - Access rules enforced only in the interface
+  - Authorization logic copied into many handlers, with different rules for the same resource
+  - Admin or internal endpoints protected only by a hidden URL
+good_looks_like:
+  - Deny by default, with every route requiring an explicit rule
+  - One central place for policy, used by every handler
+  - Queries scoped to the user or tenant by construction
+  - Automated tests for allowed and denied cases, including one user reaching another’s record
+  - Access decisions logged for sensitive actions
+decide_between: Roles, attributes or relationships. Roles are simple and fit stable job functions.
+  Attribute rules handle context such as department or time. Relationship rules, such as owner or
+  team member, fit sharing models. Many systems combine a role check with an ownership check.
+related:
+  - 110
+  - 69
+  - 120
+  - 5
+agent_check:
+  level: partial
+  search_hints:
+    - "@PreAuthorize"
+    - "@RolesAllowed"
+    - "[Authorize"
+    - "[AllowAnonymous"
+    - "@PermitAll"
+    - permitAll()
+    - AllowAny
+    - skip_authorization
+    - skip_before_action :authenticate
+    - "@UseGuards"
+    - permission_classes
+    - casbin
+    - openfga
+    - package authz
+    - pundit
+  look_for:
+    - A handler that loads a record by an id from the request with no owner or tenant condition
+    - An endpoint with no authorization annotation or middleware
+  evidence_to_request:
+    - The access control model and who defined it
+    - Test results for cross-user and cross-tenant access

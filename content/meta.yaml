@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=../schema/meta.schema.json
+# Site-level values injected into the page by scripts/build.mjs.
+title: Production Readiness Checklist
+author: Marwan Tarek
+year: 2026
+updated: October 2026

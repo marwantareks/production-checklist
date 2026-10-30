@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 113
+name: Security logging and audit trails
+category: security
+order: 190
+ownership: guardrail
+definition: Recording security-relevant events so they support detection, investigation and accountability.
+how_it_works: "Security logs record who did what, to what, when and from where, for events that
+  matter: sign-ins and failures, permission changes, access to sensitive data, administrative
+  actions and configuration changes. Audit trails must be tamper resistant, kept apart from
+  application debug logs, retained for a defined period and reviewed or alerted on. Entries must not
+  contain secrets or more personal data than needed, and user input in them must be encoded. Clocks
+  must be synchronized (see 96) so events from different systems can be ordered."
+where_it_appears: Authentication and authorization code paths, administrative functions, data access
+  layers, audit log storage and retention settings, log shipping to a central system, and alert
+  rules.
+review_question: Could you reconstruct who did what during a security incident from records that the
+  people involved cannot alter?
+trade_off: More audit detail speeds investigations but raises storage cost and the amount of
+  sensitive data held in logs.
+why_it_matters: Without a trustworthy record, a breach cannot be scoped, an insider cannot be held
+  accountable, and many regulations cannot be met.
+red_flags:
+  - No record of failed sign-ins, permission changes or administrative actions
+  - Audit entries stored where the people they cover can edit or delete them
+  - Secrets, tokens, session identifiers or full card numbers written to security logs
+  - User input written to audit entries without encoding line breaks and control characters
+  - No alert on repeated failures or privileged actions, or when audit events stop arriving
+  - Retention shorter than the legal or investigative need, or longer than the purpose allows for
+    personal data
+good_looks_like:
+  - A defined list of audited events, each with who, what, when, where and outcome
+  - Audit logs in append-only or write-once storage in a separate account that administrators cannot
+    change, with retention set deliberately
+  - Retention and access rules stated and enforced
+  - Alerts on suspicious patterns, tested
+  - Clocks synchronized across systems
+related:
+  - 59
+  - 62
+  - 96
+  - 115
+agent_check:
+  level: partial
+  search_hints:
+    - audit_log
+    - AuditLog
+    - auditd
+    - CloudTrail
+    - google_project_iam_audit_config
+    - azurerm_monitor_diagnostic_setting
+    - object_lock
+    - AuthenticationFailureBadCredentialsEvent
+    - user_login_failed
+    - paper_trail
+    - Envers
+    - pgaudit
+    - "@Audited"
+  evidence_to_request:
+    - The list of audited events and their retention periods
+    - Who can read, change or delete audit records
+    - A recent example alert raised from the audit logs

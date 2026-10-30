@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 24
+name: Server-sent events
+category: traffic
+order: 60
+ownership: own
+definition: One-way server-to-client push over HTTP.
+how_it_works: Server-sent events keep one HTTP response open so the server can stream events to a
+  browser. The format is plain text, reconnection is built into the browser, and a last event
+  identifier lets a client resume after a drop, if the server keeps recent events to replay. The
+  browser EventSource API cannot set custom headers, so authentication uses cookies or a short-lived
+  token, and over HTTP/1.1 browsers allow only about six connections per site across all tabs. Data
+  flows from server to client only.
+where_it_appears: Endpoints returning text/event-stream, client code using EventSource, and proxy or
+  CDN settings that affect buffering and timeouts.
+review_question: Is one-way push enough, and how do clients resume after a dropped connection?
+trade_off: Simpler than WebSockets and runs over plain HTTP, but one-directional, limited per
+  browser over HTTP/1.1, and broken by proxies or compression that buffer the response.
+why_it_matters: It gives real-time updates with less complexity than WebSockets, but proxies that
+  buffer responses or close idle connections can silently break it.
+red_flags:
+  - Proxy, CDN or compression buffering enabled for the stream
+  - No event identifiers, so clients cannot resume after a reconnect
+  - No keep-alive messages, so idle connections are dropped
+  - No limit on the number of open streams per user
+  - Streams kept open after the user’s session or token has expired
+good_looks_like:
+  - Served over HTTP/2 or HTTP/3 to avoid the HTTP/1.1 six-connection browser limit
+  - Event ids supported and used to resume after a reconnect
+  - Periodic keep-alive comments to hold the connection open
+  - Buffering disabled on every proxy hop for the stream
+  - Limits on concurrent streams and monitoring of open connections
+applies_when: Applies when the system streams events to clients with server-sent events.
+related:
+  - 22
+  - 101
+  - 4
+  - 3
+agent_check:
+  level: code
+  search_hints:
+    - text/event-stream
+    - EventSource
+    - Last-Event-ID
+    - SseEmitter
+    - ServerSentEvent
+    - EventSourceResponse
+    - sse-starlette
+    - sse_starlette
+    - X-Accel-Buffering
+    - proxy_buffering off

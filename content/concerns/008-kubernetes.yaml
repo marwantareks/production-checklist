@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 8
+name: Kubernetes
+category: scaling
+order: 10
+ownership: guardrail
+definition: "Orchestrates containers: scheduling, scaling, self-healing."
+how_it_works: Kubernetes runs containers across a cluster of machines. It schedules workloads,
+  restarts failed ones, scales them and routes traffic. Reliability depends on correct resource
+  requests and limits, health probes, replica counts spread across zones, disruption budgets that
+  still allow one eviction, safe rollout settings and graceful shutdown within the termination grace
+  period.
+where_it_appears: Deployment, StatefulSet, Service and Ingress manifests, Helm charts, autoscaler
+  and pod disruption budget definitions, and cluster configuration.
+review_question: Are requests, probes, zone spread and disruption budgets set for every production
+  workload, and who enforces them?
+trade_off: Powerful scheduling and self-healing versus significant operational and cognitive overhead.
+why_it_matters: Kubernetes gives strong tools for resilience, but its defaults are permissive, and
+  misconfiguration is a common cause of outages and security gaps.
+red_flags:
+  - No resource requests, or no memory limit
+  - A single replica for important services
+  - No readiness probe on pods that receive traffic
+  - Liveness probes that check dependencies such as the database
+  - Images referenced by mutable tags such as latest
+  - Containers running as root or with broad privileges, or no network policies
+good_looks_like:
+  - CPU and memory requests set from measured usage, memory limits set, and CPU limits used only
+    where throttling is acceptable
+  - At least two replicas spread across zones, with disruption budgets that still allow an eviction
+  - Readiness probes on serving pods, liveness probes that check only the process, and startup
+    probes for slow starts
+  - Pods shut down gracefully on SIGTERM within the grace period
+  - A security context that restricts privileges
+applies_when: Applies when the system runs on Kubernetes or a managed Kubernetes service.
+related:
+  - 45
+  - 57
+  - 56
+  - 54
+agent_check:
+  level: partial
+  search_hints:
+    - "kind: Deployment"
+    - "kind: StatefulSet"
+    - "kind: DaemonSet"
+    - livenessProbe
+    - readinessProbe
+    - startupProbe
+    - PodDisruptionBudget
+    - topologySpreadConstraints
+    - runAsNonRoot
+    - allowPrivilegeEscalation
+    - "privileged: true"
+    - HorizontalPodAutoscaler
+    - Chart.yaml
+    - kustomization.yaml
+    - NetworkPolicy
+  evidence_to_request:
+    - Who operates the cluster and the on-call arrangement
+    - The node and zone layout of the cluster
+    - The usage data behind the requests and limits

@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 78
+name: SQL injection
+category: security
+order: 120
+ownership: guardrail
+definition: Malicious SQL via user input; prevent with parameterized queries.
+how_it_works: "SQL injection happens when user-supplied input is joined into a query string, so the
+  input can change what the query means. The fix is to keep code and data separate: queries use
+  bound parameters, and the database account has only the privileges it needs. ORMs are safe only
+  through their binding functions, and their raw query functions need the same care. Data read back
+  from the database is also untrusted when it is used to build a query."
+where_it_appears: Data access code, raw query helpers, reporting and search endpoints, dynamic
+  sorting and filtering, and stored procedures that build SQL.
+review_question: Is every query built with bound parameters or allow-listed identifiers, with no exceptions?
+trade_off: Strict standards slightly constrain dynamic query tooling but remove a whole class of attack.
+why_it_matters: One injectable query can expose or destroy the whole database, and the flaw is easy
+  to introduce when building dynamic queries.
+red_flags:
+  - Queries built by string concatenation or formatting with request data
+  - Dynamic ORDER BY or table names taken directly from input
+  - Raw query calls with interpolated variables
+  - A database account with administrative rights used by the application
+good_looks_like:
+  - All queries use bound parameters or a safe query builder
+  - Dynamic identifiers are checked against an allow list
+  - The application account has least privilege
+  - Static analysis or tests catch string-built SQL
+also_fits: Databases
+related:
+  - 74
+  - 68
+agent_check:
+  level: code
+  search_hints:
+    - $queryRawUnsafe
+    - $executeRawUnsafe
+    - sequelize.query
+    - knex.raw
+    - createNativeQuery
+    - FromSqlRaw
+    - ExecuteSqlRaw
+    - RawSQL
+    - extra(where=
+    - cursor.execute(f
+    - f"SELECT
+    - '"SELECT " +'
+    - "`SELECT"
+    - String.format("SELECT
+    - rawQuery
+  look_for:
+    - SQL text built by joining strings or formatting values from request data
+    - A query call that takes a raw string where a parameterized form exists

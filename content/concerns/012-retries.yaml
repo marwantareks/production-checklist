@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 12
+name: Retries
+category: resilience
+order: 30
+ownership: guardrail
+definition: Reattempting failed calls; needs limits to avoid retry storms.
+how_it_works: When a call fails with a transient error, the caller sends it again, after a delay
+  that grows with each attempt (backoff) and includes random jitter so clients do not retry
+  together. Full jitter, a random delay between zero and the computed delay, spreads load best.
+  Retries help with brief faults such as a dropped connection or a restarting instance. They must be
+  limited in count and total time and applied only to safe operations, because backoff spaces
+  retries out but does not reduce how many are sent. If the server sends Retry-After, honor it.
+where_it_appears: HTTP client and SDK retry settings, gateway and service mesh retry policies, queue
+  redelivery settings, job runners, and hand-written loops around calls.
+review_question: Which failures are retried, how many times, and is the operation safe to repeat?
+trade_off: Improves success rates but can turn an outage into a retry storm.
+why_it_matters: Uncontrolled retries multiply traffic exactly when a dependency is weakest, turning
+  a small fault into a prolonged outage.
+red_flags:
+  - Retries with no limit, no delay, a fixed delay or no jitter
+  - Retries at several layers (client, gateway, service) that multiply each other
+  - Retries added on top of SDK, client or mesh defaults that already retry
+  - Retrying writes that are not idempotent, such as a payment sent without an idempotency key
+  - Retrying errors that can never succeed, such as most 4xx responses (408 and 429 are exceptions,
+    and 429 should honor Retry-After)
+  - Queue messages redelivered without limit and with no dead letter queue
+good_looks_like:
+  - A maximum retry count and an overall time limit
+  - Exponential backoff with jitter
+  - Only transient errors on idempotent operations are retried
+  - Retry counts are visible in metrics and logs
+decide_between: "Retry at one layer only, or at several. One layer, usually closest to the caller,
+  is easier to reason about. Retries at several layers multiply: three attempts at each of three
+  layers send up to 27 calls to the bottom service. Several layers need a retry budget, a cap on
+  retries as a share of normal traffic (for example 10%), so retries stop when failures are
+  widespread."
+related:
+  - 14
+  - 10
+  - 20
+  - 11
+agent_check:
+  level: code
+  search_hints:
+    - maxRetries
+    - max_retries
+    - maxAttempts
+    - RetryPolicy
+    - WaitAndRetry
+    - AddRetry
+    - "@Retryable"
+    - urllib3.Retry
+    - backoff_factor
+    - wait_exponential
+    - ExponentialBackoff
+    - UseJitter
+    - Retry-After
+    - maxReceiveCount
+    - x-delivery-limit

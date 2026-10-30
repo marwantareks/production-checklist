@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 11
+name: Timeouts
+category: resilience
+order: 20
+ownership: guardrail
+definition: Maximum wait for a call so slow dependencies don’t hang resources.
+how_it_works: Every remote call (HTTP, database, queue, cache) gets a maximum wait, usually a
+  connect timeout, a read timeout and an overall limit. When it expires, the caller stops waiting,
+  releases the thread or connection, and takes a fallback or returns an error. Each downstream
+  timeout must fit inside the caller’s own budget, and with retries, each attempt’s timeout times
+  the attempts, plus the delays, must fit too. A timeout does not stop the downstream work, so pass
+  a deadline along where possible. A timed-out write may have succeeded, so its outcome is unknown.
+where_it_appears: HTTP client and SDK configuration, database driver and connection settings,
+  gateway and load balancer settings, message consumer settings, and any outbound call written by
+  hand.
+review_question: How are timeouts set for remote calls on the critical request path, and how do they
+  fit within the request’s overall budget?
+trade_off: Short timeouts free resources quickly but fail calls that are slow yet healthy.
+why_it_matters: Without timeouts, one slow dependency holds threads and connections until the caller
+  is exhausted too, and a slowdown becomes an outage.
+red_flags:
+  - Outbound calls that rely on library defaults, which are often infinite or very long
+  - The same timeout at every layer, or a downstream timeout longer than the upstream one
+  - Connect and read timeouts set but no overall limit on the whole request
+  - Timeouts raised to make a test pass
+  - No limit on waiting for a connection from a pool
+  - No server-side limit, such as a database statement timeout or an inbound request timeout
+good_looks_like:
+  - Every outbound call has explicit connect, read and overall timeouts, including the wait for a
+    pooled connection
+  - Timeouts come from a latency budget for each request path, and new or shorter ones are rolled
+    out gradually while watching the timeout rate
+  - Timeout expiry is logged and counted in metrics
+  - A test or fault injection shows the caller recovers when a dependency hangs
+decide_between: Per-call timeouts or one overall deadline passed down the call chain. Deadlines suit
+  deep call chains because every hop knows how much time is left. Per-call timeouts are simpler for
+  shallow ones.
+related:
+  - 12
+  - 10
+  - 94
+agent_check:
+  level: code
+  search_hints:
+    - connectTimeout
+    - readTimeout
+    - requestTimeout
+    - socketTimeout
+    - context.WithTimeout
+    - context.WithDeadline
+    - http.DefaultClient
+    - http.Get(
+    - HttpClient.Timeout
+    - AbortSignal.timeout
+    - AbortController
+    - httpx.Timeout
+    - statement_timeout
+    - commandTimeout
+    - setConnectTimeout
+  look_for:
+    - An outbound HTTP or database call made with no timeout argument or client timeout setting
+    - A client library used with its default timeout, which is often infinite

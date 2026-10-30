@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 79
+name: XSS
+category: security
+order: 130
+ownership: guardrail
+definition: "Cross-site scripting: injected scripts running in other users’ browsers."
+how_it_works: Cross-site scripting happens when an application includes untrusted input in a page so
+  that a browser runs it as code. Defenses are output encoding for the right context, avoiding
+  unsafe DOM and HTML insertion, framework templating that escapes by default, and a content
+  security policy. HttpOnly cookies limit theft of the session cookie but do not stop an injected
+  script from acting as the user.
+where_it_appears: Templates and rendering code, places that insert HTML (innerHTML,
+  dangerouslySetInnerHTML, raw output), rich text handling and security headers.
+review_question: Are output encoding and a content security policy enforced by default?
+trade_off: A strict CSP blocks attacks but may break inline scripts and third-party widgets.
+why_it_matters: A script running in your page can act as the user, steal data and spread, so one gap
+  can compromise every user who views it.
+red_flags:
+  - Use of innerHTML, dangerouslySetInnerHTML or raw template output with user data
+  - No content security policy
+  - User-supplied HTML shown with no sanitization
+  - Session cookies readable by scripts
+  - User-supplied URLs placed in href, src or redirects without checking the scheme
+good_looks_like:
+  - Framework escaping used by default and bypasses reviewed
+  - User HTML sanitized with a maintained library
+  - A content security policy based on nonces or hashes, rolled out in report-only mode first
+  - Trusted Types where browser support fits
+  - HttpOnly session cookies, which limit theft of the cookie
+related:
+  - 77
+  - 74
+agent_check:
+  level: code
+  search_hints:
+    - innerHTML
+    - dangerouslySetInnerHTML
+    - v-html
+    - "|safe"
+    - document.write
+    - eval(
+    - Content-Security-Policy
+    - DOMPurify
+    - bypassSecurityTrust
+    - mark_safe
+    - Html.Raw
+    - th:utext
+    - insertAdjacentHTML
+    - "javascript:"
+    - trustAsHtml

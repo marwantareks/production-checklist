@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 85
+name: Failover
+category: resilience
+order: 90
+ownership: own
+definition: Switching service to a standby when the primary fails, automatically or by a person.
+how_it_works: Failover moves service from a failed component to a standby, such as a database
+  primary, a server or a region. It can be automatic or manual. A reliable design detects failure
+  accurately, promotes only one standby, redirects clients, and avoids two nodes both acting as
+  primary. The standby must carry full load, and requests in flight fail during the switch, so
+  clients need safe retries. With asynchronous replication, writes not yet copied are lost on
+  promotion. After failover, the old primary must be fenced and rebuilt as a replica, never simply
+  restarted, and automatic failback should be off.
+where_it_appears: Database cluster and replica settings, load balancer and DNS failover rules,
+  orchestrator and cloud high-availability settings, and failover runbooks.
+review_question: How does the architecture prevent split-brain and false promotions during failover?
+trade_off: Automatic failover shortens outages but risks false triggers. With asynchronous
+  replication, any failover can lose recent writes.
+why_it_matters: Failover that is untested, too slow or triggered by false alarms can cause longer
+  outages or data loss than the original fault.
+red_flags:
+  - A single instance of a critical component with no standby
+  - Failover never exercised outside an incident (see 87)
+  - Clients that do not follow the switch, such as long-lived connections, long DNS TTLs or runtime
+    DNS caching
+  - No protection against split-brain
+  - Health checks so sensitive that brief blips trigger repeated failovers, with no cooldown
+  - A standby in the same zone, host or rack as the primary, or smaller than the primary
+good_looks_like:
+  - A standby exists for every critical single point of failure
+  - Failover tested regularly, with planned switchover in production and forced failover in
+    non-production, recording recovery time and lost writes
+  - Clients reconnect automatically and honor DNS or endpoint changes
+  - Split-brain protection such as quorum or fencing
+  - Failure detection that needs several consecutive failed checks, with a cooldown and a limit on
+    automatic failovers
+decide_between: Automatic or manual failover. Automatic is faster but can trigger falsely. Manual is
+  slower but a person confirms the failure. Many teams automate failover across zones within a
+  region and keep cross-region failover manual.
+also_fits: Databases
+related:
+  - 33
+  - 95
+  - 32
+  - 83
+agent_check:
+  level: partial
+  search_hints:
+    - failover
+    - multi_az
+    - automatic_failover_enabled
+    - availability_type
+    - zone_redundant
+    - failover_routing_policy
+    - azurerm_traffic_manager
+    - patroni
+    - repmgr
+    - pg_auto_failover
+    - cloudnative-pg
+    - pg_promote
+    - sentinel monitor
+    - high_availability
+    - group_replication

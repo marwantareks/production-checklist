@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 64
+name: SLIs
+category: observability
+order: 70
+ownership: own
+definition: "Service level indicators: the measured values SLOs are based on."
+how_it_works: A service level indicator is a measurement of one aspect of service quality from the
+  user’s point of view, such as the share of requests that succeed or complete within a time limit.
+  It is expressed as a ratio of good events to valid events, where valid events exclude traffic that
+  should not count, such as health checks, bots or malformed client requests, and it feeds the SLO.
+where_it_appears: Monitoring queries and recording rules, SLO definitions and dashboards for key user journeys.
+review_question: Which measurements represent user experience for each SLO?
+trade_off: Good indicators are harder to measure than easy infrastructure metrics.
+why_it_matters: A poor indicator, such as server uptime, can look fine while users suffer, so SLOs
+  built on it protect nothing.
+red_flags:
+  - Indicators based on infrastructure rather than user experience
+  - No indicator for important journeys
+  - An indicator measured in a way that excludes failures
+  - Definitions that differ between teams
+good_looks_like:
+  - Each key journey has an indicator measured from real requests
+  - Good and valid events defined clearly, including which responses count as failures and which
+    requests are excluded
+  - Measured at or near the user
+  - Definitions shared and consistent
+related:
+  - 63
+  - 61
+  - 65
+  - 62
+agent_check:
+  level: partial
+  search_hints:
+    - openslo
+    - sloth.slok.dev
+    - pyrra.dev
+    - ServiceLevelObjective
+    - ServiceLevelIndicator
+    - PrometheusServiceLevel
+    - datadog_service_level_objective
+    - google_monitoring_slo
+    - sli_error
+    - good_events
+    - valid_events
+    - recording rule
+    - error ratio
+    - latency threshold

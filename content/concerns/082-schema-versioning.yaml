@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 82
+name: Schema versioning
+category: databases
+order: 160
+ownership: own
+definition: Evolving data formats without breaking consumers.
+how_it_works: Schema versioning manages how data formats change over time so producers and consumers
+  can evolve independently. Rules such as backward compatibility (new readers handle old data) and
+  forward compatibility (old readers handle new data) are enforced with schema definitions and
+  compatibility checks. Where old data is replayed or kept, check compatibility against all previous
+  versions, not just the latest. In Protobuf, never reuse a removed field number; mark it reserved.
+where_it_appears: Event and message schemas (Avro, Protobuf, JSON Schema), schema registry settings,
+  database document formats and API models.
+review_question: How do producers and consumers handle old and new data formats?
+trade_off: Compatibility rules protect consumers but limit how freely the schema can change.
+why_it_matters: Uncontrolled format changes break consumers, and stored data can outlive the code that wrote it.
+red_flags:
+  - Schemas defined only in code, with no shared definition
+  - Fields removed or renamed with no compatibility check
+  - Consumers that fail on unknown fields
+  - No version marker in stored or transmitted data
+good_looks_like:
+  - Schemas stored in a shared, versioned place
+  - Compatibility checks in CI
+  - Readers of internal events and stored data tolerate unknown fields; public API inputs are
+    validated against an explicit schema
+  - Version information carried in the data or its metadata
+also_fits: Build, deployment and release
+related:
+  - 81
+  - 102
+  - 17
+agent_check:
+  level: partial
+  search_hints:
+    - avro
+    - protobuf
+    - json schema
+    - schema registry
+    - schema.registry.url
+    - buf breaking
+    - buf.yaml
+    - BACKWARD_TRANSITIVE
+    - schemaVersion
+    - .avsc
+    - .proto
+    - reserved
+    - upcaster
+    - $schema

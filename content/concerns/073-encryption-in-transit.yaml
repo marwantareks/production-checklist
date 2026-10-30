@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 73
+name: Encryption in transit
+category: security
+order: 70
+ownership: own
+definition: Encrypting data moving across networks.
+how_it_works: Encryption in transit protects data as it moves between clients, services and data
+  stores, using TLS or mutual TLS. This includes traffic inside the network, because internal
+  networks are not automatically trusted. Service meshes or database settings can enforce it.
+where_it_appears: Service-to-service client configuration, database and cache connection strings,
+  message broker settings and mesh policies.
+review_question: Is internal service traffic encrypted as well as external traffic?
+trade_off: Protects against interception, with certificate and performance overhead.
+why_it_matters: Attackers who get inside a network can read unencrypted internal traffic, including
+  credentials and personal data.
+red_flags:
+  - Internal services calling each other over plain HTTP
+  - Database or cache connections without TLS
+  - Certificate validation disabled in client code, including for internal calls
+  - Different rules for internal and external traffic with no reason
+  - Database connections that allow fallback to plain text or skip certificate checks, for example
+    sslmode set to prefer or require instead of verify-full
+  - TLS terminated at a load balancer with plain traffic onward across networks you do not control
+good_looks_like:
+  - TLS on all connections carrying sensitive data, including internal ones
+  - Databases and brokers require encrypted connections
+  - Certificate verification enabled everywhere
+  - Mutual TLS where identity between services matters
+also_fits: Networking
+related:
+  - 71
+  - 72
+agent_check:
+  level: partial
+  search_hints:
+    - http://
+    - sslmode=disable
+    - sslmode=prefer
+    - useSSL=false
+    - Encrypt=false
+    - TrustServerCertificate=true
+    - redis://
+    - amqp://
+    - security.protocol=PLAINTEXT
+    - "mode: PERMISSIVE"
+    - InsecureSkipVerify
+    - verify=False
+    - rejectUnauthorized
+    - NODE_TLS_REJECT_UNAUTHORIZED
+    - HostnameVerifier

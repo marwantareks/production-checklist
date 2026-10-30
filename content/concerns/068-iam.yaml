@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 68
+name: IAM
+category: security
+order: 20
+ownership: own
+definition: "Identity and access management: who can do what."
+how_it_works: Identity and access management controls who or what can do what. Principles are least
+  privilege (only the access needed), separate identities for people and services, short-lived
+  credentials, strong authentication for people and regular review of permissions.
+where_it_appears: Cloud IAM policies and roles in infrastructure code, service accounts, application
+  authorization checks and access review records.
+review_question: Does every person and workload have only the permissions it needs, with evidence of
+  a recent access review?
+trade_off: Tight permissions reduce risk but create friction and admin overhead.
+why_it_matters: Excessive permissions turn any compromised account or bug into a major breach.
+red_flags:
+  - Wildcard actions, or wildcard resources without conditions where the service supports narrower
+    scoping
+  - Shared accounts or long-lived keys for services
+  - Administrator rights used for routine work
+  - No review of who has access
+  - Standing administrator access with no just-in-time or break-glass process
+good_looks_like:
+  - Roles scoped to specific actions and resources
+  - Workloads use their own identities with short-lived credentials
+  - Phishing-resistant multi-factor authentication, such as security keys or passkeys, for people
+    with privileged access
+  - Permissions reviewed on a schedule
+related:
+  - 69
+  - 67
+agent_check:
+  level: partial
+  search_hints:
+    - '"Action": "*"'
+    - '"Resource": "*"'
+    - AdministratorAccess
+    - roles/owner
+    - roles/editor
+    - cluster-admin
+    - ClusterRoleBinding
+    - aws_iam_policy
+    - aws_iam_access_key
+    - iam:PassRole
+    - assume_role
+    - google_project_iam
+    - azurerm_role_assignment
+    - service account

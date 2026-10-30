@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 4
+name: Reverse proxies
+category: traffic
+order: 30
+ownership: own
+definition: A server in front of backends handling routing, TLS and caching (Nginx, HAProxy). See 3
+  for balancing and 5 for API policy.
+how_it_works: A reverse proxy sits in front of backend services and receives client requests on
+  their behalf. It can terminate TLS, route by host or path, cache responses, compress, add headers
+  and hide internal topology. The application then sees the proxy as the client, so it must trust
+  forwarded headers only from known proxy addresses and take the client IP from the rightmost entry
+  added by a trusted proxy. If the proxy terminates TLS, decide whether traffic to the backends is
+  re-encrypted.
+where_it_appears: Nginx or HAProxy configuration files, Envoy or ingress manifests, container images
+  that bundle a proxy, and cloud front-door definitions.
+review_question: Which proxy settings, such as forwarded-header trust, timeouts and body limits, are
+  set deliberately and kept in version control?
+trade_off: Centralizes TLS, routing and caching but adds a hop and another component to operate.
+why_it_matters: It centralizes edge concerns so each service doesn’t reimplement them, but it also
+  becomes a critical shared component that must be configured and operated carefully.
+red_flags:
+  - A single proxy instance with no redundancy
+  - Backend services reachable directly from the internet, bypassing the proxy
+  - Body size and timeout limits left at defaults without a decision, or set very large
+  - Forwarded client IP and protocol headers trusted without checking where they came from
+  - Proxy and backend that parse requests differently, such as ambiguous Content-Length and
+    Transfer-Encoding not rejected, allowing request smuggling
+good_looks_like:
+  - Proxy runs redundantly and is the only public path to backends
+  - Backends accept traffic only from the proxy, for example by source range or mutual TLS
+  - Explicit timeouts, body size limits and buffering settings
+  - Forwarded headers set by the proxy and overwritten when they come from untrusted clients
+  - Proxy configuration kept in version control and tested before rollout
+related:
+  - 3
+  - 5
+  - 71
+  - 1
+agent_check:
+  level: partial
+  search_hints:
+    - proxy_pass
+    - set_real_ip_from
+    - real_ip_header
+    - trust proxy
+    - ForwardedHeaders
+    - KnownProxies
+    - SECURE_PROXY_SSL_HEADER
+    - ProxyFix
+    - forward-headers-strategy
+    - X-Forwarded-For
+    - proxy_buffering
+    - client_max_body_size
+    - proxy_read_timeout
+    - Caddyfile
+    - haproxy.cfg
+  evidence_to_request:
+    - Where the proxy configuration is managed, if outside this repository
+    - The forwarded-header trust settings of the application

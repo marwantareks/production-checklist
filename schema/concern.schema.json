@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "concern.schema.json",
+  "title": "Concern",
+  "description": "One production readiness concern. See docs/SCHEMA.md for field guidance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "category",
+    "order",
+    "ownership",
+    "definition",
+    "how_it_works",
+    "where_it_appears",
+    "review_question",
+    "trade_off",
+    "why_it_matters",
+    "red_flags",
+    "good_looks_like",
+    "related",
+    "agent_check"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Stable identifier. Never reuse or renumber."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 40
+    },
+    "category": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "A category id from content/categories.yaml."
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Position within the category. Use steps of 10 so items can be inserted."
+    },
+    "ownership": {
+      "enum": [
+        "own",
+        "guardrail",
+        "delegate"
+      ],
+      "description": "own: the architect decides. guardrail: the architect sets the standard and teams implement. delegate: team or tool detail."
+    },
+    "definition": {
+      "type": "string",
+      "minLength": 15,
+      "maxLength": 140,
+      "description": "One sentence, plain language."
+    },
+    "how_it_works": {
+      "type": "string",
+      "minLength": 150,
+      "maxLength": 600,
+      "description": "The mechanism, enough to judge whether an implementation is sound."
+    },
+    "where_it_appears": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 300,
+      "description": "The places it shows up in a real application."
+    },
+    "review_question": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 160
+    },
+    "trade_off": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 200
+    },
+    "why_it_matters": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 300
+    },
+    "red_flags": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 6,
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 160
+      }
+    },
+    "good_looks_like": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 6,
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 160
+      }
+    },
+    "decide_between": {
+      "type": "string",
+      "minLength": 80,
+      "maxLength": 400,
+      "description": "Only for concerns that involve a real design choice."
+    },
+    "also_fits": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 80,
+      "description": "Free text naming other categories this concern also belongs to."
+    },
+    "related": {
+      "type": "array",
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "agent_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "code",
+            "partial",
+            "people"
+          ],
+          "description": "code: checkable from the repository. partial: partly checkable. people: needs people or runtime data."
+        },
+        "search_hints": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "description": "Literal strings an agent can search for: setting names, library names, file names, header names. Avoid single common words."
+        },
+        "evidence_to_request": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 6,
+          "items": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 120
+          },
+          "description": "What to ask people for. Required when the level is people. Optional on partial and code concerns, for the part a repository cannot show."
+        },
+        "look_for": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 120
+          },
+          "description": "Patterns described in words, for things that have no literal text to search for. The agent reads code to find them."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "level": {
+                "const": "people"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "evidence_to_request"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "search_hints"
+                  ]
+                },
+                {
+                  "required": [
+                    "look_for"
+                  ]
+                }
+              ]
+            }
+          },
+          "else": {
+            "required": [
+              "search_hints"
+            ]
+          }
+        }
+      ]
+    },
+    "applies_when": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 200,
+      "description": "One sentence that starts with 'Applies when' and says when this concern applies. If the condition clearly does not hold, an agent returns not_applicable. Leave it out for a concern that applies to every system."
+    }
+  }
+}

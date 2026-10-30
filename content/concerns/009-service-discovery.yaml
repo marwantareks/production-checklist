@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 9
+name: Service discovery
+category: scaling
+order: 20
+ownership: own
+definition: Lets services find each other’s addresses dynamically.
+how_it_works: Service discovery lets services find the current network addresses of other services,
+  even as instances start, stop and move. It uses DNS, a registry, or the platform (such as
+  Kubernetes services). Clients must handle changes and failures when the registry or DNS is slow or
+  stale, cache resolution safely without overwhelming resolvers, and refresh long-lived connections
+  such as gRPC or HTTP/2, because a Kubernetes ClusterIP balances connections, not requests.
+where_it_appears: Service and DNS definitions, registry client configuration (Consul, Eureka, etcd),
+  service mesh settings and client libraries that cache addresses.
+review_question: How do client services maintain availability when the discovery registry or DNS resolver degrades?
+trade_off: Dynamic addressing enables scaling but adds a critical dependency.
+why_it_matters: Hard-coded addresses break when instances change, and stale addresses send traffic
+  to instances that are gone.
+red_flags:
+  - Hard-coded hosts or IP addresses
+  - Clients that cache DNS results forever, or never refresh long-lived connections
+  - A registry without a quorum of three or five servers
+  - Every call fails when the registry is unreachable
+  - No health information used when choosing instances
+good_looks_like:
+  - Services referenced by stable names
+  - Short DNS caching, or client-side refresh that respects changes
+  - The registry runs as a quorum of three or five servers across zones
+  - Clients keep the last known healthy addresses if the registry is unavailable
+  - Only healthy instances returned
+also_fits: Networking
+related:
+  - 3
+  - 56
+  - 8
+agent_check:
+  level: partial
+  search_hints:
+    - consul
+    - eureka.client
+    - spring.cloud.discovery
+    - CoreDNS
+    - aws_service_discovery
+    - servicediscovery
+    - "clusterIP: None"
+    - ClusterIP
+    - .svc.cluster.local
+    - srv record
+    - networkaddress.cache.ttl
+    - sun.net.inetaddr.ttl
+    - kube-dns
+    - _tcp.

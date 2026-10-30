@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 53
+name: Canary releases
+category: delivery
+order: 40
+ownership: own
+definition: Release to a small share of users or traffic first to catch problems.
+how_it_works: A canary release sends a small share of traffic to the new version first, watches key
+  metrics and then increases the share or rolls back. The canary is compared with a control group
+  running the current version, of similar size and over the same period, rather than with the whole
+  fleet. Route by user or session where possible, so each user stays on one version. Decisions can
+  be automatic, from error rate and latency comparisons.
+where_it_appears: Deployment configuration with traffic weights, analysis or promotion rules,
+  service mesh or load balancer routing, and release metrics.
+review_question: Which metrics decide whether to promote or roll back a canary?
+trade_off: Limits blast radius but needs good observability and traffic routing.
+why_it_matters: It limits the number of users affected by a bad release and gives real production
+  evidence before full rollout.
+red_flags:
+  - No defined or automated success criteria for the canary
+  - Canary traffic too small or too short to show a problem
+  - Canary metrics not separated from the stable version
+  - Version differences that break shared data
+  - Canary instances also consume queues or run jobs that traffic weights do not limit
+good_looks_like:
+  - Success and rollback criteria defined in numbers, including business metrics, not only errors
+    and latency
+  - Automated analysis and rollback where possible
+  - Compatible data and message formats between versions
+  - Each user routed to one version for the length of the rollout
+  - Rollout steps visible in release records
+applies_when: Applies when the system can run two versions at once with routing control, and has
+  enough traffic for canary metrics to be meaningful.
+related:
+  - 52
+  - 54
+  - 63
+  - 81
+agent_check:
+  level: partial
+  search_hints:
+    - canary
+    - "kind: Rollout"
+    - AnalysisTemplate
+    - "kind: Canary"
+    - canaryAnalysis
+    - setWeight
+    - trafficRouting
+    - canary-weight
+    - "kind: VirtualService"
+    - HTTPRoute
+    - additional_version_weights
+    - routing_config
+    - traffic split
+    - flagger
+    - argo rollouts

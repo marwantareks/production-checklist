@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 121
+name: Graceful degradation
+category: resilience
+order: 140
+ownership: guardrail
+definition: Keeping the most important functions working, in a reduced form, when parts of the system fail.
+how_it_works: Instead of failing completely when a dependency is slow or down, the system decides in
+  advance which features matter most and which can be turned off, simplified or served from bounded,
+  stale data. Fallbacks that run rarely or move load to another system can make an outage worse, so
+  prefer ones that do less work, such as static or cached responses, and exercise them. Queued
+  writes need a durable queue, idempotent replay, an honest pending message and a paced drain.
+  Degradation also applies under overload, with clear criteria for entering and leaving each mode.
+where_it_appears: Fallback code behind circuit breakers, feature flags and kill switches, cached or
+  default responses, read-only modes, user interface states for missing data, and failure tests.
+review_question: What does each non-essential feature do when the dependency it needs fails or slows down?
+trade_off: Degraded modes keep users working but add code paths to build, test and keep honest.
+why_it_matters: Most outages begin with one failing component, and a design that can shed
+  non-essential work turns a total outage into a partial one.
+red_flags:
+  - One failing dependency fails whole pages or the whole request
+  - Fallbacks that were never tested or have never run in production
+  - Stale data served with no limit and no indication
+  - A fallback that calls another dependency under the same stress
+  - Authorization, fraud or other security checks that fail open in degraded mode
+  - No agreed list of which features are essential, or a degraded mode that users and operators
+    cannot see
+good_looks_like:
+  - Features ranked by importance, with a defined degraded behavior for each non-essential one
+  - Fallbacks triggered automatically and also switchable by hand
+  - Security and integrity checks fail closed, with any cached decisions kept short lived
+  - Degraded states shown to users and visible in monitoring
+  - Fallback paths exercised in tests or game days
+  - Limits on how stale fallback data may be
+related:
+  - 10
+  - 44
+  - 51
+  - 123
+agent_check:
+  level: partial
+  search_hints:
+    - "@Fallback"
+    - fallbackMethod
+    - fallbackFactory
+    - getFallback
+    - FallbackPolicy
+    - AddFallback
+    - onErrorReturn
+    - onErrorResume
+    - stale-if-error
+    - stale-while-revalidate
+    - proxy_cache_use_stale
+    - killSwitch
+    - kill_switch
+    - readOnlyMode
+    - read_only
+  evidence_to_request:
+    - The ranked list of essential and optional features
+    - Results of a test where a dependency was failed on purpose

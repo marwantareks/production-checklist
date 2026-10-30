@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 89
+name: Cold starts
+category: scaling
+order: 70
+ownership: own
+definition: Startup delay when a new instance of a function or container starts, after idle, during
+  scale-out or after a deployment.
+how_it_works: A cold start is the delay when a serverless function or container starts a new
+  instance, loading the runtime and code before handling the first request. It depends on language,
+  package size, initialization work and network setup. Mitigations are smaller packages, lazy
+  loading, and provisioned or minimum instances. Scheduled pings keep only one instance warm and do
+  not help with bursts.
+where_it_appears: Function configuration and package size, initialization code that runs at startup,
+  provisioned concurrency settings, and latency metrics for first requests.
+review_question: Which latency-sensitive paths run on serverless, and is warm capacity needed?
+trade_off: Pay-per-use economics versus unpredictable startup latency.
+why_it_matters: Cold starts add unpredictable latency that can break time limits on user-facing paths.
+red_flags:
+  - Large dependencies loaded at start
+  - Startup work not needed by most requests, such as loading unused modules or calling services
+    that could be called lazily
+  - Latency-sensitive endpoints on functions with no warm capacity
+  - No measurement of cold start frequency or duration
+good_looks_like:
+  - Minimal packages and lazy initialization
+  - Provisioned or minimum capacity for latency-sensitive paths
+  - Cold start frequency and duration measured
+  - Timeouts and retries that allow for a cold start
+  - Snapshot-based startup used only after unique values and connections are re-created on restore
+also_fits: Performance
+applies_when: Applies when the system uses serverless functions or containers that scale to zero.
+related:
+  - 90
+  - 42
+  - 93
+agent_check:
+  level: partial
+  search_hints:
+    - aws_lambda_function
+    - AWS::Serverless::Function
+    - serverless.yml
+    - provisioned_concurrent_executions
+    - ProvisionedConcurrencyConfig
+    - SnapStart
+    - min_instance_count
+    - minScale
+    - startup-cpu-boost
+    - azurerm_linux_function_app
+    - FUNCTIONS_WORKER_RUNTIME
+    - cold start

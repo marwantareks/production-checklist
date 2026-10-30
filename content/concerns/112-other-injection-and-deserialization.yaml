@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 112
+name: Other injection and deserialization
+category: security
+order: 180
+ownership: guardrail
+definition: Untrusted input that is run as a command, query or object by something other than the SQL layer.
+how_it_works: "Injection happens when input is mixed into something an interpreter runs: an
+  operating system command, code passed to eval or an expression language, a template, an LDAP or
+  NoSQL query, an XML parser, a file path, an HTTP header or a serialized object. Safe patterns pass
+  input as parameters, use allow lists, avoid shell calls and string-built queries, turn off
+  dangerous parser features and never deserialize untrusted data into arbitrary types. In
+  JavaScript, merging request objects into other objects can change shared prototypes. SQL injection
+  and cross-site scripting have their own concerns."
+where_it_appears: Code that runs commands or spawns processes, template rendering, NoSQL and LDAP
+  queries, XML and YAML parsing, file path handling, and deserialization of data from requests,
+  queues or files.
+review_question: Where does untrusted input reach a command, template, parser or deserializer, and
+  how is it constrained?
+trade_off: Strict allow lists and safe APIs block whole classes of attack but limit flexibility and
+  need review of every new use.
+why_it_matters: These flaws often give an attacker code execution on the server, which is a full
+  compromise and not just a data leak.
+red_flags:
+  - Shell commands built by joining strings that include request data
+  - Templates rendered from user-supplied template text, or input passed to eval
+  - Native or binary deserialization of data from untrusted sources
+  - XML parsed with external entities or document type definitions enabled
+  - File paths built from user input without resolving the full path and checking it stays inside an
+    allowed directory
+  - NoSQL or LDAP queries built from raw request objects
+good_looks_like:
+  - Process calls avoided, or made with argument lists and no shell, with user values placed after a
+    -- separator and checked against an allow list
+  - Untrusted input validated against allow lists and passed as parameters
+  - Deserialization limited to plain data formats with type information from the payload turned off,
+    or to allow-listed types
+  - XML parsers configured to refuse external entities
+  - Static analysis rules for these patterns run in CI
+related:
+  - 78
+  - 79
+  - 80
+agent_check:
+  level: code
+  search_hints:
+    - os.system
+    - subprocess.run
+    - child_process.exec
+    - Runtime.getRuntime().exec
+    - exec.Command(
+    - shell_exec
+    - eval(
+    - new Function(
+    - ObjectInputStream
+    - pickle.loads
+    - BinaryFormatter
+    - TypeNameHandling
+    - enableDefaultTyping
+    - DocumentBuilderFactory
+    - render_template_string
+  look_for:
+    - User input passed to a shell command, a template, a parser or a deserializer

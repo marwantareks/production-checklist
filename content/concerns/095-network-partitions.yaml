@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 95
+name: Network partitions
+category: resilience
+order: 120
+ownership: own
+definition: Network failures splitting a system into isolated groups, and the settings that decide
+  what each side does. See 34 for theory.
+how_it_works: "A network partition splits a system so some nodes cannot reach others while all keep
+  running. The side without a quorum then has to choose: stop serving writes to protect consistency,
+  or keep serving and risk conflicts. Quorum systems need an odd number of voters or a tiebreaker.
+  Design this per data set and test it. Partitions are often partial or one-way, and a timeout
+  cannot tell a partition from a slow or crashed peer. A leader cut off from the others may keep
+  acting as leader, so writes should carry a fencing token that storage checks."
+where_it_appears: Code that calls remote services and shares state, database cluster settings
+  (quorum, replication mode), and leader election or lock code.
+review_question: How does each component behave when it cannot reach its peers?
+trade_off: Favoring availability during partitions risks conflicts; favoring consistency risks
+  refusing requests.
+why_it_matters: Partitions happen in real networks. Without a design, the result is split-brain,
+  duplicate processing or hangs.
+red_flags:
+  - A cluster setting that lets both sides of a partition keep accepting writes, such as RabbitMQ
+    partition handling left on ignore
+  - "Writes acknowledged by one node, such as acks=1, w: 1, min.insync.replicas=1 or unclean leader
+    election on"
+  - Two-node or even-sized clusters with no tiebreaker
+  - Two nodes able to accept writes for the same data with no conflict handling
+  - A design that assumes the network is reliable
+  - No test of behavior with a dependency unreachable
+good_looks_like:
+  - A stated behavior for each component when peers are unreachable
+  - Quorum or fencing for data that must stay consistent
+  - Conflict resolution for data that may diverge
+  - Partition behavior tested with fault injection
+also_fits: Databases (CAP)
+related:
+  - 34
+  - 38
+  - 85
+  - 87
+agent_check:
+  level: partial
+  search_hints:
+    - split-brain
+    - fencing
+    - cluster_partition_handling
+    - x-queue-type
+    - min.insync.replicas
+    - unclean.leader.election.enable
+    - writeConcern
+    - synchronous_commit
+    - pause_minority
+    - hashicorp/raft
+    - etcd-io/raft
+    - synchronous_standby_names
+    - minimum_master_nodes
+    - readConcern
+    - zookeeper

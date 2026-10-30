@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 66
+name: Observability
+category: observability
+order: 90
+ownership: own
+definition: Understanding internal state from logs, metrics, traces and wide events.
+how_it_works: Observability is the ability to understand what a system is doing from the data it
+  produces (logs, metrics, traces and wide events), including answering questions you did not plan
+  for. It needs rich, correlated data, consistent identifiers and the ability to slice by attributes
+  such as customer, version and region. High-cardinality attributes such as customer belong on
+  traces, logs and events, not metric labels, and follow the same personal data rules as logs.
+where_it_appears: Instrumentation across services, telemetry pipeline and storage configuration,
+  dashboards and query tools, and incident notes.
+review_question: Can you answer new questions about production behavior without shipping new code?
+trade_off: Deeper insight costs instrumentation, storage and skills.
+why_it_matters: When failures are new, dashboards built for known problems are not enough, and teams
+  without good data guess for hours.
+red_flags:
+  - No way to move from an alert to the related traces and logs
+  - Telemetry lacking attributes such as version, customer or region
+  - Unable to answer a new question without deploying new code
+  - Telemetry costs controlled by removing detail blindly
+good_looks_like:
+  - Logs, metrics and traces correlated by trace or request id
+  - Rich attributes on events to slice by
+  - Engineers can explore data during incidents
+  - Retention and sampling set deliberately
+  - Telemetry exporters do not block the application, and the collector has memory limits and buffers
+related:
+  - 59
+  - 60
+  - 61
+  - 62
+agent_check:
+  level: partial
+  search_hints:
+    - OTEL_RESOURCE_ATTRIBUTES
+    - service.version
+    - deployment.environment
+    - otel-collector
+    - otelcol
+    - memory_limiter
+    - "processors:"
+    - "exporters:"
+    - trace_id
+    - semconv
+    - TracerProvider
+    - Pyroscope

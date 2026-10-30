@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 61
+name: Metrics
+category: observability
+order: 40
+ownership: guardrail
+definition: Numeric time-series measurements (CPU, error rate, latency).
+how_it_works: Metrics are numeric measurements collected over time, such as request rate, error
+  rate, latency, CPU, queue depth and business counts. Counters only increase and are read as rates,
+  and gauges hold a current value. Request rate, errors and duration (RED) suit services, and
+  utilization, saturation and errors (USE) suit resources. Metrics are cheap only while label values
+  stay bounded, because unbounded labels can overload or crash the metrics backend.
+where_it_appears: Metrics libraries and exporters in application code, metric endpoints, dashboards and alert rules.
+review_question: Are request rate, errors, duration and saturation measured for each service?
+trade_off: More metrics add insight and also cardinality cost.
+why_it_matters: Without metrics for the main signals, problems are found by users, and capacity and
+  reliability decisions are guesses.
+red_flags:
+  - No request, error and latency metrics for services
+  - Labels with unbounded values, such as user ids, raw URL paths, error messages or request ids
+  - Latency measured with averages, or percentiles averaged across instances, instead of histograms
+  - Only infrastructure metrics, none for business flows
+  - Metrics that no one looks at
+good_looks_like:
+  - Rate, errors and duration for every service, with duration recorded as a histogram, and
+    saturation for resources
+  - Labels kept to a small, bounded set
+  - Key business events counted
+  - Dashboards and alerts built from the metrics
+related:
+  - 63
+  - 62
+  - 58
+  - 93
+agent_check:
+  level: code
+  search_hints:
+    - prometheus_client
+    - prom-client
+    - client_golang
+    - micrometer
+    - "@Timed"
+    - MeterProvider
+    - create_counter
+    - create_histogram
+    - System.Diagnostics.Metrics
+    - dogstatsd
+    - StatsD
+    - ServiceMonitor
+    - /metrics
+    - histogram_quantile

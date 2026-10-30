@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 86
+name: Multi-region deployment
+category: resilience
+order: 100
+ownership: own
+definition: Running in multiple regions for resilience and lower latency.
+how_it_works: Multi-region deployment runs the application in more than one cloud region, either
+  active-active (all serve traffic) or active-passive (one waits). It protects against a regional
+  outage and lowers latency, but replication makes consistency, cost and operations harder.
+  Accepting writes in several regions needs a rule for conflicting writes, and last writer wins can
+  silently lose data. Local reads from a single write region can be stale. Recovery should rely on
+  capacity and routing already in place, not on control plane calls that may fail in a regional
+  event. Deploy one region at a time.
+where_it_appears: Infrastructure code that defines regions, global load balancing and DNS, database
+  replication settings, and deployment pipelines.
+review_question: Is it active-active or active-passive, and how is data kept consistent across regions?
+trade_off: Higher resilience and proximity versus higher cost, consistency complexity and operational load.
+why_it_matters: A single-region system goes down with its region. A multi-region system that was
+  never tested can fail in more complicated ways.
+red_flags:
+  - Application in several regions but data with no replica outside one region
+  - No tested procedure to move traffic between regions
+  - State and sessions tied to one region
+  - Dependencies (identity, secrets, queues) available in only one region
+  - Releases or configuration changes pushed to every region at once
+  - A secondary region without the capacity or quota to take full load
+good_looks_like:
+  - Recovery targets that justify the cost of multi-region
+  - A data replication strategy chosen with its consistency trade-offs understood
+  - Regular regional failover exercises
+  - Every critical dependency available in the secondary region
+decide_between: Active-passive, active-active with one write region, or active-active with writes
+  everywhere. Active-passive is simpler and cheaper, with a slower and riskier switch. One write
+  region serves reads locally without write conflicts, but local reads can be stale and writes still
+  depend on that region. Writes everywhere gives the fastest recovery but needs data designed for
+  conflicting writes.
+also_fits: Scaling and infrastructure
+applies_when: Applies when recovery targets require surviving the loss of a whole region, or users
+  are far enough apart that one region cannot meet latency targets.
+related:
+  - 83
+  - 85
+  - 32
+  - 115
+agent_check:
+  level: partial
+  search_hints:
+    - multi-region
+    - cross-region
+    - aws_rds_global_cluster
+    - aws_globalaccelerator_accelerator
+    - aws_dynamodb_global_table
+    - azurerm_traffic_manager
+    - azurerm_frontdoor
+    - multiple_write_locations_enabled
+    - google_spanner_instance
+    - google_compute_global_forwarding_rule
+    - latency_routing_policy
+    - aws_s3_bucket_replication_configuration
+    - geo_location

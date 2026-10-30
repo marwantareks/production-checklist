@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 65
+name: Error budgets
+category: observability
+order: 80
+ownership: own
+definition: Allowed unreliability (100% minus SLO), used to balance releases against stability.
+how_it_works: An error budget is the amount of unreliability an SLO allows, such as 0.1% of requests
+  over 30 days for a 99.9% target. While budget remains, the team can ship changes and take risks.
+  When it is spent, effort shifts to reliability. It needs an agreed policy that says how burn from
+  dependencies or planned work is counted, and low-traffic services may need longer windows. Alerts
+  compare burn rate over a short and a long window.
+where_it_appears: SLO reports, release and incident policies, and team agreements on what happens
+  when the budget is exhausted.
+review_question: What happens to releases when the error budget is spent?
+trade_off: Balances speed and stability but needs organizational agreement to be enforced.
+why_it_matters: It turns reliability from an argument into a shared rule that balances speed and stability.
+red_flags:
+  - SLOs with no budget tracking
+  - No policy for exhausted budgets
+  - A budget policy not agreed by product and engineering
+  - Risky changes continue to ship without restriction when the budget is exhausted
+  - Budgets reset or ignored when inconvenient
+good_looks_like:
+  - Budget tracked for every SLO
+  - A written policy agreed with product owners
+  - Budget burn drives alerts and release decisions, with security patches and reliability fixes
+    exempt from any freeze
+  - Reviewed regularly
+also_fits: Build, deployment and release
+related:
+  - 63
+  - 64
+  - 62
+  - 53
+agent_check:
+  level: people
+  evidence_to_request:
+    - The error budget policy and who agreed it
+    - Current budget status for the main SLOs
+    - An example of a decision made because of the budget

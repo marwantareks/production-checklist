@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 93
+name: P99 latency
+category: caching
+order: 70
+ownership: own
+definition: The time within which 99 percent of requests complete, showing near worst-case experience.
+how_it_works: P99 latency is the time under which 99% of requests complete, so the slowest 1% take
+  longer. It shows what unlucky users experience. Percentiles cannot be averaged across instances,
+  so they are computed from histograms or sketches. A P99 needs enough requests to mean anything, so
+  use longer windows for low-traffic paths.
+where_it_appears: Monitoring dashboards, SLO definitions, load test reports and tracing data.
+review_question: What is the P99 target for each key journey, and how is it measured across instances?
+trade_off: Improving the tail needs extra capacity or hedging; averages hide the pain.
+why_it_matters: Averages hide the slowest requests, which are the ones that cause timeouts, retries
+  and user complaints.
+red_flags:
+  - Only averages on dashboards
+  - P99 never reviewed or compared to a target
+  - Slow outliers dismissed as noise and not investigated
+  - Percentiles averaged across instances, which gives wrong results
+good_looks_like:
+  - P99 target stated for key journeys, expressed in SLOs as the share of requests faster than a
+    threshold
+  - Percentiles computed from histograms or sketches, not averaged, with buckets placed around the
+    target
+  - Slow outliers investigated with traces
+  - P99 included in SLOs and alerts
+also_fits: Observability
+related:
+  - 94
+  - 63
+  - 64
+agent_check:
+  level: people
+  evidence_to_request:
+    - The P99 target and current value for key journeys
+    - The dashboard where it is tracked
+    - Examples of slow requests that were investigated

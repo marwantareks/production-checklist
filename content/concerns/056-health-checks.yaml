@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 56
+name: Health checks
+category: delivery
+order: 70
+ownership: guardrail
+definition: Endpoints reporting whether a service is working.
+how_it_works: "A health endpoint reports whether an instance can serve traffic. A liveness check
+  says the process can still make progress, so that restarting it would help. A readiness check says
+  it can take requests. It should cover what is local to the instance, not a dependency every
+  instance shares, because when a shared dependency slows, every instance goes unready at once.
+  Platforms react differently when every check fails: some load balancers keep routing, and
+  Kubernetes removes all endpoints."
+where_it_appears: Health or status endpoints in the application, container and orchestrator
+  manifests, and load balancer target group settings.
+review_question: Which dependencies does each check include, and what happens to the fleet if a
+  shared dependency fails?
+trade_off: Deep checks catch more problems but can remove or restart every instance at once when a
+  shared dependency slows.
+why_it_matters: Without accurate checks, traffic reaches instances that cannot serve it. Checks that
+  are too deep can also remove every instance at once when one shared dependency fails.
+red_flags:
+  - No health endpoint, or one that always returns success
+  - A readiness check that calls every dependency and fails the whole fleet if one is down
+  - A liveness check that includes dependency or readiness checks, so a dependency fault restarts
+    instances
+  - Health handlers that call dependencies without their own short timeout
+  - A public health endpoint that returns dependency names, versions, hostnames or error details
+  - Health endpoints blocked by authentication, rate limits or WAF rules, or served from the same
+    saturated request pool as user traffic
+good_looks_like:
+  - Separate liveness and readiness endpoints
+  - Readiness reflects only what the instance needs to serve requests
+  - Public health responses return only a status, with detail restricted to internal callers
+  - Checks are cheap and bounded in time
+  - Check results are visible in monitoring
+decide_between: Shallow checks (process only) or deep checks (including dependencies). Shallow
+  checks avoid cascading removals. Deep checks catch real dependency faults. Many teams use a
+  shallow liveness check and a carefully limited readiness check.
+also_fits: Observability
+related:
+  - 57
+  - 3
+  - 8
+  - 10
+agent_check:
+  level: partial
+  search_hints:
+    - AddHealthChecks
+    - MapHealthChecks
+    - grpc.health.v1
+    - health/liveness
+    - health/readiness
+    - management.endpoint.health
+    - show-details
+    - healthCheck
+    - health_check
+    - HealthCheckPath
+    - terminus
+    - livenessProbe
+    - readinessProbe
+    - actuator/health
+    - /healthz

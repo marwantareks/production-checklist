@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 115
+name: Data classification and privacy
+category: security
+order: 210
+ownership: own
+definition: Knowing what data you hold, how sensitive it is, and how long and where you may keep it.
+how_it_works: "Classification labels data by sensitivity and ties each label to rules for storage,
+  access, encryption, logging and sharing. Privacy adds legal duties: collect only what a stated
+  purpose needs and use it only for that, keep it no longer than needed, honor access and deletion
+  requests, limit transfers between countries, and give notice of leaks. Every vendor that receives
+  personal data, including analytics scripts and AI services, needs a contract and an inventory
+  entry. These rules reach backups, logs, analytics copies, test data and messages."
+where_it_appears: Data inventories, schema definitions with personal data columns, retention and
+  deletion jobs, backup and log retention settings, data sharing agreements, privacy impact
+  assessments, and test data practices.
+review_question: What personal and regulated data do you hold, where does it flow, and how is it deleted?
+trade_off: Strict classification and retention limit risk and legal exposure but add work and can
+  conflict with analytics and recovery needs.
+why_it_matters: Data held without knowing its sensitivity gets copied into logs, tests and backups,
+  and a breach then carries legal, financial and trust costs.
+red_flags:
+  - No inventory of where personal or regulated data is stored
+  - Personal data in logs, analytics, test environments or messages with no control
+  - No retention period, or deleted data that can return through copies or a backup restore (backups
+    should expire on a schedule and deletions be re-applied)
+  - Data moved to regions or vendors with no check of residency and contract terms
+  - Soft-deleted records kept indefinitely
+  - No process to answer access or deletion requests
+good_looks_like:
+  - A data inventory with an owner and a sensitivity label for each store
+  - Labels that drive controls such as encryption, access and masking
+  - Retention and deletion applied to every copy, and tested
+  - Access and deletion requests handled through a defined process that reaches every store in the
+    inventory, within legal deadlines
+  - Production data masked or synthetic in non-production
+  - Data residency and vendor terms checked before data moves
+related:
+  - 59
+  - 84
+  - 86
+  - 120
+agent_check:
+  level: partial
+  search_hints:
+    - retention_in_days
+    - retention_period
+    - expireAfterSeconds
+    - "@PersonalData"
+    - data_classification
+    - anonymize
+    - DataSubjectRequest
+    - faker
+    - delete_user_data
+  evidence_to_request:
+    - The data inventory and classification scheme
+    - The retention schedule and the last deletion test
+    - Data processing agreements with vendors

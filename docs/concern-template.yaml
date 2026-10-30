@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../schema/concern.schema.json
+# Copy to content/concerns/NNN-slug.yaml. Use the next unused id and delete these comments.
+id: 9999
+name: Example concern
+category: resilience
+order: 10
+ownership: own            # own | guardrail (delegate is allowed but no concern uses it)
+definition: One sentence in plain language.
+how_it_works: Explain the mechanism in two to four sentences so a reader can judge whether an implementation is sound. Say what the parts are, how they interact, and what the usual settings or choices are.
+where_it_appears: Name the places this shows up in a real application, such as configuration files, middleware or infrastructure code.
+review_question: What single question can a reviewer answer from evidence?
+trade_off: The main cost of getting this right, stated fairly.
+why_it_matters: What goes wrong when this concern is ignored, stated in terms a reviewer would care about.
+red_flags:
+  - A finding or answer that should worry a reviewer
+  - Another one
+  - A third one
+good_looks_like:
+  - Something a reviewer can ask to see
+  - Another one
+  - A third one
+# decide_between: Option A or option B. Say when each fits.
+# also_fits: Security, Resilience
+# applies_when: Applies when the system does the thing that makes this concern relevant.
+related: []
+agent_check:
+  level: code             # code | partial | people
+  search_hints:           # literal strings: setting names, library names, file names
+    - a literal term
+    - another term
+    - a third term
+    - one more
+  # look_for:             # patterns that can only be described in words (not for people)
+  #   - A query call inside a loop over results
+  # evidence_to_request:  # what to ask people for; required for people, optional otherwise
+  #   - The latest load test report

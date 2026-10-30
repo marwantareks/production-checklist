@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 19
+name: Saga pattern
+category: messaging
+order: 50
+ownership: own
+definition: Chain of local transactions, with compensating actions that offset earlier steps if a
+  later one fails.
+how_it_works: A saga splits a long business operation into local transactions, each in one service.
+  If a step fails, earlier steps are offset by compensating actions, such as refunding a payment.
+  Compensation does not restore the original state, and other operations can see intermediate
+  states, so designs use pending states, semantic locks or rereads of current values to limit harm.
+  Sagas are coordinated by an orchestrator or by events, and every step and compensation must be
+  safe to repeat.
+where_it_appears: Workflow or orchestration code (Step Functions, Temporal, Camunda, custom state
+  machines), compensation handlers and event handlers that continue the flow.
+review_question: What is the compensating action for each step, and who orchestrates the flow?
+trade_off: Avoids distributed locks but moves complexity into compensation and partial-failure states.
+why_it_matters: It gives workable consistency across services without distributed locks, but partial
+  failure states must be designed explicitly.
+red_flags:
+  - Steps with no defined compensation where one is needed
+  - Compensations that can fail with no retry, alert or manual resolution path
+  - Compensation that is not idempotent
+  - No record of the saga state, so a crash loses progress
+  - Steps that cannot be undone placed early in the flow
+good_looks_like:
+  - Compensable steps have defined compensating actions
+  - Steps and compensations are idempotent
+  - Saga state stored durably and visible for diagnosis
+  - Steps that cannot be compensated come at the point of no return, and every step after it is
+    retried until it succeeds
+  - Timeouts defined for each step
+decide_between: Orchestrated or choreographed saga. An orchestrator keeps the flow in one place and
+  is easier to monitor. Choreography avoids a central coordinator but spreads the logic.
+also_fits: Databases, Resilience
+applies_when: Applies when one business operation updates data owned by more than one service.
+related:
+  - 18
+  - 14
+  - 20
+agent_check:
+  level: partial
+  search_hints:
+    - AWS::StepFunctions::StateMachine
+    - aws_sfn_state_machine
+    - "@WorkflowMethod"
+    - temporalio
+    - zeebe
+    - camunda
+    - MassTransitStateMachine
+    - SagaOrchestrator
+    - compensat
+    - saga

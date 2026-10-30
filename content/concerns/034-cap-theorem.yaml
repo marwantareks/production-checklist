@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 34
+name: CAP theorem
+category: databases
+order: 100
+ownership: own
+definition: During a network partition, a replicated system must give up either strict consistency
+  or availability for affected operations.
+how_it_works: The CAP theorem says that when a network partition happens, a distributed data system
+  can keep either consistency (every read sees the latest write) or availability (every request gets
+  a response), not both. In practice the choice is made for each data set and shows up in the
+  database settings and in the application’s behavior on errors. CAP uses strict definitions, and
+  many systems meet neither. Without a partition, the everyday choice is between lower latency and
+  stronger consistency, which settings such as quorum size or synchronous replication control.
+where_it_appears: Architecture decisions and diagrams, database consistency and quorum settings, and
+  application behavior when a data store is unreachable.
+review_question: For each data set, do you favor consistency or availability during a partition?
+trade_off: You cannot have both under partition; the choice should follow business impact.
+why_it_matters: If the choice is not made on purpose, it is made by default settings and discovered
+  during an outage.
+red_flags:
+  - No stated consistency requirement for each data set
+  - Default database consistency settings never reviewed
+  - An assumption that the system is both always consistent and always available
+  - The business never asked what is acceptable during a failure
+good_looks_like:
+  - Consistency and availability needs recorded for each important data set
+  - Database settings match those decisions
+  - Application behavior on partition (refuse, serve stale or queue) defined and tested
+  - The business has agreed the trade-off
+related:
+  - 35
+  - 95
+  - 32
+agent_check:
+  level: people
+  evidence_to_request:
+    - The recorded consistency requirement for the main data sets
+    - The decision on what to do when a data store is unreachable
+    - Evidence that it was tested

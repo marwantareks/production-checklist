@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 54
+name: Rolling deployments
+category: delivery
+order: 50
+ownership: guardrail
+definition: Gradually replace instances with the new version.
+how_it_works: "A rolling deployment replaces instances a few at a time, so the service stays up
+  during the release. Settings control how many instances can be unavailable or added at once. Old
+  instances must shut down gracefully: they stop taking new requests and messages, and finish or
+  return in-flight work. Old and new versions run side by side, so they must be compatible with each
+  other and with the database. Many platforms stop a failing rollout but do not roll it back, so set
+  a progress deadline and act when it passes."
+where_it_appears: Deployment strategy settings (maxSurge, maxUnavailable), readiness probes, load
+  balancer draining settings and migration steps.
+review_question: Can old and new versions run side by side during a rollout?
+trade_off: Efficient on capacity, but mixed-version periods need compatibility and rollback is as
+  slow as the rollout.
+why_it_matters: Without proper settings, a rollout can remove too much capacity or send traffic to
+  instances that are not ready.
+red_flags:
+  - No readiness probe, so new instances receive traffic before they are ready
+  - Too many instances replaced at once
+  - No connection draining, so in-flight requests are cut off
+  - Message consumers that do not stop taking messages on shutdown
+  - Versions incompatible with each other during the rollout
+good_looks_like:
+  - Readiness probes check the instance itself, so a dependency outage does not remove every instance
+  - Surge and unavailable limits set from capacity
+  - Graceful shutdown and connection draining
+  - A progress deadline that raises an alert or triggers a rollback
+  - Mixed-version compatibility tested
+related:
+  - 52
+  - 53
+  - 15
+  - 81
+agent_check:
+  level: partial
+  search_hints:
+    - RollingUpdate
+    - maxSurge
+    - maxUnavailable
+    - readinessProbe
+    - terminationGracePeriodSeconds
+    - preStop
+    - progressDeadlineSeconds
+    - deregistration_delay
+    - minReadySeconds
+    - deployment_minimum_healthy_percent
+    - deployment_maximum_percent
+    - instance_refresh
+    - AutoScalingRollingUpdate
+    - update_config
+    - SIGTERM
+  evidence_to_request:
+    - Whether mixed-version compatibility has been tested
+    - Capacity at the surge and unavailable limits

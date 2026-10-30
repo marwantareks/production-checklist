@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-findings.schema.json",
+  "title": "Agent findings",
+  "description": "The JSON a coding agent returns after a repository review. The page imports this shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "findings"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "result"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "result": {
+            "enum": [
+              "found",
+              "partial",
+              "not_found",
+              "cannot_determine",
+              "not_applicable"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "required": [
+                "file"
+              ],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "quote": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              }
+            }
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 600
+          },
+          "red_flags": {
+            "type": "array",
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "required": [
+                "flag"
+              ],
+              "properties": {
+                "flag": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "evidence": {
+                  "type": "array",
+                  "maxItems": 5,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "file"
+                    ],
+                    "properties": {
+                      "file": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "line": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "quote": {
+                        "type": "string",
+                        "maxLength": 200
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

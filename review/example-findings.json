@@ -1,0 +1,29 @@
+{
+  "reviewer": "Example only, not a real review",
+  "date": "2026-01-01",
+  "scope": "Example showing the expected shape",
+  "findings": [
+    {
+      "concern_id": 12,
+      "field": "red_flags",
+      "severity": "minor",
+      "type": "completeness",
+      "issue": "Example: the list does not mention retries that ignore a Retry-After response from the server.",
+      "suggested_edit": "Retries that ignore a Retry-After header sent by the dependency",
+      "confidence": "medium",
+      "sources": []
+    }
+  ],
+  "suggested_additions": [
+    {
+      "name": "Graceful shutdown",
+      "category": "delivery",
+      "reason": "Example: instances that stop without draining in-flight work cause errors during every deployment.",
+      "overlaps_with": [
+        54,
+        57
+      ]
+    }
+  ],
+  "no_issues_found": []
+}

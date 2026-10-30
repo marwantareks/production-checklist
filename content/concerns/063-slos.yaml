@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 63
+name: SLOs
+category: observability
+order: 60
+ownership: own
+definition: "Service level objectives: reliability targets (e.g. 99.9%)."
+how_it_works: A service level objective is a reliability target for a measurable service level
+  indicator over a rolling window, for example 99.9% of requests succeed over 30 days. The gap
+  between the target and 100% is the error budget. Calendar windows reset the budget on a fixed
+  date, which can hide a bad end of period. An SLA is a contractual promise and should be looser
+  than the internal SLO, and a target above what critical dependencies provide cannot be met.
+where_it_appears: Monitoring and alerting configuration, dashboards, service documentation, and
+  release and on-call policies.
+review_question: Which user journeys have an SLO, and who agreed the targets?
+trade_off: Higher targets cost disproportionately more; looser ones risk user trust.
+why_it_matters: Without an agreed target, reliability work has no priority order and teams argue
+  from opinion. Targets set from user impact focus effort where it matters.
+red_flags:
+  - A target of 100%, or a target based only on infrastructure uptime
+  - Targets stricter than what critical dependencies and the platform can deliver
+  - SLOs written down but not measured or reviewed
+  - SLOs that nobody agreed with the business
+good_looks_like:
+  - Each key user journey has an indicator and an SLO agreed with the business
+  - SLOs are measured from real traffic and reviewed regularly
+  - Alerts are tied to error budget burn
+  - A clear policy for what happens when the budget is exhausted
+also_fits: Resilience
+related:
+  - 64
+  - 65
+  - 93
+agent_check:
+  level: partial
+  search_hints:
+    - openslo
+    - sloth.slok.dev
+    - pyrra.dev
+    - ServiceLevelObjective
+    - datadog_service_level_objective
+    - google_monitoring_slo
+  evidence_to_request:
+    - The list of SLOs and who agreed them
+    - The dashboard showing current attainment
+    - The error budget policy

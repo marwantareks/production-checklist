@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 119
+name: Database maintenance and growth
+category: databases
+order: 190
+ownership: guardrail
+definition: The routine work that keeps a database healthy as data grows, such as vacuuming and
+  capacity planning.
+how_it_works: Databases need regular upkeep as data changes. Deleted and updated rows leave dead
+  space that routine maintenance, such as autovacuum in PostgreSQL, makes reusable, or tables and
+  indexes bloat and slow down. Rewriting a table to return space, such as VACUUM FULL or OPTIMIZE
+  TABLE, locks or rebuilds it, so test it first. Long-running transactions, idle sessions and unused
+  replication slots stop cleanup and fill disks. Planner statistics must stay current, and some
+  databases have counters that can run out, such as transaction ids in PostgreSQL. Archive old data
+  under a stated policy.
+where_it_appears: Database configuration for autovacuum and statistics, scheduled maintenance jobs,
+  storage and growth dashboards, alerts on disk, connection and bloat metrics, and archive or purge
+  jobs.
+review_question: Which database limit will this system reach first, when, and what alert and action
+  are in place before it does?
+trade_off: Aggressive maintenance keeps performance steady but uses capacity and contends with
+  traffic. Storage autoscaling prevents full disks but can raise cost, so set a maximum.
+why_it_matters: Unmanaged growth causes slow queries and sudden outages, such as a full disk or a
+  wrapped counter, that arrive with little warning.
+red_flags:
+  - Autovacuum or an equivalent disabled, or too far behind to keep up
+  - No alert on disk use, bloat, long-running transactions or unused replication slots
+  - Tables growing without bound with no archive or purge policy
+  - No projection of when storage or other limits will be reached (see 124)
+  - Maintenance jobs scheduled at peak hours with no limit on their impact
+  - Wraparound or similar counters not monitored on databases that have them
+good_looks_like:
+  - Maintenance settings reviewed against the real write pattern
+  - Alerts on disk use, growth rate, bloat and long-running transactions
+  - An archive or purge policy for old data, applied in small batches or by dropping partitions,
+    aligned with retention and legal holds, and tested
+  - Capacity projected from growth trends, with a date for the next limit
+  - Heavy manual maintenance tested and scheduled outside peak load, with autovacuum left running
+    and tuned, not paused
+related:
+  - 26
+  - 31
+  - 84
+  - 124
+agent_check:
+  level: partial
+  search_hints:
+    - autovacuum
+    - vacuum_cost
+    - pg_stat_user_tables
+    - n_dead_tup
+    - OPTIMIZE TABLE
+    - max_allocated_storage
+    - disk_autoresize
+    - auto_grow_enabled
+    - max_slot_wal_keep_size
+    - idle_in_transaction_session_timeout
+    - autovacuum_freeze_max_age
+    - datfrozenxid
+    - pg_repack
+    - sp_updatestats
+    - log_reuse_wait_desc
+  evidence_to_request:
+    - Disk and growth dashboards with a projection
+    - Maintenance settings and recent run history

@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 103
+name: Semantic versioning
+category: delivery
+order: 90
+ownership: guardrail
+definition: MAJOR.MINOR.PATCH numbering signalling change impact.
+how_it_works: Semantic versioning uses MAJOR.MINOR.PATCH numbers for libraries, SDKs and contracts
+  that others depend on. A major increase signals a breaking change, a minor one adds compatible
+  features and a patch fixes bugs compatibly. Versions below 1.0.0 make no stability promise, and
+  pre-release labels such as 1.0.0-rc.1 sort before the release. A breaking change includes changed
+  behavior or defaults, removed fields and dropped runtime support. It only works if breaking
+  changes are actually detected and labeled. For HTTP APIs, see 102.
+where_it_appears: Package manifests and version files, release tags, changelogs, and tooling that
+  bumps versions or checks API compatibility.
+review_question: How is a breaking change detected before release, and what stops it from shipping
+  as a minor or patch version?
+trade_off: Clear signalling of impact needs discipline and tooling to enforce.
+why_it_matters: Consumers usually accept new minor and patch versions automatically through version
+  ranges, so a breaking change released as minor or patch can break their next build without any
+  decision on their side.
+red_flags:
+  - Breaking changes released as minor or patch versions
+  - No changelog or release notes
+  - Versions bumped by hand with no check
+  - No release tags or release automation tying versions to source
+good_looks_like:
+  - Version numbers follow the rule, with breaking changes marked as major
+  - Automated checks for API or package compatibility
+  - A changelog kept for every release
+  - Each version tagged in source control
+also_fits: Traffic and APIs (API versioning)
+applies_when: Applies when the team publishes libraries, packages, SDKs or contracts that other
+  teams or customers depend on.
+related:
+  - 102
+  - 108
+agent_check:
+  level: partial
+  search_hints:
+    - semver
+    - BREAKING CHANGE
+    - CHANGELOG.md
+    - .changeset
+    - semantic-release
+    - release-please
+    - commitlint
+    - conventional-changelog
+    - goreleaser
+    - bumpversion
+    - cargo-semver-checks
+    - api-extractor
+    - japicmp
+    - revapi
+    - gorelease

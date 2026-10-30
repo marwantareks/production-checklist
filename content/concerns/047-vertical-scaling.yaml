@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 47
+name: Vertical scaling
+category: scaling
+order: 50
+ownership: own
+definition: Using a bigger machine.
+how_it_works: Vertical scaling gives one machine more CPU, memory or storage. It is simple, needs no
+  architecture change and is quick for databases and legacy applications, but runtime settings such
+  as heap size, worker count and pool sizes often must be raised to use the capacity. It has a
+  ceiling and usually needs a restart, and a managed database resize usually means a failover with
+  brief disconnects. It leaves one larger component as a single point of failure.
+where_it_appears: Instance size choices, database tier settings, capacity plans and utilization metrics.
+review_question: What is the hardware resource ceiling for the current architecture, and when will it be reached?
+trade_off: Simple and fast to apply but bounded, with a larger failure impact per node.
+why_it_matters: It is often the cheapest first step, but without a plan you hit the ceiling
+  suddenly, at the worst time.
+red_flags:
+  - No known ceiling or next step when the largest size is reached
+  - Utilization never reviewed, so sizes are guesses
+  - Scaling up requires downtime nobody has planned
+  - The largest size used to hide inefficient code
+good_looks_like:
+  - Current utilization and headroom known
+  - The next step identified before the ceiling is reached
+  - The resize procedure tested, including its downtime
+  - Efficiency work done first where it is cheaper
+related:
+  - 46
+  - 88
+  - 29
+  - 30
+agent_check:
+  level: people
+  evidence_to_request:
+    - Current utilization and headroom for the main components
+    - The size ceiling and the plan after it
+    - The procedure and downtime for a resize

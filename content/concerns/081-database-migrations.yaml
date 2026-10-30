@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 81
+name: Database migrations
+category: databases
+order: 150
+ownership: own
+definition: Versioned, repeatable schema changes.
+how_it_works: Schema changes are written as versioned scripts, stored with the code and applied in
+  order by a tool, so every environment reaches the same schema. Safe migrations are backward
+  compatible with the version of the application that is still running, so a bad release can be
+  fixed by rolling forward. Down migrations that drop data are not a rollback plan. Schema changes
+  set a short lock timeout and retry, so a waiting change does not block all traffic.
+where_it_appears: A migrations folder, ORM migration tooling, CI/CD pipeline steps, and deployment scripts.
+review_question: Can each schema change be deployed while the previous application version is still running?
+trade_off: Zero-downtime migrations need multi-step changes, which take longer and add coordination.
+why_it_matters: Manual or untracked schema changes cause drift between environments and failed
+  deployments, and unsafe changes can lock tables or break the running version.
+red_flags:
+  - Schema changes made by hand in production
+  - Migrations that drop or rename a column in one step while the old version is still running
+  - Migrations that lock large tables with no plan
+  - No record of which migrations have been applied
+  - Migrations that backfill or update millions of rows in a single transaction without batching
+good_looks_like:
+  - All schema changes are versioned migrations in the repository
+  - Migrations run in the pipeline, in order, with the contract step held until no old version is
+    running
+  - "Changes follow expand then contract: add new structures, deploy code that uses both, backfill
+    in batches, then remove old structures in a later release"
+  - Constraints added in steps where supported, such as NOT VALID then VALIDATE in PostgreSQL
+  - Large migrations are tested on production-sized data
+decide_between: Run migrations at application startup, or as a separate pipeline step. Startup is
+  simple, but long migrations can trip health checks and the application account needs rights to
+  change the schema. A separate step is controlled and allows a least-privilege runtime account, but
+  needs pipeline work.
+also_fits: Build, deployment and release
+related:
+  - 82
+  - 55
+  - 6
+agent_check:
+  level: code
+  search_hints:
+    - migrations/
+    - flyway
+    - liquibase
+    - alembic
+    - prisma migrate
+    - knex migrate
+    - db/migrate
+    - manage.py migrate
+    - dotnet ef
+    - golang-migrate
+    - DROP COLUMN
+    - RENAME COLUMN
+    - SET NOT NULL
+    - ALTER TABLE

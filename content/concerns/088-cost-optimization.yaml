@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 88
+name: Cost optimization
+category: scaling
+order: 60
+ownership: guardrail
+definition: Right-sizing and tuning cloud spend.
+how_it_works: Cost optimization keeps cloud spend in line with value. It covers right-sizing
+  resources with headroom for peaks and failover, removing idle ones, choosing pricing models
+  (reserved capacity, savings plans, or spot only for interruptible, stateless work), setting
+  storage lifecycle rules that expire data only within agreed retention periods, and tagging
+  resources so costs can be traced to teams and products.
+where_it_appears: Cloud billing and cost reports, resource tags in infrastructure code, autoscaling
+  and lifecycle rules, and budget alerts.
+review_question: Who owns cloud cost for this system, and how is it tracked against a budget?
+trade_off: Savings through commitments and right-sizing reduce flexibility and add effort.
+why_it_matters: Cloud costs grow quietly, and architecture choices such as data transfer and
+  always-on capacity can make them structural.
+red_flags:
+  - No tagging, so costs cannot be attributed
+  - No budgets or anomaly alerts
+  - Idle or oversized resources left running
+  - Large data transfer between regions, zones, NAT gateways or to the internet not considered in
+    design
+  - Capacity counted in failover or disaster recovery plans removed as idle
+  - No upper bound on autoscaled or serverless capacity
+good_looks_like:
+  - Every resource tagged to an owner and product
+  - Budgets and anomaly alerts in place
+  - Right-sizing based on peak usage over a full business cycle, load tested, with headroom for
+    spikes and failover, and reversible
+  - Architecture decisions include a cost estimate
+also_fits: Operations
+related:
+  - 45
+  - 47
+  - 89
+agent_check:
+  level: partial
+  search_hints:
+    - default_tags
+    - aws_budgets_budget
+    - aws_ce_anomaly_monitor
+    - azurerm_consumption_budget_subscription
+    - google_billing_budget
+    - aws_s3_bucket_lifecycle_configuration
+    - lifecycle_rule
+    - instance_market_options
+  evidence_to_request:
+    - The monthly cost report by product or team
+    - Budget and alert settings
+    - The latest cost review and its actions

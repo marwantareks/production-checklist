@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 44
+name: Backpressure
+category: resilience
+order: 60
+ownership: own
+definition: "What happens when a consumer is overwhelmed: slow the producer (backpressure) or reject
+  excess work (load shedding)."
+how_it_works: Backpressure lets a slow consumer tell a fast producer to slow down, so work does not
+  pile up without limit. Options are to block the producer, drop or reject excess work, or buffer
+  within a fixed size. Systems without it either run out of memory or fall behind forever. With a
+  durable broker, a consumer that falls behind can lose data when retention deletes messages it has
+  not read. Size queue limits by how long work may wait, not by memory, and drop work whose caller
+  has already given up.
+where_it_appears: Queue and stream consumer settings, bounded buffers and channels, reactive stream
+  code, API rate limits and load shedding logic.
+review_question: "What happens when a consumer cannot keep up: drop, buffer or slow the producer?"
+trade_off: Protects consumers but pushes the problem upstream; unbounded buffers only delay failure.
+why_it_matters: Unbounded queues hide overload until memory runs out or latency becomes unusable.
+red_flags:
+  - Unbounded in-memory queues or buffers
+  - Producers that never slow down regardless of consumer lag
+  - No limit on concurrent work per consumer
+  - No alert on queue depth or consumer lag
+good_looks_like:
+  - Bounded queues and explicit behavior when full (block, reject or shed)
+  - Consumer concurrency limits set
+  - Rejected or shed work is counted and visible
+  - Alerts on queue depth and consumer lag
+decide_between: Block the producer, buffer, reject or drop. Blocking keeps all the work but can
+  stall callers and exhaust their threads. Buffers absorb bursts but must be bounded. Rejecting, for
+  example with 429 or 503 and Retry-After, lets the caller try again later. Silent dropping protects
+  the system but loses work, so use it only where loss is acceptable.
+also_fits: Messaging and async
+related:
+  - 15
+  - 20
+  - 1
+  - 12
+agent_check:
+  level: partial
+  search_hints:
+    - backpressure
+    - prefetch
+    - basicQos
+    - prefetch_count
+    - max.poll.records
+    - maxInFlight
+    - maxConcurrentCalls
+    - BoundedChannelOptions
+    - make(chan
+    - ArrayBlockingQueue
+    - LinkedBlockingQueue
+    - RejectedExecutionHandler
+    - onBackpressureBuffer
+    - highWaterMark
+    - load shedding

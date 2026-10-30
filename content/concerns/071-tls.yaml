@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 71
+name: TLS
+category: security
+order: 50
+ownership: own
+definition: Encrypts network traffic and authenticates servers.
+how_it_works: Transport Layer Security encrypts traffic between a client and a server and proves the
+  server’s identity with a certificate. Good practice is TLS 1.2 as the minimum with TLS 1.3
+  preferred, strong ciphers, certificates from a trusted authority renewed automatically, HTTP
+  redirected to HTTPS for web pages, and HSTS.
+where_it_appears: Load balancer and proxy TLS settings, certificate management configuration, HTTP
+  client settings and redirect rules.
+review_question: Is TLS enforced on every public endpoint, and is certificate renewal automated?
+trade_off: Strong protection, with cost in certificate lifecycle management and handshake overhead.
+why_it_matters: Without TLS, traffic can be read and modified, and expired certificates cause
+  outages that are avoidable. Public certificate lifetimes are shrinking toward 47 days by 2029, so
+  manual renewal will not keep up.
+red_flags:
+  - Content or APIs served over plain HTTP, where APIs should reject it and web pages should redirect
+  - Old protocol versions or weak ciphers still enabled
+  - Certificates renewed by hand
+good_looks_like:
+  - TLS on all external endpoints with modern settings
+  - Automated certificate issuance and renewal with expiry alerts
+  - HTTP redirected to HTTPS and HSTS enabled, starting with a short max-age and adding
+    includeSubDomains or preload only after every subdomain serves HTTPS
+also_fits: Networking
+related:
+  - 73
+  - 4
+  - 67
+agent_check:
+  level: partial
+  search_hints:
+    - min_tls_version
+    - ssl_protocols
+    - Strict-Transport-Security
+    - cert-manager
+    - letsencrypt
+    - acm
+    - certbot
+    - ssl_certificate
+    - SSLProtocol
+    - includeSubDomains

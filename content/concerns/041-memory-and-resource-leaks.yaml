@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 41
+name: Memory and resource leaks
+category: concurrency
+order: 30
+ownership: guardrail
+definition: Memory or resources such as files and connections that are never released, so usage
+  grows until the app fails.
+how_it_works: A leak is memory or another resource, such as a file handle, socket or connection,
+  that the program keeps but no longer uses, so usage grows until the process slows or crashes.
+  Common causes are growing caches or collections, resources never closed, listeners that are never
+  removed, long-lived references, and native or off-heap allocations that heap profiles do not show.
+  In containers, off-heap growth often appears only as out-of-memory kills. Leaks are found by
+  watching usage over time and by profiling.
+where_it_appears: Memory metrics, restart and out-of-memory events, heap profiles, soak test
+  results, and code with long-lived caches or listeners.
+review_question: How does the team detect, track and profile persistent memory growth before
+  deployment and in production?
+trade_off: Restarts mask leaks cheaply but hide root causes and risk instability.
+why_it_matters: A leak turns into crashes under steady load, and restarts only hide it until the next one.
+red_flags:
+  - Live memory after garbage collection that keeps rising between restarts
+  - Caches or maps with no size limit
+  - Files, sockets or connections opened without a guaranteed close
+  - Scheduled restarts used as the fix
+  - No memory limit alerts or out-of-memory tracking
+  - No monitoring of open file handles, connections or threads
+good_looks_like:
+  - Memory trend monitored for each service, with alerts
+  - Bounded caches with eviction
+  - Resources closed by construction, for example with try-with-resources, using blocks, defer or
+    context managers
+  - Soak tests run before releases for critical services
+  - Low-overhead continuous profiling, or heap dumps taken on a drained instance and stored as
+    sensitive data
+related:
+  - 42
+  - 61
+  - 62
+agent_check:
+  level: partial
+  search_hints:
+    - maximumSize
+    - maxsize
+    - lru_cache
+    - LruCache
+    - WeakHashMap
+    - WeakReference
+    - addEventListener
+    - removeEventListener
+    - setInterval
+    - MemoryCache
+    - SizeLimit
+    - expireAfterWrite
+    - try-with-resources
+    - IDisposable
+    - ulimit
+  evidence_to_request:
+    - Memory graphs for the main services over several days
+    - Out-of-memory kills or restarts in the last quarter
+    - Results of any soak test

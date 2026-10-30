@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Production Readiness Checklist for Architects</title>
+<meta name="description" content="A free checklist of {{CONCERN_COUNT}} production concerns for architects and review boards. Every concern has a review question and a trade-off. Mark each one decided, deferred, missing or not applicable.">
+<meta name="author" content="{{AUTHOR}}">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Production Readiness Checklist for Architects">
+<meta property="og:description" content="{{CONCERN_COUNT}} production concerns in {{CATEGORY_COUNT_WORD}} categories, each with a review question and a trade-off. Free to use.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Production Readiness Checklist for Architects">
+<meta name="twitter:description" content="{{CONCERN_COUNT}} production concerns in {{CATEGORY_COUNT_WORD}} categories, each with a review question and a trade-off. Free to use.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B6E78'/%3E%3Cpath d='M9 16.5l5 5 9-10' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<script>
+try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}
+</script>
+<style>
+{{STYLES}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+<div class="wrap in">
+<a class="brand" href="#top">
+<span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+<span>Production Readiness Checklist</span>
+</a>
+<div class="links">
+<a href="#categories">Categories</a>
+<a href="#checklist">Checklist</a>
+<a href="#included">What’s included</a>
+</div>
+<div class="navr">
+<button id="themeBtn" class="theme" type="button" aria-label="Switch to dark theme" aria-pressed="false" title="Toggle light and dark theme">
+<svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+<svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+</button>
+<a class="btn" href="#checklist">Open the checklist</a>
+</div>
+</div>
+</nav>
+
+<header class="hero" id="top">
+<div class="wrap in">
+<div>
+<span class="badge">Free tool for architects</span>
+<h1>Know what your architecture is missing before go‑live</h1>
+<p class="lead">A free checklist of {{CONCERN_COUNT}} production concerns, each with a review question and a trade-off. Browse it yourself, or run an agent-assisted review with Claude Code.</p>
+<div class="cta">
+<a class="btn" href="#checklist">Open the checklist
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+<a class="btn alt" id="heroAgent" href="#checklist">Review with Claude Code</a>
+</div>
+<div class="stats">
+<div><b id="sTotal">{{CONCERN_COUNT}}</b><span>Concerns</span></div>
+<div><b id="sCats">{{CATEGORY_COUNT}}</b><span>Categories</span></div>
+<div><b>3</b><span>Ownership levels</span></div>
+</div>
+</div>
+<div class="vis">
+<div class="hc">
+<div class="hc-top">
+<span class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h9"/></svg></span>
+<div><b>Your review</b><small>Saved in this browser</small></div>
+</div>
+<div class="meter" id="hMeter" role="presentation"><span class="m-ok"></span><span class="m-def"></span><span class="m-miss"></span></div>
+<div class="hc-row"><span id="hText">0 of {{CONCERN_COUNT}} reviewed</span><span id="hPct">0%</span></div>
+<a class="btn" href="#checklist">Open the checklist</a>
+</div>
+<span class="sticker sk1 h-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+<span class="sticker sk2 h-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+<span class="sticker sk3 h-red" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.6v.01"/></svg></span>
+</div>
+</div>
+</header>
+
+<section class="sect band" id="categories" aria-labelledby="cat-h">
+<div class="wrap">
+<div class="sh2"><span class="tag">Categories</span><h2 id="cat-h">{{CATEGORY_COUNT_WORD_CAP}} areas to review</h2><p>Pick an area to open it in the checklist.</p></div>
+<div class="cgrid" id="catGrid"></div>
+</div>
+</section>
+
+<section class="sect" id="checklist" aria-labelledby="ck-h">
+<div class="wrap">
+<div class="sh2"><span class="tag">Free tool</span><h2 id="ck-h">The checklist</h2><p>Walk each category against your system and mark every concern as decided, deliberately deferred, or missing.</p></div>
+
+<div class="modew"><div class="modes" role="group" aria-label="Mode">
+<button id="modeBrowse" class="mode" type="button" aria-pressed="true">Browse</button>
+<button id="modeAgent" class="mode" type="button" aria-pressed="false">Agent review with Claude Code</button>
+</div></div>
+
+<section id="agentPanel" class="agent" aria-labelledby="ag-h" hidden>
+<h3 id="ag-h">Review your application with Claude Code</h3>
+<p class="lede">Claude Code reads your repository and reports what it finds for each concern. You check the evidence and decide. Nothing leaves this page: the prompt is built here and the findings are pasted back here.</p>
+<ol class="steps">
+<li>
+<h4>Choose what to review</h4>
+<div class="row"><label for="agScope">Review</label>
+<select id="agScope"></select>
+<label class="ck"><input type="checkbox" id="agPeople"> Include concerns that need people or runtime data</label></div>
+<p id="agCount" class="note"></p>
+</li>
+<li>
+<h4>Run it in Claude Code</h4>
+<p>Open your repository and start Claude Code in plan mode, which is read-only: run <code>claude --permission-mode plan</code>, or press Shift+Tab to cycle to plan mode, or type <code>/plan</code>. Then paste the prompt.</p>
+<div class="row"><button id="agCopy" class="btn alt" type="button">Copy prompt</button><button id="agSkill" class="btn alt" type="button">Download as skill</button><span id="agMsg" class="note" role="status" style="margin:0"></span></div>
+<p class="note">Only run an agent on a repository you trust, or on a throwaway copy. A repository can contain text, hooks, settings or MCP servers that try to steer an agent. For code you do not trust, use a fresh checkout with project hooks, MCP servers and project settings turned off, and no credentials in the environment.</p>
+<details><summary>Preview the prompt</summary><pre id="agPrev" class="pre"></pre></details>
+<p class="note">To use the skill, save the file as <code>.claude/skills/production-readiness-review/SKILL.md</code> in your repository, then ask Claude Code to run it. Skill support depends on your Claude Code version, so use Copy prompt if it isn’t available.</p>
+</li>
+<li>
+<h4>Paste the findings back</h4>
+<label for="agIn" class="sr">Findings from Claude Code</label>
+<textarea id="agIn" rows="6" placeholder="Paste the JSON that Claude Code returns"></textarea>
+<div class="row"><button id="agImport" class="btn" type="button">Import findings</button><button id="agClear" class="chip" type="button">Clear findings</button><span id="agErr" class="err" role="alert"></span></div>
+<p id="agSum" class="note"></p>
+</li>
+</ol>
+<p class="note">Findings include file paths and short code quotes. They are stored in this browser only, so clear them when you are done. The agent suggests and you decide: verify the evidence before marking anything decided.</p>
+</section>
+
+<section class="how" aria-labelledby="how-h">
+<h3 id="how-h">How to use it in a review</h3>
+<ul>
+<li>Performance and resilience: turn them into targets (latency, availability, RPO/RTO) before choosing components.</li>
+<li>Integration points: check each one for timeouts, retries, idempotency and circuit breakers.</li>
+<li>Data: settle the consistency model, locking approach and migration strategy early, since they are costly to change.</li>
+<li>Delivery and operations: decide deployment strategy, SLOs and tracing as part of the design.</li>
+<li>Security: treat it as a design input, not a late audit.</li>
+<li>Items with a dashed outline fit two categories. These cross-cutting concerns are where team ownership is most often unclear, so assign an owner.</li>
+</ul>
+</section>
+
+<section class="prog" aria-labelledby="prog-h">
+<div class="ph"><h3 id="prog-h">Review progress</h3><span id="progText" class="cnt"></span></div>
+<div class="meter" id="meter" role="img" aria-label="Review progress"><span class="m-ok"></span><span class="m-def"></span><span class="m-miss"></span></div>
+<ul class="pl">
+<li><span class="sw s-ok"></span><span id="nDec"></span> decided</li>
+<li><span class="sw s-def"></span><span id="nDef"></span> deferred</li>
+<li><span class="sw s-miss"></span><span id="nMiss"></span> missing</li>
+<li><span class="sw s-na"></span><span id="nNA"></span> not applicable</li>
+<li><span class="sw s-none"></span><span id="nNone"></span> not reviewed</li>
+</ul>
+<div class="row"><span class="fl">Show</span><div id="stChips" class="row chips" role="group" aria-label="Filter by review status"></div><button id="resetBtn" class="chip" type="button">Reset review</button></div>
+<p class="note">Select a concept, then mark it decided, deferred, missing or not applicable. Concerns marked not applicable leave the progress count. Marks are saved in this browser only.</p>
+</section>
+</div>
+
+<div class="bar">
+<div class="wrap">
+<div class="row">
+<input id="q" type="search" placeholder="Search a concept or keyword" aria-label="Search concepts">
+<button id="dualBtn" class="chip" type="button" aria-pressed="false">Fits two categories</button>
+</div>
+<div id="chips" class="row chips" role="group" aria-label="Filter by category"></div>
+</div>
+</div>
+
+<div class="wrap">
+<noscript><p class="empty">This checklist needs JavaScript to display.</p></noscript>
+<div id="grid" aria-live="polite"></div>
+<section class="legend" aria-labelledby="lg-h">
+<h3 id="lg-h">Legend</h3>
+<ul>
+<li><span class="dot d-own"></span>Own: the architect decides</li>
+<li><span class="dot d-guard"></span>Guardrail: the architect sets the standard, teams implement</li>
+<li id="lgDel"><span class="dot d-del"></span>Delegate: team or tool detail</li>
+<li><span class="dashed"></span>Fits two categories</li>
+</ul>
+</section>
+</div>
+</section>
+
+<section class="sect band" id="included" aria-labelledby="inc-h">
+<div class="wrap">
+<div class="sh2"><span class="tag h-purple">What’s included</span><h2 id="inc-h">What every concern includes</h2></div>
+<div class="fgrid">
+<div class="fcard"><span class="tile h-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1018 0 9 9 0 10-18 0M9.5 9.5a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17v.01"/></svg></span><h3>Review question</h3><p>A question to put to the team for every concern, so reviews don’t depend on who remembers what.</p></div>
+<div class="fcard"><span class="tile h-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M6 20h12M5 7h14M5 7l-3 6a3 3 0 006 0zM19 7l-3 6a3 3 0 006 0z"/></svg></span><h3>Trade-off</h3><p>The cost of each choice in plain terms, so decisions are made on purpose.</p></div>
+<div class="fcard"><span class="tile h-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M6 8a3 3 0 106 0 3 3 0 10-6 0M16 11l2 2 4-4"/></svg></span><h3>Ownership level</h3><p>Each concern is marked own or guardrail, so it’s clear what the architect decides and what teams implement.</p></div>
+<div class="fcard"><span class="tile h-coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-6-6-6M12 19h8"/></svg></span><h3>Agent-ready</h3><p>An agent check level, search hints and a copy-ready Claude Code prompt for each concern.</p></div>
+<div class="fcard"><span class="tile h-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg></span><h3>Related concerns</h3><p>Jump to the concerns that travel together, like retries, idempotency and timeouts.</p></div>
+</div>
+</div>
+</section>
+
+<section class="ctab" aria-labelledby="cta-h">
+<div class="wrap">
+<div class="ctac">
+<h2 id="cta-h">Ready to run your review?</h2>
+<p>Walk the checklist with your team and mark every concern. It’s free, needs no sign-up, and your progress stays in your browser.</p>
+<a class="btn" href="#checklist">Open the checklist
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+<div class="checks">
+<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free</span>
+<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No sign-up</span>
+<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Saved in your browser</span>
+</div>
+</div>
+</div>
+</section>
+
+<footer class="foot">
+<div class="wrap">
+<div class="fg">
+<div>
+<a class="brand" href="#top"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Production Readiness Checklist</span></a>
+<p>A free checklist for architects and review boards. It is general guidance, so adapt it to your context.</p>
+</div>
+<div class="fl2">
+<a href="#categories">Categories</a>
+<a href="#checklist">Checklist</a>
+<a href="#included">What’s included</a>
+</div>
+</div>
+<div class="fb"><span>© {{YEAR}} {{AUTHOR}}</span><span>Last updated {{UPDATED}}</span></div>
+</div>
+</footer>
+
+<script>
+{{DATA}}
+{{PROMPT_KIT}}
+{{APP}}
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 74
+name: WAF
+category: security
+order: 80
+ownership: own
+definition: Web application firewall filtering malicious HTTP traffic.
+how_it_works: A web application firewall inspects HTTP traffic and blocks requests that match attack
+  patterns, such as injection attempts, and applies rules such as rate limits and bot controls. It
+  is a layer of defense that buys time and visibility, not a replacement for secure code.
+where_it_appears: WAF configuration in cloud or CDN infrastructure code, rule sets and exceptions, and WAF logs.
+review_question: Which rule sets are active, and how are false positives handled?
+trade_off: Blocks common attacks cheaply but needs tuning and is no substitute for secure code.
+why_it_matters: It blocks a lot of automated attacks cheaply and can give emergency protection for a
+  known vulnerability before code is fixed.
+red_flags:
+  - No WAF or equivalent control on public web applications that handle sensitive data, with no
+    recorded reason
+  - A WAF left in detection mode indefinitely, with alerts nobody investigates
+  - Broad exceptions added to remove false positives
+  - WAF logs never reviewed
+  - Origin reachable without passing through the WAF
+good_looks_like:
+  - WAF in blocking mode in front of public applications, after a time-boxed period in detection
+    mode to tune rules
+  - Managed rule sets kept up to date
+  - False positives handled with narrow exceptions
+  - Logs and blocked requests reviewed
+also_fits: Traffic and APIs
+related:
+  - 75
+  - 5
+  - 1
+  - 48
+agent_check:
+  level: partial
+  search_hints:
+    - waf
+    - aws_wafv2
+    - aws_wafv2_web_acl_association
+    - modsecurity
+    - SecRuleEngine
+    - coreruleset
+    - managed rules
+    - cloudflare waf
+    - google_compute_security_policy
+    - cloud armor
+    - azurerm_cdn_frontdoor_firewall_policy
+    - azurerm_web_application_firewall

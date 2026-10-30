@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 107
+name: Build caching
+category: delivery
+order: 100
+ownership: guardrail
+definition: Reusing prior build outputs to speed up builds and CI.
+how_it_works: Build caching reuses the results of earlier build steps (compiled code, downloaded
+  dependencies, container layers) when their inputs have not changed. It speeds up pipelines and
+  lowers cost. Cache keys must reflect everything that affects the output, including tool versions,
+  operating system and architecture, environment variables and base image tags, or builds can reuse
+  stale results. Fallback keys that restore a partial match suit dependency downloads, not build
+  outputs. Caches and layers must never hold secrets.
+where_it_appears: CI pipeline cache steps, container build files and layer ordering, build tool
+  cache settings (Gradle, Bazel, Nx, npm) and remote cache configuration.
+review_question: What goes into each cache key, and who can write to the caches that release builds read?
+trade_off: Faster builds versus the risk of stale artifacts when cache keys are weak.
+why_it_matters: Slow builds slow every change and every fix, but a cache with weak keys can ship an
+  old dependency or old code without anyone noticing.
+red_flags:
+  - Cache keys that ignore lock files or other build inputs
+  - Secrets passed to builds through build arguments, environment variables or copied files, so they
+    persist in image layers or caches
+  - Container files that copy all source before installing dependencies, so every change rebuilds
+    everything
+  - Shared or remote caches that pull request, fork or developer builds can write to, when release
+    builds read from the same cache
+  - No way to build from a clean state to check the cache
+good_looks_like:
+  - Cache keys built from lock files and relevant inputs
+  - Build secrets mounted only for the step that needs them, for example with BuildKit secret mounts
+  - Regular clean builds whose artifacts are compared with cached builds, so differences show up
+  - Container layers ordered so dependencies cache well
+  - Cache writes restricted to trusted pipeline runs
+also_fits: Caching and performance
+related:
+  - 6
+  - 67
+  - 108
+agent_check:
+  level: partial
+  search_hints:
+    - actions/cache
+    - restore-keys
+    - cache-from
+    - cache-to
+    - type=gha
+    - --mount=type=cache
+    - --mount=type=secret
+    - org.gradle.caching
+    - buildCache
+    - --remote_cache
+    - .bazelrc
+    - nx.json
+    - turbo.json
+    - sccache
+    - ccache
+  evidence_to_request:
+    - Who can write to the shared and remote caches, from the CI platform settings
+    - The schedule of clean builds

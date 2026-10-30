@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 43
+name: Thread safety
+category: concurrency
+order: 50
+ownership: guardrail
+definition: Code stays correct under concurrent access.
+how_it_works: Code is thread safe when it behaves correctly under concurrent access across threads
+  or asynchronous tasks. Approaches include immutable data, confining state to one thread,
+  thread-safe data structures, and synchronization where shared mutable state is unavoidable.
+  Single-threaded async runtimes such as Node.js and asyncio avoid data races but not races between
+  awaits, and request context belongs in async task scopes, not module globals. Python’s global
+  interpreter lock does not make operations such as += atomic.
+where_it_appears: Shared singletons and static fields, shared caches and counters, concurrent
+  collections, async code with shared variables, and framework components that are shared between
+  requests.
+review_question: What shared mutable state exists, and which conventions govern it?
+trade_off: Immutability and isolation are safer but can cost memory and performance.
+why_it_matters: Shared mutable state accessed without protection causes corrupted data and intermittent failures.
+red_flags:
+  - Mutable fields in singletons or shared services
+  - Clients or collections shared across threads that their documentation says are not thread safe,
+    or thread-safe clients created per request instead of shared
+  - Request-specific data kept in static or global variables
+  - The volatile keyword used as if it made updates atomic
+  - Request or user data in ThreadLocal or async-local storage that is not cleared at the end of the
+    request
+  - No concurrent tests
+good_looks_like:
+  - Shared components are stateless or immutable
+  - Request data passed explicitly, not stored in shared fields
+  - Thread-safe structures or locks around necessary shared state
+  - Concurrency tested and checked with race detectors where available
+related:
+  - 39
+  - 40
+agent_check:
+  level: partial
+  search_hints:
+    - AddSingleton
+    - "@Singleton"
+    - ConcurrentDictionary
+    - ConcurrentHashMap
+    - SimpleDateFormat
+    - volatile
+    - sync.Mutex
+    - sync.Map
+    - go test -race
+    - threading.Lock
+    - Interlocked
+    - ThreadLocal
+    - AsyncLocal
+    - AsyncLocalStorage
+    - contextvars
+  look_for:
+    - A mutable field or collection on a singleton shared across requests
+    - Request-specific data stored in a static or global variable

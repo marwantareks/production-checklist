@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 118
+name: Constraints, keys and integrity
+category: databases
+order: 180
+ownership: guardrail
+definition: Rules enforced by the database itself, such as keys and uniqueness, so bad data cannot be stored.
+how_it_works: "Constraints make the database refuse invalid data whichever application or script
+  writes it. Primary keys identify rows, unique constraints stop duplicates and, with conflict
+  handling in the application, let retried inserts be detected, foreign keys keep relationships
+  valid, and not null and check constraints enforce basic rules. Adding a constraint to a large
+  table can lock it. Key choice matters: 32-bit ids run out, often sooner than row counts suggest,
+  sequential ids are guessable, random UUIDs scatter index writes unless time ordered, and sharded
+  systems need globally unique ids."
+where_it_appears: Schema definitions and migrations, ORM model constraints, id generation code,
+  unique indexes behind idempotency and deduplication checks, and data cleanup scripts.
+review_question: Which data integrity and business rules does the database enforce directly through constraints?
+trade_off: Database constraints catch more bad data but can slow bulk loads and make some schema
+  changes harder.
+why_it_matters: Bad data that gets in is expensive to find and clean, and application-only checks
+  are the first thing a concurrent request or a manual fix goes around.
+red_flags:
+  - Tables with no primary key, or relationships inside one database with no foreign key and no
+    documented reason
+  - Uniqueness checked in application code with no unique constraint
+  - Integer ids near their limit, or 32-bit ids on tables expected to grow
+  - Guessable sequential ids exposed in URLs as the only access protection
+  - Constraints disabled to speed up loads and not revalidated against the loaded data afterwards
+  - Foreign key columns with no index, or ON DELETE CASCADE on large tables without review
+good_looks_like:
+  - Every table has a primary key
+  - Uniqueness and relationships enforced by constraints, with application checks as a convenience
+    only
+  - Id type and generation chosen for expected size, ordering and sharding needs
+  - "New constraints added by a safe migration: clean violating rows first, validate in a separate
+    step, build unique indexes concurrently, widen ids in batches"
+  - Data quality checks that find rows violating the rules
+related:
+  - 14
+  - 81
+  - 109
+  - 117
+agent_check:
+  level: partial
+  search_hints:
+    - PRIMARY KEY
+    - FOREIGN KEY
+    - ON CONFLICT
+    - ADD CONSTRAINT
+    - NOT VALID
+    - "@@unique"
+    - unique_together
+    - validates_uniqueness_of
+    - db_constraint=False
+    - relationMode
+    - DEFAULT_AUTO_FIELD
+    - BigAutoField
+    - uuidv7
+    - ulid
+    - NEWSEQUENTIALID
+  evidence_to_request:
+    - The current maximum id and growth rate for the largest tables with integer keys
+    - Results of recent data quality checks

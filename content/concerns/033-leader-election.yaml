@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 33
+name: Leader election
+category: databases
+order: 90
+ownership: own
+definition: Nodes agreeing on one coordinator.
+how_it_works: Leader election lets a group of nodes agree on one node to coordinate work, such as
+  the primary of a database or the one scheduler running a job. It usually relies on a consensus
+  system (Raft, ZooKeeper, etcd) or a lease in shared storage. The design must handle a leader that
+  is slow or partitioned, so two leaders do not act at once. Leases assume clocks and pauses stay
+  within bounds, so a paused leader can still act after losing its lease. Safety needs fencing
+  tokens that the protected resource checks.
+where_it_appears: Cluster and consensus configuration, lease or lock code, scheduler and singleton
+  job code, and orchestrator settings.
+review_question: How is a leader chosen, and what happens during a partition?
+trade_off: Simplifies coordination but needs a reliable consensus mechanism and careful failover handling.
+why_it_matters: Without one safe leader, jobs run twice or not at all, and state can diverge.
+red_flags:
+  - Singleton jobs run on every instance with no coordination
+  - Leases with no expiry or renewal logic
+  - A leader decided by something unreliable, such as the oldest instance by local time
+  - No fencing, so an old leader can still write
+good_looks_like:
+  - A proven consensus or lease mechanism used instead of custom code
+  - Leader changes handled and logged
+  - Fencing tokens so a stale leader cannot write
+  - Behavior under partition tested
+also_fits: Resilience
+related:
+  - 85
+  - 95
+  - 38
+  - 96
+agent_check:
+  level: partial
+  search_hints:
+    - LeaderElector
+    - RunOrDie
+    - coordination.k8s.io
+    - LeaderLatch
+    - LeaderSelector
+    - Campaign(
+    - "@SchedulerLock"
+    - leader-elect
+    - raft
+    - zookeeper
+    - etcd
+    - consul

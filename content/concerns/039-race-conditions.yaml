@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 39
+name: Race conditions
+category: concurrency
+order: 10
+ownership: guardrail
+definition: Outcome depends on unpredictable timing of concurrent operations.
+how_it_works: A race condition happens when the result depends on the timing of operations that run
+  at the same time, for example two requests both reading a balance and then both writing a new one.
+  Fixes include one atomic statement, a row lock, an optimistic version check, serializable
+  isolation with retry, unique constraints, and designs without shared mutable state. A transaction
+  at the default isolation level does not prevent lost updates, and locks in application memory
+  protect only one process. Race detectors find data races, not logic races such as check-then-act
+  across requests.
+where_it_appears: Read-modify-write code, check-then-act logic, shared in-memory state, cache
+  updates and background job handlers.
+review_question: Which shared state is updated concurrently, and how is correctness tested?
+trade_off: Synchronization removes races but costs throughput and adds complexity.
+why_it_matters: Races pass most tests and fail under real load, producing rare, hard-to-reproduce
+  errors such as double bookings or negative stock.
+red_flags:
+  - Read, change and write back in separate steps, even inside a default-isolation transaction
+  - Check-then-insert with no unique constraint
+  - In-process locks used to protect data that several instances can update
+  - A rule such as one booking per slot enforced only in application code, not by the database
+good_looks_like:
+  - Critical updates are atomic (a single statement, compare-and-set, or a stronger isolation level
+    with retry)
+  - Unique constraints enforce rules such as one booking per slot
+  - Shared mutable state minimized and guarded
+  - Concurrency tests for money, stock and booking flows
+related:
+  - 36
+  - 37
+  - 43
+  - 38
+agent_check:
+  level: partial
+  search_hints:
+    - FOR UPDATE
+    - ON CONFLICT
+    - INSERT IGNORE
+    - MERGE INTO
+    - "@Version"
+    - rowversion
+    - get_or_create
+    - findOrCreate
+    - upsert
+    - SETNX
+    - WATCH
+    - Interlocked
+    - compareAndSet
+    - AtomicInteger
+    - version = version + 1
+  look_for:
+    - A read followed by a write on the same row outside one atomic statement
+    - A check for existence followed by an insert, with no unique constraint

@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 32
+name: Replication
+category: databases
+order: 80
+ownership: own
+definition: Copying data across nodes for availability and durability.
+how_it_works: Replication copies data from one node to others to improve availability and
+  durability. It can be synchronous, where a write completes only after replicas confirm, or
+  asynchronous, where replicas catch up later. Synchronous protects data but adds latency, and it
+  can block writes when the required replicas are unavailable. Quorum and semi-synchronous modes sit
+  between the two. Asynchronous is faster but can lose recent writes on failure. Replication copies
+  mistakes and deletions, so it does not replace backups.
+where_it_appears: Database and storage cluster settings, replication mode and factor, backup and
+  failover configuration, and replica monitoring.
+review_question: Is replication synchronous or asynchronous, and what data loss is acceptable on failure?
+trade_off: Synchronous protects data but adds latency; asynchronous is faster but can lose recent writes.
+why_it_matters: The replication mode sets how much data you can lose in a failure, so it must match
+  your recovery point target.
+red_flags:
+  - A single copy of important data
+  - Asynchronous replication where no data loss is allowed
+  - No monitoring of replication lag or health
+  - Replicas in the same failure zone as the primary
+good_looks_like:
+  - Replication mode chosen against the recovery point target
+  - Replicas spread across failure zones
+  - Lag and replication errors monitored and alerted
+  - Failover with replicas tested
+also_fits: Resilience
+related:
+  - 29
+  - 85
+  - 84
+  - 83
+agent_check:
+  level: partial
+  search_hints:
+    - synchronous_commit
+    - synchronous_standby_names
+    - rpl_semi_sync
+    - MultiAZ
+    - multi_az
+    - replication_factor
+    - min.insync.replicas
+    - acks=all
+    - writeConcern
+    - consistency_level
+    - binlog

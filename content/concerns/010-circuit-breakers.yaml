@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 10
+name: Circuit breakers
+category: resilience
+order: 10
+ownership: own
+definition: Stop calls to a failing dependency to prevent cascading failures.
+how_it_works: "A circuit breaker wraps calls to a dependency and tracks failures and slow calls,
+  usually as a rate over a sliding window after a minimum number of calls. When the rate passes a
+  threshold it opens and fails calls immediately without contacting the dependency. After a wait it
+  lets a few trial calls through (half-open): if they succeed it closes, and if they fail it opens
+  again. State is usually kept per process, so instances trip independently. Scope a breaker to one
+  dependency or endpoint group, so one failing endpoint does not block healthy ones."
+where_it_appears: Resilience libraries in application code, service mesh or gateway outlier
+  detection, and client SDK settings.
+review_question: Which dependencies are guarded, and what is the fallback when the breaker is open?
+trade_off: Prevents cascading failure but needs tuning; wrong thresholds cause false or late trips.
+why_it_matters: It stops a failing dependency from consuming all your threads and gives it room to
+  recover, which prevents one failure from cascading.
+red_flags:
+  - Open state behavior not defined, so callers get an unexpected exception
+  - Thresholds copied from an example and never tuned
+  - No metric or alert when a breaker opens
+  - Breakers around calls that have no timeout
+  - A fallback that fails open on an authorization, fraud or payment check
+  - A fallback that calls another dependency that would be overloaded by the same event
+good_looks_like:
+  - Breakers on calls to critical remote dependencies
+  - A defined fallback or clear error for the open state
+  - Breaker state exposed in metrics and alerts
+  - Thresholds tested with fault injection
+decide_between: A library-level breaker or mesh-level protection. A library breaker stops calls to
+  the whole dependency and can run fallback logic for each call. A mesh applies policy without code
+  changes, but its outlier detection removes individual unhealthy hosts and its connection limits
+  cap load. It does not stop calls to a dependency that is failing everywhere, and it cannot provide
+  a fallback.
+related:
+  - 11
+  - 12
+  - 87
+agent_check:
+  level: code
+  search_hints:
+    - circuitBreaker
+    - CircuitBreaker
+    - "@CircuitBreaker"
+    - resilience4j
+    - AddCircuitBreaker
+    - CircuitBreakerStrategyOptions
+    - opossum
+    - pybreaker
+    - gobreaker
+    - failsafe
+    - outlierDetection
+    - consecutive5xxErrors
+    - circuit_breakers
+    - half-open
+    - hystrix

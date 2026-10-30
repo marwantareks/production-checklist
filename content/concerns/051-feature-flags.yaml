@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 51
+name: Feature flags
+category: delivery
+order: 20
+ownership: own
+definition: Switches in code that turn behavior on or off, usually at runtime without redeploying.
+how_it_works: "A feature flag turns behavior on or off, usually at runtime without redeploying. It
+  lets teams release code dark, roll out to a small percentage or group, and switch a feature off
+  fast if it causes problems. Flags differ by purpose: release and experiment flags are temporary
+  and should be removed once the rollout ends, while kill switches and permission flags can be
+  long-lived by design but should be named and reviewed. Flags add code paths to test."
+where_it_appears: Flag evaluation code, flag service or configuration files, rollout rules and cleanup tickets.
+review_question: What does each flag evaluate to when the flag service is unreachable?
+trade_off: Decouples release from deploy but accumulates flags and test combinations.
+why_it_matters: They separate deploying from releasing and give a quick safety switch, but unmanaged
+  flags pile up and create untested combinations.
+red_flags:
+  - Flags with no owner or removal date
+  - Application failing, or a protection switching off, if the flag service is unreachable
+  - Production flag changes made without review or approval, or with no audit trail
+  - Personal data sent in flag evaluation context to an external flag service without need or
+    agreement
+  - Release or experiment flags left in place after the rollout ended
+good_looks_like:
+  - Each flag has an owner, purpose and removal plan
+  - An explicit fallback value for each flag, chosen so that an unreachable flag service keeps
+    protections on and new features off
+  - Flag changes audited
+  - Automated tests cover both states of each active flag
+  - Old release and experiment flags removed regularly
+related:
+  - 53
+  - 55
+  - 6
+  - 11
+agent_check:
+  level: partial
+  search_hints:
+    - openfeature
+    - getBooleanValue
+    - boolVariation
+    - ldclient
+    - launchdarkly
+    - unleash-client
+    - isFeatureEnabled
+    - growthbook
+    - flipt
+    - configcat
+    - statsig
+    - FeatureManagement
+    - IFeatureManager
+    - togglz
+    - flagsmith
+  evidence_to_request:
+    - The flag service configuration, owners and removal dates
+    - Who can change production flags, and the audit log

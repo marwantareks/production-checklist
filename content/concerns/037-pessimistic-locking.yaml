@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 37
+name: Pessimistic locking
+category: databases
+order: 130
+ownership: own
+definition: Lock the resource up front to block concurrent changes.
+how_it_works: Pessimistic locking takes a lock on the data before changing it, so others wait or
+  fail until the lock is released. It is done with SELECT FOR UPDATE or similar. It prevents
+  conflicts when contention is high, but it reduces concurrency and can cause deadlocks if locks are
+  taken in different orders. The lock lasts only until the transaction ends, so under autocommit it
+  protects nothing. The database aborts one side of a deadlock, and that transaction must be
+  retried.
+where_it_appears: Transaction code using FOR UPDATE, lock hints, advisory locks and ORM lock modes.
+review_question: Which resources need exclusive access, and how long are locks held?
+trade_off: Prevents conflicts but reduces concurrency and risks deadlocks.
+why_it_matters: Used carelessly, locks held across slow operations block other work and cause
+  timeouts and deadlocks.
+red_flags:
+  - Locks held while calling external services
+  - Different code paths locking rows in different orders
+  - No lock timeout
+  - Long transactions that hold locks
+good_looks_like:
+  - Locks held for as short a time as possible and never across external calls
+  - Consistent lock ordering
+  - Lock wait timeouts set, or NOWAIT used to fail fast
+  - Deadlock and lock timeout errors retried a bounded number of times
+  - Lock waits and deadlocks monitored
+also_fits: Concurrency
+related:
+  - 36
+  - 40
+  - 38
+agent_check:
+  level: code
+  search_hints:
+    - FOR UPDATE
+    - select_for_update
+    - with_for_update
+    - lockForUpdate
+    - with_lock
+    - PESSIMISTIC_WRITE
+    - LockModeType
+    - FOR SHARE
+    - NOWAIT
+    - SKIP LOCKED
+    - UPDLOCK
+    - HOLDLOCK
+    - GET_LOCK(
+    - pg_advisory_lock
+    - lock_timeout

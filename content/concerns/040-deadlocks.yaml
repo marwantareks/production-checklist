@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 40
+name: Deadlocks
+category: concurrency
+order: 20
+ownership: guardrail
+definition: Two or more tasks each wait for something the other holds, so none can continue until
+  one is aborted or times out.
+how_it_works: "A deadlock happens when two or more tasks each hold something the other needs and
+  wait. Databases detect and abort one transaction. Deadlocks also happen without explicit locks: a
+  thread holding a pooled connection that waits for another from the same pool, blocking on
+  asynchronous code, thread pool tasks waiting on work queued to the same pool, or two services each
+  waiting on the other. Nothing detects these, so only timeouts end them. Prevent them with a
+  consistent lock order, short critical sections, timeouts and separate pools."
+where_it_appears: Transaction code that updates several rows or tables, code that takes more than
+  one lock, and database deadlock logs.
+review_question: Is there a consistent lock ordering, or timeouts on lock acquisition?
+trade_off: Avoidance rules limit design freedom; detection and timeouts add recovery logic.
+why_it_matters: Deadlocks cause failed requests or hung processes, and they appear only under certain timings.
+red_flags:
+  - Code paths locking the same resources in different orders
+  - Long transactions touching many rows
+  - Nested locks with no timeout
+  - Deadlock errors in logs that are not retried or tracked
+good_looks_like:
+  - A rule for lock and row ordering
+  - Short transactions
+  - Timeouts on lock acquisition
+  - Deadlock errors (for example PostgreSQL 40P01, MySQL 1213, SQL Server 1205) logged and counted
+  - The whole transaction retried from the start, with randomized backoff and a limit
+related:
+  - 37
+  - 38
+  - 28
+  - 11
+agent_check:
+  level: partial
+  search_hints:
+    - deadlock detected
+    - 40P01
+    - ER_LOCK_DEADLOCK
+    - innodb_lock_wait_timeout
+    - lock_timeout
+    - NOWAIT
+    - tryLock
+    - ReentrantLock
+    - Monitor.Enter
+    - SemaphoreSlim
+    - .Result
+    - .Wait()

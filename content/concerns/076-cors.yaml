@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 76
+name: CORS
+category: security
+order: 100
+ownership: guardrail
+definition: Browser rule that lets a server choose which other origins’ scripts may read its responses.
+how_it_works: Cross-origin resource sharing lets a server relax the browser’s same-origin policy so
+  that named origins can read its responses from scripts. Simple requests are still sent, so CORS
+  does not stop cross-site requests from happening and is not a CSRF defense. Non-browser clients
+  ignore it, so it is not access control. The server sends headers naming the allowed origins,
+  methods and headers.
+where_it_appears: CORS middleware and gateway settings, response headers and preflight handling.
+review_question: Which origins can read responses with credentials, and how is that list enforced?
+trade_off: Permissive settings ease integration but widen exposure.
+why_it_matters: Allowing untrusted origins with credentials lets any website read responses as your user.
+red_flags:
+  - Credentials allowed together with a reflected origin or the null origin
+  - "Origin reflected without a Vary: Origin header, which allows cache poisoning"
+  - Allow lists with wildcard patterns that match attacker domains
+  - CORS treated as if it were authentication
+  - All subdomains trusted, so one compromised subdomain can read user data
+good_looks_like:
+  - An explicit allow list of origins
+  - Credentials allowed only for trusted origins
+  - Methods and headers limited to what is needed
+  - Real authorization enforced on the server
+also_fits: Traffic and APIs
+related:
+  - 5
+  - 77
+agent_check:
+  level: code
+  search_hints:
+    - Access-Control-Allow-Origin
+    - cors
+    - allowedOrigins
+    - Access-Control-Allow-Credentials
+    - preflight
+    - OPTIONS
+    - enableCors
+    - CORS_ORIGIN

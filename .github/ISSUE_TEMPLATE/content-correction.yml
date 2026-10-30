@@ -1,0 +1,48 @@
+name: Content correction
+description: Something in a concern is wrong, unclear or missing.
+labels: [content]
+body:
+  - type: input
+    id: concern
+    attributes:
+      label: Concern
+      description: The name or id, for example "12. Retries".
+    validations:
+      required: true
+  - type: dropdown
+    id: field
+    attributes:
+      label: Field
+      options:
+        - definition
+        - how_it_works
+        - where_it_appears
+        - review_question
+        - trade_off
+        - why_it_matters
+        - red_flags
+        - good_looks_like
+        - decide_between
+        - search_hints
+        - look_for
+        - evidence_to_request
+        - applies_when
+        - related
+        - ownership
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested wording
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources or experience that support this

@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 20
+name: Dead letter queues
+category: messaging
+order: 60
+ownership: own
+definition: Holding queue for messages that repeatedly fail, for inspection.
+how_it_works: A dead letter queue receives messages that could not be processed after a set number
+  of attempts. It keeps them out of the main flow so one bad message does not block others, and
+  holds them for inspection and replay. Log systems such as Kafka have none built in, so the
+  consumer publishes failures to a separate topic, and in an ordered stream a poison message blocks
+  its partition until it is handled. Retention on the dead letter queue must outlast the source
+  queue, or messages expire unseen. It only works if someone is alerted and owns the next step.
+where_it_appears: Queue and subscription settings (redrive policy, max delivery count), consumer
+  error handling, and replay tooling or runbooks.
+review_question: Who monitors the dead letter queue, and how are messages replayed?
+trade_off: Isolates poison messages but becomes a silent graveyard without alerting and ownership.
+why_it_matters: Without one, a poison message either blocks the queue or is lost. With one but no
+  alert, failures pile up unnoticed.
+red_flags:
+  - Queues with no dead letter configuration
+  - A dead letter queue with no alert and no owner
+  - No tool or procedure to replay messages
+  - A retry count so high that poison messages stall the flow
+  - Dead letter queue retention no longer than the source queue’s, so messages expire before
+    inspection
+good_looks_like:
+  - Work queues have a dead letter queue and a maximum delivery count, except where order matters
+  - Where order matters, a failure for a key pauses that key or stops the consumer, by a stated rule
+  - Dead letter queues have no dead letter queue of their own
+  - Alerts on any message arriving in a dead letter queue
+  - A documented and tested replay procedure that relies on idempotent consumers, checks ordering
+    and schema version, and limits the replay rate
+  - The failure reason kept with each message
+also_fits: Resilience
+related:
+  - 15
+  - 62
+  - 12
+  - 14
+agent_check:
+  level: partial
+  search_hints:
+    - deadLetterTargetArn
+    - redrivePolicy
+    - redrive_policy
+    - maxReceiveCount
+    - max_delivery_count
+    - MaxDeliveryCount
+    - dead_letter_policy
+    - max_delivery_attempts
+    - DeadLetteringOnMessageExpiration
+    - $DeadLetterQueue
+    - x-dead-letter-exchange
+    - x-dead-letter-routing-key
+    - DeadLetterPublishingRecoverer
+    - errors.deadletterqueue
+    - dlq

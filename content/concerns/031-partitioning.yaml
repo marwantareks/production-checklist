@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 31
+name: Partitioning
+category: databases
+order: 70
+ownership: own
+definition: Splitting a large table into segments, typically within one database.
+how_it_works: Partitioning splits one large table into smaller parts inside the same database, by
+  range (often date), list or hash. Queries that filter on the partition key read only the relevant
+  parts, and old data can be dropped quickly by removing a partition. A poorly chosen key forces
+  scans of every partition, and too many partitions slow query planning.
+where_it_appears: Table definitions and migrations with PARTITION clauses, retention jobs, and
+  queries on large tables.
+review_question: What is the partition key and the retention approach?
+trade_off: Improves manageability and pruning, but a poor key creates hotspots.
+why_it_matters: Very large tables become slow to query, back up and maintain. Partitioning keeps them manageable.
+red_flags:
+  - Very large tables with no retention or archival plan
+  - Queries on partitioned tables that do not filter on the partition key
+  - Future partitions created by hand, so inserts fail when one is missing
+  - Partition key chosen with no link to query patterns
+good_looks_like:
+  - Large time-series tables partitioned by time with automated creation and removal
+  - Queries include the partition key
+  - Retention handled by dropping partitions
+  - Partitions monitored for size and skew
+  - Converting an existing table planned as a data migration, with unique keys that include the
+    partition key
+also_fits: Performance
+related:
+  - 30
+  - 25
+agent_check:
+  level: code
+  search_hints:
+    - PARTITION BY
+    - PARTITION OF
+    - ATTACH PARTITION
+    - DETACH PARTITION
+    - pg_partman
+    - partman.create_parent
+    - create_hypertable
+    - CREATE PARTITION FUNCTION
+    - partitioned table

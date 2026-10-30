@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 111
+name: Software supply chain security
+category: security
+order: 170
+ownership: guardrail
+definition: Making sure what you build and deploy comes from the code and dependencies you intended.
+how_it_works: "The supply chain covers everything between source and running system: dependencies,
+  build tools, pipelines, base images and artifacts. Controls include building in a controlled
+  pipeline, recording how an artifact was built (provenance), listing its contents in a software
+  bill of materials, signing it, and verifying the signer before deploy. Common attacks use
+  lookalike package names, internal names claimed on a public registry, install scripts, and
+  pipelines that run untrusted pull request code with secrets. Pipeline tokens need least privilege.
+  Pinning and updates are in 108."
+where_it_appears: Pipeline definitions, build files and lockfiles, container build files and base
+  image references, artifact registries, signing and attestation settings, dependency update
+  configuration, and patching records.
+review_question: How do you know the artifact in production was built from reviewed source and trusted inputs?
+trade_off: Signing, provenance and pinning raise assurance but add pipeline work and slow dependency updates.
+why_it_matters: Attackers increasingly compromise a dependency, a build step or an image instead of
+  the application, and one compromised component reaches every system that uses it.
+red_flags:
+  - Base images or CI actions referenced by mutable tags, or dependencies installed without a
+    committed lockfile
+  - Artifacts built on developer machines or by pipelines anyone can modify
+  - No record of what went into a released artifact
+  - Images or packages deployed with no check of the signer or digest
+  - Runtimes, frameworks or base images past end of support
+  - Critical vulnerability fixes with no target time to apply
+good_looks_like:
+  - Dependencies installed from a committed lockfile, base images pinned by digest, and CI actions
+    pinned to a full commit hash
+  - Builds run in a controlled pipeline, and the artifact is built once and promoted by digest
+  - Artifacts signed, with build provenance and a software bill of materials stored
+  - Deploys verify that signatures come from the expected build identity and that provenance names
+    the expected source and pipeline
+  - Patch timelines stated for critical fixes, and runtimes kept in support
+related:
+  - 108
+  - 6
+  - 107
+  - 67
+agent_check:
+  level: partial
+  search_hints:
+    - cosign
+    - cosign verify
+    - sigstore
+    - slsa-github-generator
+    - cyclonedx
+    - spdxVersion
+    - .spdx.json
+    - in-toto
+    - attest-build-provenance
+    - "@sha256:"
+    - syft
+    - trivy
+    - verifyImages
+    - --require-hashes
+    - pull_request_target
+  evidence_to_request:
+    - The list of release artifacts and how each is built and signed
+    - Patch timelines for critical vulnerabilities and runtime support dates

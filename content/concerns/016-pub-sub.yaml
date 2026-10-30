@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 16
+name: Pub/sub
+category: messaging
+order: 20
+ownership: own
+definition: Publishers send to topics; many subscribers receive.
+how_it_works: In publish and subscribe, publishers send events to a topic without knowing who
+  receives them. Each subscription gets its own copy, and instances that share a subscription split
+  the messages between them. Some mechanisms, such as Redis pub/sub and in-process emitters, deliver
+  only to subscribers connected at that moment, so events are lost during downtime. Durable
+  subscriptions keep events until they are acknowledged. Teams must define the event contract, the
+  delivery guarantee and what happens to slow or failed subscribers.
+where_it_appears: Topic and subscription definitions, publisher and subscriber code, broker
+  configuration and schema or contract files.
+review_question: How is each subscription isolated, so that a slow or failed subscriber cannot lose
+  events or block others?
+trade_off: Loose coupling versus weaker visibility into who depends on an event.
+why_it_matters: It enables loose coupling, but it also hides dependencies, so you can lose track of
+  who relies on an event.
+red_flags:
+  - Non-durable subscriptions used for events that must not be lost
+  - Subscribers that fail silently with no retry or dead letter handling
+  - Instances that share one subscription when each was meant to receive every event
+  - One slow subscriber able to block others
+good_looks_like:
+  - Each subscription has its own retry and dead letter handling
+  - Subscriptions are durable where events must not be lost while a subscriber is offline
+  - Subscribers tolerate duplicate and out-of-order events
+  - Consumer lag per subscription is monitored
+decide_between: Transient pub/sub or log-backed topics. Transient pub/sub suits ephemeral broadcasts
+  where lost messages do not matter. Log-backed topics suit business events that need replay,
+  persistence and durable subscriber offsets.
+related:
+  - 17
+  - 15
+  - 20
+  - 14
+agent_check:
+  level: partial
+  search_hints:
+    - TopicArn
+    - aws_sns_topic_subscription
+    - FilterPolicy
+    - google.cloud.pubsub
+    - ServiceBusSender
+    - eventbridge
+    - fanout
+    - exchange_declare
+    - PUBLISH
+    - psubscribe
+    - XADD
+    - "@EventPattern"

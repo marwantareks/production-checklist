@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 125
+name: Environment configuration management
+category: delivery
+order: 120
+ownership: guardrail
+definition: Controlling how settings differ between environments and how changes to them are
+  validated and rolled out.
+how_it_works: "Configuration is everything that changes behavior without changing code: endpoints,
+  limits, timeouts and resource sizes. It is kept apart from code and secrets, versioned, and
+  differs between environments only where it must. It is validated at startup and in the pipeline
+  against a schema. Changes go to a small share of instances first, with health checks that stop and
+  roll back automatically, and instances that reload settings at runtime reject invalid values and
+  keep the last good one. Drift is detected between running configuration and version control and
+  between environments."
+where_it_appears: Environment files and config maps, configuration schemas and validation code,
+  deployment manifests and templates, parameter stores and configuration services, and pipeline
+  steps that apply or check configuration.
+review_question: How does configuration differ between environments, and how is a change validated and rolled back?
+trade_off: Strict validation and review slow configuration changes but prevent the quick edit that
+  takes production down.
+why_it_matters: A mistyped setting can take down a system as surely as a bad deploy, yet it often
+  reaches production with none of the checks code gets.
+red_flags:
+  - Configuration edited by hand in production with no review or history
+  - Settings that differ between environments with no record of why
+  - No validation, so a missing or malformed value is found at runtime
+  - Defaults in code that point at production or enable debug, or non-production settings that can
+    reach production resources
+  - Configuration changes applied to every instance at once with no way back
+  - Production configuration that nobody can reproduce from version control
+good_looks_like:
+  - Configuration in version control in its own files or repository, never hard-coded, with secrets
+    in a secrets store and referenced by name
+  - A schema validated at startup and in the pipeline, with required values that have no default
+  - Differences between environments small, listed and reviewed
+  - Changes rolled out gradually and reversible
+  - Drift between running configuration and version control detected
+  - Non-production cannot reach production resources
+related:
+  - 51
+  - 53
+  - 67
+  - 104
+agent_check:
+  level: partial
+  search_hints:
+    - ConfigMap
+    - appsettings.json
+    - envalid
+    - BaseSettings
+    - pydantic-settings
+    - viper
+    - application.properties
+    - values.yaml
+    - "@ConfigurationProperties"
+    - ValidateOnStart
+    - IOptions
+    - convict
+    - zod
+    - aws_ssm_parameter
+    - kustomization.yaml
+  look_for:
+    - Code that reads a setting from the environment with a default that points at production
+    - A required setting with no validation at startup
+  evidence_to_request:
+    - How configuration is stored, reviewed and applied in each environment
+    - A recent configuration change and how it was rolled out

@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 35
+name: Eventual consistency
+category: databases
+order: 110
+ownership: own
+definition: Replicas may differ, and converge once updates stop, with no guaranteed time limit.
+how_it_works: Eventually consistent systems let copies of data differ for a short time and converge
+  when updates propagate. This gives better availability and scale, but users and code can see stale
+  data. Designs handle it by choosing which flows can tolerate staleness, showing pending states and
+  resolving conflicts.
+where_it_appears: Replica and cache designs, event-driven flows, user interface behavior after
+  writes, and conflict resolution logic.
+review_question: Which user-facing flows can tolerate stale reads, and for how long?
+trade_off: Better availability and scale versus confusing temporary inconsistencies for users.
+why_it_matters: Unplanned staleness shows up as confusing bugs, such as a user saving a change and not seeing it.
+red_flags:
+  - A user flow that reads immediately after a write from an asynchronous copy
+  - No stated maximum staleness
+  - Conflicting updates resolved by last-write-wins on wall-clock time where losing a write matters
+  - Reads spread across replicas so a user can see newer data and then older data
+  - Users able to retry pending actions with no idempotency keys
+  - Eventually consistent data used for checks that must be exact, such as balances
+good_looks_like:
+  - Each flow stated as consistent or tolerant of staleness, with a limit
+  - Read-your-writes handled for user-facing flows
+  - Conflict resolution rules defined
+  - Convergence time measured
+related:
+  - 34
+  - 29
+  - 96
+  - 17
+agent_check:
+  level: people
+  evidence_to_request:
+    - Which flows are allowed to be stale, and for how long
+    - How conflicts are resolved
+    - Measured replication or propagation delay

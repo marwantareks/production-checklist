@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 110
+name: Authentication and session management
+category: security
+order: 160
+ownership: own
+definition: Proving who the caller is and keeping that proof safe for the life of a session.
+how_it_works: "Authentication verifies identity with a password, passkey, one-time code or federated
+  sign-in. After it succeeds, the system issues a session or token that stands in for the user. That
+  proof must be hard to steal and guess: random identifiers, Secure and HttpOnly cookies, expiry,
+  rotation after login and privilege change, and server-side revocation. Passwords need slow
+  hashing, a breached-password check and protection against credential stuffing, without complexity
+  rules or forced changes. Sensitive actions need a second factor. Recovery is part of
+  authentication and often the weakest path."
+where_it_appears: Login, signup, password reset and sign-out handlers, session or token
+  configuration, cookie settings, identity provider settings, and multi-factor enrolment flows.
+review_question: How can a user’s session or account be taken over, through login, recovery or a
+  stolen session, and what stops each path?
+trade_off: Strong controls such as short sessions and second factors protect accounts but add
+  friction and support load.
+why_it_matters: Account takeover is how most attackers get in, and weak sessions or recovery flows
+  let them skip a strong password.
+red_flags:
+  - Passwords stored with a fast hash or in reversible form
+  - Session identifiers in URLs, or session cookies without Secure, HttpOnly and SameSite settings
+  - Sessions that never expire, are not ended on logout and password change, or keep the same
+    identifier after login
+  - No limit or delay on repeated login failures, or no defense against credential stuffing
+  - Login, signup or password reset responses that reveal whether an account exists
+  - Multi-factor authentication that can be skipped through recovery or a weaker fallback factor, or
+    privileged accounts protected by a single factor
+good_looks_like:
+  - Passwords hashed with Argon2id, scrypt, bcrypt or PBKDF2 at a current work factor, or handled by
+    a managed identity provider or passkeys
+  - Multi-factor authentication for privileged and sensitive actions
+  - Session cookies marked Secure and HttpOnly, with SameSite set to Lax or Strict, no broader
+    Domain than needed, and sensible expiry and rotation
+  - Sessions revocable on the server and ended on password change
+  - Recovery flows reviewed and tested as carefully as login
+decide_between: Server-side sessions or signed tokens. Server-side sessions are easy to revoke and
+  keep data off the client, but need shared storage. Signed tokens avoid a lookup and suit service
+  calls, but cannot be revoked before they expire. A middle ground is short-lived access tokens with
+  rotated, revocable refresh tokens, and browser apps can keep tokens on a server and use a session
+  cookie.
+related:
+  - 69
+  - 70
+  - 109
+  - 1
+agent_check:
+  level: partial
+  search_hints:
+    - bcrypt
+    - argon2
+    - scrypt
+    - PBKDF2
+    - httpOnly
+    - HttpOnly
+    - sameSite
+    - SameSite
+    - session_regenerate_id
+    - session.regenerate
+    - reset_session
+    - SESSION_COOKIE_HTTPONLY
+    - Rfc2898DeriveBytes
+    - WebAuthn
+    - totp
+  evidence_to_request:
+    - The identity provider and its session settings
+    - A description of the password reset and account recovery flow

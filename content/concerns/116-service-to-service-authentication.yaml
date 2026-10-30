@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 116
+name: Service-to-service authentication
+category: security
+order: 220
+ownership: own
+definition: How services prove their identity to each other and which calls each is allowed to make.
+how_it_works: "Inside a system, services call each other, and each call needs proof of who is
+  calling and a rule for what that caller may do. Common approaches are mutual TLS with certificates
+  issued to each workload, signed tokens from a trusted identity service, and platform identities
+  such as cloud roles. Network location alone is not proof of identity: a request that skips the
+  gateway or carries a forged identity header must be rejected. Tokens must name the service they
+  are meant for, and a call made for a user should carry a token for that user and service, not a
+  broad service token."
+where_it_appears: Service mesh or sidecar configuration, mutual TLS settings, workload identity and
+  service account definitions, internal API authorization code, gateway to service trust settings,
+  and network policies.
+review_question: How does each service prove who it is to the services it calls, and what stops a
+  request from skipping the gateway?
+trade_off: Mutual authentication stops lateral movement but adds certificate management and latency,
+  and a mesh adds another component to run.
+why_it_matters: If internal calls are trusted by network location, one compromised service or a
+  forged header gives access to everything behind the gateway.
+red_flags:
+  - Services that trust identity headers or any caller on the internal network
+  - A gateway that forwards identity headers sent by the client instead of removing and setting them
+  - Internal tokens accepted without checking which service they were issued for
+  - Shared long-lived credentials used by many services
+  - Services reachable directly from outside the gateway
+  - One service identity with broad access to all other services
+good_looks_like:
+  - Every internal call authenticated, with mutual TLS in strict mode or workload identity, and an
+    explicit rule saying which callers each service accepts
+  - Short-lived credentials issued and rotated automatically
+  - Each service allowed to call only the services it needs
+  - Services accept traffic only from the gateway or known callers
+  - Identity and authorization decisions logged
+decide_between: Mutual TLS, signed tokens or platform identity. Mutual TLS authenticates the
+  connection and suits a mesh or a uniform platform. Signed tokens carry caller and user context and
+  work across protocols and hops. Platform identity, such as cloud roles, is simplest where one
+  provider hosts everything. Many systems combine connection level and token level checks.
+applies_when: Applies when the system has more than one service, or calls internal services or
+  functions over a network.
+related:
+  - 5
+  - 68
+  - 70
+  - 71
+agent_check:
+  level: partial
+  search_hints:
+    - mTLS
+    - PeerAuthentication
+    - "mode: STRICT"
+    - PERMISSIVE
+    - "kind: AuthorizationPolicy"
+    - SPIFFE
+    - spiffe://
+    - linkerd
+    - iam.gke.io/gcp-service-account
+    - eks.amazonaws.com/role-arn
+    - azure.workload.identity
+    - X-Forwarded-User
+    - NetworkPolicy
+    - audience
+    - requireClientCert
+  evidence_to_request:
+    - How service identities are issued and rotated
+    - The rules that limit which services may call which

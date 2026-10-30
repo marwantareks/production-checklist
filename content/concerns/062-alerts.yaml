@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 62
+name: Alerts
+category: observability
+order: 50
+ownership: guardrail
+definition: Notifications to people when the system needs action.
+how_it_works: Alerts notify people when something needs action. Good alerts are tied to user impact
+  or error budget burn, have a clear owner, link to a runbook and fire rarely enough that people
+  trust them. Only urgent, actionable problems page someone, and the rest become tickets. Budget
+  burn alerts compare a short and a long window, so fast burns page and slow burns open a ticket.
+  Too many or noisy alerts cause fatigue, and too few leave outages unnoticed.
+where_it_appears: Alert rule definitions, routing and escalation settings, on-call schedules and runbooks.
+review_question: Does every alert that pages someone have an owner, a runbook and a defined action?
+trade_off: Sensitive alerts catch issues early but cause fatigue; tuning is ongoing.
+why_it_matters: Alerts are how problems reach people, and poorly tuned ones are either ignored or
+  miss real outages.
+red_flags:
+  - Alerts for causes (such as high CPU) with no link to user impact
+  - No owner or runbook for an alert
+  - Alerts that fire often and are ignored
+  - One failure triggers many separate pages because alerts are not grouped or deduplicated
+  - No alert for a key user journey being down
+good_looks_like:
+  - Pages based on symptoms users feel, plus a few cause alerts for problems that will soon cause
+    impact, such as a disk, certificate or quota about to run out
+  - Each alert has an owner, severity and runbook
+  - Noisy alerts reviewed and fixed or removed
+  - Escalation paths tested
+related:
+  - 61
+  - 63
+  - 65
+agent_check:
+  level: partial
+  search_hints:
+    - PrometheusRule
+    - alerting_rules
+    - "expr:"
+    - runbook_url
+    - alertmanager.yml
+    - "receivers:"
+    - group_by
+    - inhibit_rules
+    - pagerduty_service
+    - opsgenie_
+    - aws_cloudwatch_metric_alarm
+    - datadog_monitor
+    - azurerm_monitor_metric_alert
+    - google_monitoring_alert_policy

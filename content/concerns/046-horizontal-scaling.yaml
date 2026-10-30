@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 46
+name: Horizontal scaling
+category: scaling
+order: 40
+ownership: own
+definition: Adding more instances of a service to share the load.
+how_it_works: Horizontal scaling adds more instances to share load, instead of making one bigger. It
+  requires services that are stateless, or whose state sits in shared stores, so any instance can
+  handle any request. It improves capacity and resilience but exposes shared bottlenecks such as the
+  database.
+where_it_appears: Service state handling (sessions, files, caches in memory), deployment replica
+  counts, and the shared stores used by every instance.
+review_question: Is the application stateless enough to add instances freely?
+trade_off: Capacity and resilience grow with instances until a shared store or coordination becomes
+  the limit, versus state and coordination complexity.
+why_it_matters: If state lives in one instance, adding instances doesn’t help and failures lose data.
+red_flags:
+  - Sessions or files stored on the local instance
+  - In-memory caches that need to be consistent across instances
+  - Jobs that assume only one instance is running
+  - Rate limits, counters or connection state kept in instance memory
+  - A database or other shared store that cannot handle more instances
+good_looks_like:
+  - Instances stateless, with sessions and files in shared stores
+  - Safe to run several copies of every service, including scheduled jobs
+  - Shared dependencies sized for the maximum instance count
+  - Load tests run with several instances
+related:
+  - 47
+  - 3
+  - 45
+  - 38
+agent_check:
+  level: partial
+  search_hints:
+    - express-session
+    - MemoryStore
+    - HttpSession
+    - sessionAffinity
+    - ClientIP
+    - IMemoryCache
+    - lru-cache
+    - "@Scheduled"
+    - node-cron
+    - APScheduler
+    - ShedLock
+    - Quartz
+    - persistentVolumeClaim
+    - stateless

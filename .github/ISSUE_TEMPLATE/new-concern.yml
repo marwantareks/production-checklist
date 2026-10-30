@@ -1,0 +1,25 @@
+name: Propose a new concern
+description: A production concern that the checklist should cover.
+labels: [content, enhancement]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Name
+    validations:
+      required: true
+  - type: input
+    id: category
+    attributes:
+      label: Suggested category
+      description: See content/categories.yaml.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why architects need to review it
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: What goes wrong without it

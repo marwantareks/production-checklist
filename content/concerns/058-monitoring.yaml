@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 58
+name: Monitoring
+category: observability
+order: 10
+ownership: own
+definition: Continuously collecting and watching system health data.
+how_it_works: Monitoring collects and watches signals that show whether the system is healthy, such
+  as availability, errors, latency and saturation, and alerts people when it isn’t. Good monitoring
+  covers every service and dependency, is based on user impact, and has owners who act on what it
+  reports.
+where_it_appears: Monitoring agents and exporters, dashboard and alert definitions, synthetic checks
+  and infrastructure code for the monitoring stack.
+review_question: Which user-facing signals are monitored for each service and dependency, and how
+  would you know if monitoring itself stopped working?
+trade_off: Broader coverage raises cost and alert noise.
+why_it_matters: You cannot fix, or even know about, what you cannot see, and monitoring gaps are
+  usually discovered during an incident.
+red_flags:
+  - Services with no dashboards or alerts
+  - Monitoring that covers servers but not user-facing behavior
+  - Dashboards with no owner
+  - Monitoring hosted in the same place as the system, so it fails with it
+  - No alert when monitoring stops collecting data or cannot deliver alerts
+good_looks_like:
+  - Every service and key dependency is covered by the metrics in 61 and the alerts in 62
+  - Synthetic checks cover the main user journeys, using test accounts and flagged traffic that
+    cannot trigger real payments, messages or data changes
+  - Monitoring has owners and is reviewed
+  - Monitoring stays available if the main system is down
+  - An always-firing heartbeat alert checked from outside, and alerts on missing data
+related:
+  - 61
+  - 62
+  - 66
+agent_check:
+  level: partial
+  search_hints:
+    - scrape_configs
+    - ServiceMonitor
+    - PrometheusRule
+    - blackbox_exporter
+    - grafana_dashboard
+    - datadog_monitor
+    - datadog_synthetics_test
+    - aws_cloudwatch_metric_alarm
+    - aws_synthetics_canary
+    - azurerm_monitor
+    - google_monitoring_uptime_check_config
+    - newrelic
+    - pingdom
+    - uptime_kuma
+    - /metrics

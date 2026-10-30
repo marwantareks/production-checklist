@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 114
+name: Threat modeling
+category: security
+order: 200
+ownership: own
+definition: Working out how a system could be attacked and deciding what to do about it, first at
+  design time and again as it changes.
+how_it_works: "Threat modeling is a structured look at a design: what the system holds and does, who
+  might attack it and how, what controls exist, and what is left uncovered. Teams draw data flows
+  and trust boundaries, ask what could go wrong at each step using a method such as STRIDE
+  (spoofing, tampering, repudiation, information disclosure, denial of service, elevation of
+  privilege) or LINDDUN for privacy, rank findings by impact and likelihood, and record decisions.
+  It is done at design time and repeated when the design changes."
+where_it_appears: Design documents and architecture diagrams, data flow diagrams with trust
+  boundaries, risk registers, security review records, and tickets created from threat model
+  findings.
+review_question: When was this system last threat modeled, and what changed because of it?
+trade_off: Early modeling finds costly flaws cheaply but takes expert time and goes stale if it is
+  not repeated.
+why_it_matters: Many serious flaws are design mistakes, such as a missing trust boundary, that no
+  scanner or code review will catch later.
+red_flags:
+  - No threat model for a system that handles sensitive data or money
+  - A model created once and never updated after major changes
+  - Findings recorded but with no owner or follow-up
+  - Only outside attackers considered, not insiders or compromised dependencies
+  - Trust boundaries and data flows not drawn
+good_looks_like:
+  - A data flow diagram with trust boundaries kept with the design
+  - "Threats listed with a decision for each: mitigate, remove by design, transfer or accept, with
+    accepted risks signed off by a named owner and given a review date"
+  - Findings tracked as work items with owners
+  - The model reviewed when the design changes
+  - Security and engineering both take part
+related:
+  - 109
+  - 113
+  - 115
+  - 116
+agent_check:
+  level: partial
+  search_hints:
+    - threat-model
+    - threatmodel
+    - .tm7
+    - threagile
+    - pytm
+    - STRIDE
+    - LINDDUN
+    - threat_model.md
+  evidence_to_request:
+    - The latest threat model and its date
+    - The list of findings and their status
+    - Examples of design changes made because of it

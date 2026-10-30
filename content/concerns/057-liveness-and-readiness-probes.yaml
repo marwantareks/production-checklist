@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 57
+name: Liveness and readiness probes
+category: delivery
+order: 80
+ownership: guardrail
+definition: "Kubernetes checks: restart if dead (liveness), send traffic only when ready (readiness)."
+how_it_works: Kubernetes uses three probes. A liveness probe restarts a container that is stuck. A
+  readiness probe controls whether it receives traffic, and a failing one removes the pod from
+  Service endpoints without restarting it. A startup probe gives slow-starting applications time
+  before the other probes begin. If every pod fails readiness, the Service has no endpoints. The
+  defaults (1 second timeout, 10 second period, 3 failures) often need tuning. Wrong settings cause
+  restart loops or traffic to unready instances.
+where_it_appears: Pod specifications in deployment manifests and charts, and the application’s
+  health endpoints they call.
+review_question: Are liveness and readiness defined separately and tuned for startup time?
+trade_off: Aggressive probes detect failures quickly but risk restarting or removing busy, healthy
+  pods. Lenient probes avoid flapping but leave broken pods running longer.
+why_it_matters: A liveness probe that checks dependencies can restart every pod during a database
+  blip, and a missing readiness probe sends traffic to instances that cannot serve it.
+red_flags:
+  - No readiness probe on a workload that receives traffic through a Service
+  - A liveness probe that depends on external services
+  - Very short timeouts or thresholds that cause restarts under load, or a liveness probe on the
+    same request pool as user traffic
+  - A slow-starting application with no startup probe
+  - No graceful shutdown or preStop delay, so requests fail during rollouts
+good_looks_like:
+  - Separate liveness and readiness probes
+  - The liveness probe checks only the process itself
+  - Timeouts and thresholds tuned under load
+  - A startup probe for slow starts
+also_fits: Observability, Scaling and infrastructure
+applies_when: Applies when workloads run on Kubernetes or another orchestrator that manages traffic
+  and restarts with probes.
+related:
+  - 56
+  - 8
+  - 54
+agent_check:
+  level: partial
+  search_hints:
+    - livenessProbe
+    - readinessProbe
+    - startupProbe
+    - initialDelaySeconds
+    - failureThreshold
+    - periodSeconds
+    - timeoutSeconds
+    - successThreshold
+    - tcpSocket
+    - "grpc:"
+    - terminationGracePeriodSeconds
+    - preStop
+  evidence_to_request:
+    - Probe tuning data from load tests
+    - Where the manifests live, if outside this repository

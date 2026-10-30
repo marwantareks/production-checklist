@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 29
+name: Read replicas
+category: databases
+order: 50
+ownership: own
+definition: DB copies that serve read traffic.
+how_it_works: A read replica is a copy of the database that serves read queries, spreading load away
+  from the primary. Replication is usually asynchronous, so a replica can lag behind and return
+  older data. Applications must decide which reads can use a replica and handle lag. Reads inside a
+  write transaction must stay on the primary. Long queries on a replica can be cancelled or can
+  delay replication, depending on settings.
+where_it_appears: Database cluster and replica definitions, connection strings for read and write
+  endpoints, ORM or driver read routing, and replica lag metrics.
+review_question: Which reads tolerate replica lag?
+trade_off: Offloads the primary but introduces stale reads and failover considerations.
+why_it_matters: Replicas add read capacity and resilience, but code that reads its own write from a
+  lagging replica shows users missing or stale data.
+red_flags:
+  - Primary overloaded by reads with no plan for caching, tuning or replicas
+  - Replicas used for reads that must see the latest write
+  - No monitoring of replica lag
+  - Application assuming a replica is always in sync
+good_looks_like:
+  - Reads that tolerate lag go to replicas, and critical reads go to the primary
+  - Read-your-own-writes handled explicitly where needed
+  - Replica lag monitored and alerted
+  - Behavior defined for when a replica is unavailable
+also_fits: Scaling
+related:
+  - 32
+  - 35
+  - 30
+agent_check:
+  level: partial
+  search_hints:
+    - read replica
+    - reader endpoint
+    - replication lag
+    - readPreference
+    - secondaryPreferred
+    - ApplicationIntent=ReadOnly
+    - "connects_to(database:"
+    - using('replica')
+    - DATABASE_ROUTERS
+    - AbstractRoutingDataSource
+    - replicaSet
+    - read_replica

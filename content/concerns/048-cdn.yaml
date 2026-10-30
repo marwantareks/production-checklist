@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 48
+name: CDN
+category: caching
+order: 20
+ownership: own
+definition: Globally distributed servers that deliver content close to users and shield the origin.
+how_it_works: A content delivery network serves content from servers close to users. It caches
+  static files and can cache some dynamic responses, absorb traffic spikes and terminate TLS at the
+  edge. Cache behavior is controlled by response headers and CDN rules. Purges are not instant, and
+  a purge of everything sends a burst of requests to the origin, so purge by key or path and use an
+  origin shield tier where the CDN offers one.
+where_it_appears: CDN or front-door configuration in infrastructure code, cache-control headers set
+  by the application, asset build and upload scripts, and DNS records.
+review_question: Which content is served from the edge, and how is purging handled?
+trade_off: Large gains for static content; dynamic content and purge delays need care.
+why_it_matters: It lowers latency for distant users and shields the origin from load, but wrong
+  cache rules can serve stale or private content to the wrong people.
+red_flags:
+  - Static assets served only from the application server
+  - CDN rules that override origin Cache-Control for dynamic paths, or caching decided by file
+    extension alone
+  - Responses that set cookies or carry private data that the CDN is allowed to cache
+  - No versioning of asset file names, so a purge is needed for every change
+  - Origin reachable directly, bypassing CDN protections
+good_looks_like:
+  - Static assets served through the CDN with long lifetimes and versioned file names
+  - Cache-Control and Vary headers set deliberately for every response type
+  - Authenticated responses send Cache-Control private or no-store, and the CDN is set to respect it
+  - Origin accepts traffic only from the CDN, using origin access control, a secret header or mutual
+    TLS
+  - Cache hit ratio and egress volume are monitored
+also_fits: Traffic, networking and APIs
+applies_when: Applies when the system serves content to users spread across regions or must absorb
+  traffic spikes at the edge.
+related:
+  - 49
+  - 50
+  - 2
+  - 75
+agent_check:
+  level: partial
+  search_hints:
+    - aws_cloudfront_distribution
+    - cache_policy_id
+    - origin_access_control
+    - cloudflare_ruleset
+    - azurerm_cdn_frontdoor_profile
+    - google_compute_backend_bucket
+    - enable_cdn
+    - fastly_service_vcl
+    - akamai_property
+    - cloudfront
+    - fastly
+    - s-maxage
+    - immutable
+    - Vary
+    - Cache-Control

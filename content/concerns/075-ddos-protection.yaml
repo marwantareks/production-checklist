@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 75
+name: DDoS protection
+category: security
+order: 90
+ownership: own
+definition: Defense against traffic floods meant to take a service down.
+how_it_works: "A distributed denial of service attack floods a service with traffic to make it
+  unavailable. Defenses work in layers: absorb volumetric attacks at the network edge or CDN, filter
+  at the application layer, rate limit, and design the system so that expensive operations cannot be
+  triggered cheaply. Keep proxies and servers patched against protocol-level attacks such as HTTP/2
+  Rapid Reset, and cap autoscaling so an attack cannot cause unlimited cost."
+where_it_appears: Network and edge protection services, CDN and WAF settings, rate limiting, and
+  incident response plans.
+review_question: What absorbs volumetric attacks, and what is the escalation path?
+trade_off: Managed protection costs money, but self-defense rarely scales.
+why_it_matters: An attack can take a service offline for hours, and autoscaling without limits can
+  turn an attack into a large bill. Options found only during an attack are slow and expensive.
+red_flags:
+  - Origin servers reachable directly from the internet
+  - No edge or network-level protection
+  - Expensive operations that any anonymous user can trigger
+  - No plan or contact for an attack in progress
+good_looks_like:
+  - Traffic passes through a service built to absorb attacks
+  - Origin locked to the protection layer
+  - Rate limits and challenges on expensive endpoints
+  - A rehearsed response plan with contacts
+also_fits: Resilience, Networking
+related:
+  - 74
+  - 1
+  - 48
+  - 45
+agent_check:
+  level: people
+  evidence_to_request:
+    - Which service protects the public entry points
+    - How the origin is protected from direct access
+    - The response plan for an attack

@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 102
+name: API versioning
+category: traffic
+order: 80
+ownership: own
+definition: Evolving APIs without breaking existing clients.
+how_it_works: API versioning lets you change an API without breaking existing clients. Versions are
+  exposed in the URL path, a query parameter, a header, a media type or a date. Compatible changes,
+  such as adding optional request fields or new response fields, need no new version if clients are
+  documented to ignore unknown fields. New enum values and changed defaults often break clients.
+  Breaking changes ship as a new version while the old one is supported for a defined period.
+where_it_appears: Route definitions, API specifications (OpenAPI), request and response models,
+  gateway routes, and deprecation notices or changelogs.
+review_question: How are breaking changes introduced, and how long are old versions supported?
+trade_off: Strict versioning protects clients but multiplies what you must maintain and test.
+why_it_matters: Clients upgrade on their own schedule. Without a versioning rule, any change can
+  break someone, so teams either freeze the API or break customers.
+red_flags:
+  - Breaking changes made to an existing version
+  - No stated support period or deprecation process
+  - Several versions maintained forever with no usage data
+  - No API specification to compare changes against
+good_looks_like:
+  - A documented rule for what counts as breaking
+  - Old versions run alongside new ones for a published period
+  - Deprecation signalled with the Deprecation and Sunset headers and in notices, and tracked by
+    client usage
+  - Specification checked in CI for breaking changes
+decide_between: Version in the URL path, a query parameter, a header or the media type, or by date.
+  Path versions are the easiest to see and cache. Header and media type versions keep URLs stable
+  but need a Vary header for caches and are harder to test. GraphQL and gRPC usually evolve one
+  schema with additive rules instead.
+also_fits: Build, deployment and release
+related:
+  - 103
+  - 5
+  - 82
+agent_check:
+  level: partial
+  search_hints:
+    - "@ApiVersion"
+    - Asp.Versioning
+    - URLPathVersioning
+    - AcceptHeaderVersioning
+    - api-version
+    - application/vnd.
+    - openapi
+    - oasdiff
+    - openapi-diff
+    - buf breaking
+    - "Sunset:"
+    - "Deprecation:"
+  evidence_to_request:
+    - The published deprecation policy and support periods
+    - Usage per API version and per client

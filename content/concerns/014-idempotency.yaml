@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 14
+name: Idempotency
+category: resilience
+order: 50
+ownership: own
+definition: Repeating an operation has the same effect as doing it once, so retries are safe.
+  Payments and order creation need it most.
+how_it_works: An operation is idempotent when doing it several times has the same effect as doing it
+  once. For writes this is usually done with a caller-supplied idempotency key. The server claims
+  the key atomically before processing, for example with a unique constraint, so a concurrent
+  duplicate waits or is rejected instead of running twice. It stores a fingerprint of the request,
+  rejects the same key with a different body, scopes keys to the client, and returns the stored
+  result for a repeat. Side effects outside the database need the key passed on, or an outbox.
+where_it_appears: Payment and order endpoints, webhook receivers, queue consumers, scheduled jobs,
+  and database writes protected by unique constraints.
+review_question: Which write operations must be idempotent, and how are keys stored and expired?
+trade_off: Makes retries safe but requires storing keys and defining their lifetime.
+why_it_matters: Retries, duplicate messages and double clicks are normal. Without idempotency they
+  create duplicate charges, orders or emails.
+red_flags:
+  - Write endpoints that create records with no key or unique constraint
+  - Queue consumers that assume each message arrives exactly once
+  - Idempotency keys held in memory only, so a restart forgets them
+  - Keys not scoped to the client or tenant, or kept with no expiry policy
+  - Check-then-insert on the key with no lock or unique constraint
+  - Consumers that mark a message processed in a separate transaction from the write it caused
+good_looks_like:
+  - Idempotency keys on payment and order creation
+  - Keys stored durably with the result and a defined lifetime
+  - Unique constraints as a backstop
+  - Tests that send the same request twice
+decide_between: A key supplied by the client, or deduplication by the server on a natural key.
+  Client keys work for any write. Natural keys need no client change but only work where a stable
+  unique identifier exists.
+also_fits: Messaging and async, Traffic and APIs
+related:
+  - 12
+  - 15
+  - 101
+  - 18
+agent_check:
+  level: partial
+  search_hints:
+    - Idempotency-Key
+    - idempotency_key
+    - IdempotencyKey
+    - dedupe
+    - MessageDeduplicationId
+    - ON CONFLICT
+    - ON DUPLICATE KEY
+    - INSERT IGNORE
+    - unique=True
+    - "@Column(unique"
+    - UNIQUE INDEX
+    - upsert
+    - processed_events
+    - inbox

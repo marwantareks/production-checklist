@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 36
+name: Optimistic locking
+category: databases
+order: 120
+ownership: own
+definition: Assume no conflict; check a version at write time and fail if changed.
+how_it_works: Optimistic locking assumes conflicts are rare. Each record carries an integer version
+  or a database row version. An update includes the expected version in its condition and succeeds
+  only if one row changed, and otherwise fails so the caller can reload and retry. Code that does
+  not check the row count misses the conflict. It avoids holding locks, so it scales well when
+  conflicts are uncommon.
+where_it_appears: ORM version fields, UPDATE statements with a version check in the WHERE clause,
+  ETag and If-Match handling in APIs, and retry code.
+review_question: Where are conflicts rare enough for version checks, and how are retries handled?
+trade_off: No blocking and good throughput when conflicts are rare; failures and retries when they are common.
+why_it_matters: Without it, two users editing the same record overwrite each other silently (a lost update).
+red_flags:
+  - Updates that read, change and write back with no version check
+  - Version conflicts caught and ignored
+  - No retry or clear error when a conflict occurs
+  - A version column that is not updated on every write
+  - Bulk or raw updates that bypass the version check
+  - Version checks relied on for rules that span several rows
+good_looks_like:
+  - Version or ETag checked on updates to shared records
+  - Conflicts reported to the user or retried safely
+  - The version increments in every write path
+  - Conflict rate monitored
+decide_between: Optimistic or pessimistic locking. Optimistic suits low-conflict workloads and
+  avoids blocking. Pessimistic suits high-conflict records where retries would be costly.
+also_fits: Concurrency
+related:
+  - 37
+  - 39
+  - 96
+agent_check:
+  level: code
+  search_hints:
+    - "@Version"
+    - row_version
+    - lock_version
+    - If-Match
+    - ETag
+    - WHERE version
+    - "[ConcurrencyCheck]"
+    - IsRowVersion
+    - rowversion
+    - version_id_col
+    - OptimisticLockException
+    - StaleObjectStateError
+    - DbUpdateConcurrencyException

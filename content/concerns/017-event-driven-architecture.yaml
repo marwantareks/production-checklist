@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 17
+name: Event-driven architecture
+category: messaging
+order: 30
+ownership: own
+definition: Components communicate by emitting and reacting to events, keeping them loosely coupled.
+how_it_works: In event-driven architecture, components communicate by publishing events that
+  describe something that happened, and other components react. Variants include notification
+  events, which say only that something changed; events that carry the changed data, so consumers do
+  not need to call back; and event sourcing, where the events themselves are the stored record of
+  state. Event sourcing is a storage choice and is not required. It brings loose coupling and
+  scalability, but behavior is spread across services and harder to follow.
+where_it_appears: Event definitions and schemas, broker configuration, producers and handlers, and
+  architecture diagrams or event catalogs.
+review_question: Which events are part of the contract, and how are they versioned and traced?
+trade_off: Flexibility and scalability versus harder debugging and end-to-end reasoning.
+why_it_matters: Without discipline on contracts and tracing, an event-driven system becomes hard to
+  debug and change safely.
+red_flags:
+  - No catalog or schema for events
+  - Commands disguised as events, or a sender that blocks waiting for an asynchronous reply with no
+    timeout
+  - No correlation id to follow a flow across services
+  - Events that carry too little or too much data with no rule
+good_looks_like:
+  - Events named for facts that happened, with versioned schemas
+  - Schema changes checked for backward compatibility in CI or by a schema registry, and consumers
+    ignore fields they do not know
+  - A catalog of events, producers and consumers
+  - Correlation and causation identifiers carried and traced end to end
+  - Handlers idempotent and tolerant of ordering differences
+decide_between: Event notification, event-carried state transfer or event sourcing. Notification
+  keeps payloads small but makes consumers call back for details. Carrying state removes the
+  callbacks but couples consumers to the payload shape. Event sourcing stores events as the source
+  of truth, a larger commitment than event-driven communication. For coordinating a multi-step flow,
+  see the saga concern (19).
+related:
+  - 19
+  - 60
+  - 14
+  - 82
+agent_check:
+  level: partial
+  search_hints:
+    - eventbridge
+    - asyncapi
+    - cloudevents
+    - ce-specversion
+    - schema registry
+    - avro
+    - correlationId
+    - causationId
+    - eventstore
+    - outbox
+    - DomainEvent
+    - IntegrationEvent
+    - INotificationHandler
+    - IConsumer<
+    - EventGrid

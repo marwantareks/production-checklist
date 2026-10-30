@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 50
+name: Cache invalidation
+category: caching
+order: 40
+ownership: own
+definition: Removing or refreshing stale cache entries when source data changes.
+how_it_works: Invalidation removes or refreshes cached data when the source changes. Approaches
+  include expiry (time to live), explicit deletion when data is written, versioned keys and
+  event-driven purge. Invalidate after the write commits and keep a lifetime on every entry as a
+  backstop, because a concurrent read can put an old value back after an invalidation, and do not
+  refill the cache from a replica that may lag. The cost is a trade between staleness, complexity
+  and load on the source.
+where_it_appears: Write paths that update data, cache delete or purge calls, event handlers, key
+  naming code and TTL settings.
+review_question: What triggers invalidation, and what staleness is acceptable?
+trade_off: Short lifetimes are simple and still help hot data, but lower hit rates for the rest.
+  Event-driven invalidation is precise but harder to get right.
+why_it_matters: If invalidation is missed, users see wrong data. If it is too aggressive, the cache
+  stops helping. It is one of the most common sources of subtle bugs.
+red_flags:
+  - Data updated in one place with no matching cache invalidation
+  - Every cache entry using the same lifetime with no reasoning behind it
+  - Invalidation done in one service while another service writes the same data
+  - Explicit invalidation with no lifetime as a backstop
+  - No way to purge a bad entry quickly
+good_looks_like:
+  - Each cached item has a stated freshness rule and an owner
+  - Writes delete the matching entries after commit, rather than writing new values into the cache
+  - Versioned keys or reliable events, such as an outbox or change data capture, where several
+    services write the data
+  - Every entry has a safety lifetime even when explicit invalidation is used
+  - An operational way to purge by key or tag
+decide_between: Expiry alone, or explicit invalidation with expiry as a backstop. Expiry alone is
+  simple and fits data that can be stale for its lifetime. Explicit invalidation gives fresher data
+  but must cover every write path, so keep a lifetime to bound the damage from a missed one.
+related:
+  - 2
+  - 35
+  - 48
+  - 39
+agent_check:
+  level: partial
+  search_hints:
+    - "@CacheEvict"
+    - "@CachePut"
+    - cache.delete
+    - cache.del
+    - unlink
+    - revalidateTag
+    - revalidatePath
+    - invalidateQueries
+    - createInvalidation
+    - purge_cache
+    - Surrogate-Key
+    - cache tag
+    - stale-while-revalidate
+    - cache_key_version
+  evidence_to_request:
+    - The freshness rule and owner for each main cache
+    - The operational procedure to purge a bad entry

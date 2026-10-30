@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 18
+name: Distributed transactions
+category: messaging
+order: 40
+ownership: own
+definition: Keeping data consistent across multiple services or databases.
+how_it_works: A distributed transaction changes data in more than one service or database so that
+  either all changes happen or none do. Two-phase commit gives atomicity, but participants hold
+  locks while they wait, and if the coordinator fails after the prepare step they can stay blocked
+  until it recovers. Across independent services most teams avoid it and use sagas, the outbox
+  pattern or change data capture, with idempotent steps. Sagas and the outbox avoid distributed
+  locks but give up isolation. An outbox relay can publish an event more than once, so consumers
+  must deduplicate.
+where_it_appears: Code that updates several data stores in one business operation, transaction
+  manager configuration, outbox tables, and saga or workflow code.
+review_question: Which operations truly need atomicity across services?
+trade_off: Strong consistency across services is expensive and fragile; weaker models need compensation logic.
+why_it_matters: Updating two systems without a plan leaves them inconsistent when one step fails,
+  and the damage is hard to find later.
+red_flags:
+  - Writing to a database and publishing a message as two separate steps with no outbox
+  - Two-phase commit used across services without understanding its failure modes
+  - Business operations that span services with no compensation for failure
+  - No reconciliation to detect drift
+  - Calls to other services or brokers made inside an open local database transaction
+good_looks_like:
+  - Each multi-service operation has a stated consistency approach
+  - An outbox or change data capture, so an event is published if and only if the write commits,
+    possibly with delay and duplicates
+  - Compensation logic for steps that can fail late
+  - Reconciliation jobs that detect and report inconsistency
+decide_between: Two-phase commit, saga or a single owner for the data. Two-phase commit gives
+  atomicity at a cost of availability and coupling. Sagas keep services independent but need
+  compensation. Keeping related data in one service avoids the problem.
+also_fits: Databases
+applies_when: Applies when one business operation writes to more than one service, database or message broker.
+related:
+  - 19
+  - 35
+  - 38
+agent_check:
+  level: partial
+  search_hints:
+    - XAResource
+    - JtaTransactionManager
+    - Atomikos
+    - Narayana
+    - MSDTC
+    - EnlistTransaction
+    - ChainedTransactionManager
+    - two-phase
+    - 2pc
+    - outbox
+    - OutboxMessage
+    - debezium
+    - transactional.id
+    - compensat

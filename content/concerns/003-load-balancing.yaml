@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 3
+name: Load balancing
+category: traffic
+order: 20
+ownership: own
+definition: Spreads incoming traffic across multiple servers.
+how_it_works: A load balancer spreads incoming requests across several instances and stops sending
+  traffic to unhealthy ones. It works at layer 4 (connections) or layer 7 (HTTP requests, which
+  allows routing by path or header). The algorithm, such as round robin or least connections, and
+  the health checks decide how evenly and safely traffic is spread. Before an instance is removed
+  for a deployment or scale-in, the balancer should stop sending new requests and let in-flight ones
+  finish, which is called connection draining.
+where_it_appears: Cloud load balancer definitions in infrastructure code, ingress and service
+  manifests, reverse proxy upstream blocks, and DNS or traffic manager configuration.
+review_question: How does the load balancer detect unhealthy targets and drain in-flight connections during removal?
+trade_off: Layer 7 gives routing control at higher cost and latency than layer 4; sticky sessions
+  skew distribution.
+why_it_matters: A single instance is a single point of failure and a capacity ceiling. A
+  misconfigured balancer can send traffic to broken instances or pile load on one.
+red_flags:
+  - A single instance behind the entry point
+  - No health check on the load balancer targets
+  - Sticky sessions used to hide server-side state
+  - Backend keep-alive timeout shorter than the balancer’s idle timeout, causing intermittent 502
+    errors
+good_looks_like:
+  - At least two instances in separate failure zones behind the balancer
+  - Health checks that test the instance itself, not shared dependencies, and remove unhealthy
+    targets quickly
+  - Connection draining enabled so in-flight requests finish before an instance is removed
+  - Stateless instances, with sessions kept in a shared store
+  - Backend keep-alive timeout longer than the balancer’s idle timeout, with request timeouts
+    consistent across layers
+decide_between: Layer 4 or layer 7. Layer 4 is simpler and passes any protocol through. Layer 7
+  gives routing, header handling and per-request metrics, and is needed to spread HTTP/2 and gRPC
+  requests, which layer 4 pins to one backend per connection.
+also_fits: Scaling and infrastructure
+related:
+  - 56
+  - 45
+  - 4
+agent_check:
+  level: partial
+  search_hints:
+    - aws_lb
+    - aws_lb_target_group
+    - health_check
+    - deregistration_delay
+    - idle_timeout
+    - google_compute_backend_service
+    - azurerm_lb
+    - azurerm_application_gateway
+    - "type: LoadBalancer"
+    - sessionAffinity
+    - stickiness
+    - keepAliveTimeout
+    - connection_draining
+    - least_conn
+    - haproxy

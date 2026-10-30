@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../schema/retired.schema.json
+# Concern ids that were retired. An id is never reused and nothing may link to it.
+retired:
+  - id: 13
+    name: Exponential backoff
+    merged_into: 12
+    date: 2026-10-29
+    reason: It repeated the red flags and good practices of Retries, and backoff must be paired with a retry limit.

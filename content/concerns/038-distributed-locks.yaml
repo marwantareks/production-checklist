@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 38
+name: Distributed locks
+category: databases
+order: 140
+ownership: own
+definition: Mutual exclusion across machines (Redis, etcd).
+how_it_works: A distributed lock gives one process at a time exclusive access to a resource across
+  several machines, usually through Redis, a database or a coordination service. Correct use needs
+  an expiry so crashed holders do not block forever, and fencing tokens so a holder that paused
+  cannot act after its lock expired. Fencing tokens must come from a source that always increases,
+  such as an etcd revision or a database sequence, and the protected resource must reject older
+  tokens. Redis locks do not provide this.
+where_it_appears: Lock library usage (Redlock, database locks, ZooKeeper, etcd), scheduled job code
+  and critical-section code that runs on several instances.
+review_question: What happens if a lock holder pauses or dies, and are fencing tokens used?
+trade_off: Provides mutual exclusion across nodes but is easy to get subtly wrong and adds a dependency.
+why_it_matters: Locks that expire while work continues, or that have no fencing, can let two
+  processes act together, which defeats the purpose.
+red_flags:
+  - Locks with no expiry
+  - Lock expiry shorter than the work, with no renewal
+  - The lock used alone to protect data, with no fencing token or unique constraint
+  - A Redis lock, single node or Redlock, relied on alone for correctness
+  - Lock set and expiry set in two separate commands
+  - Lock released without checking it is still owned by the caller
+good_looks_like:
+  - Expiry and renewal sized to the work
+  - Fencing tokens or database constraints as the real protection
+  - Locks avoided where idempotency or a unique constraint would do
+  - Lock contention and timeouts monitored
+  - Scheduled jobs run once per cycle, not on every replica, with a timeout and a rule for
+    overlapping runs
+decide_between: Use a distributed lock, or design so it isn’t needed. Idempotent operations, unique
+  constraints and a single owner per partition are often safer than locks.
+also_fits: Concurrency
+related:
+  - 37
+  - 33
+  - 96
+agent_check:
+  level: code
+  search_hints:
+    - redlock
+    - SETNX
+    - SET NX
+    - RLock
+    - getLock(
+    - InterProcessMutex
+    - LockRegistry
+    - "@SchedulerLock"
+    - pg_try_advisory_lock
+    - pg_advisory_lock
+    - DistributedLock
+    - fencing
+    - zookeeper
+    - etcd

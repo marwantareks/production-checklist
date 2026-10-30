@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 30
+name: Sharding
+category: databases
+order: 60
+ownership: own
+definition: Splitting data across multiple databases by a key.
+how_it_works: "Sharding splits data across several databases using a shard key, such as customer or
+  region, so each holds part of the data and writes scale beyond one machine. Choosing the key
+  matters most: a poor key creates hotspots, and queries or transactions across shards become hard.
+  Unique constraints and auto-increment ids only hold within a shard, so ids need a global scheme.
+  Mapping keys to many logical shards, rather than modulo the number of servers, makes adding
+  capacity a move of whole shards."
+where_it_appears: Data access layer that routes queries to shards, shard key definitions, database
+  cluster configuration and rebalancing tooling.
+review_question: What is the shard key, and how will you rebalance and run cross-shard queries?
+trade_off: Scales writes beyond one node but complicates queries, transactions and operations; hard to undo.
+why_it_matters: Sharding is hard to undo and complicates queries, transactions and operations, so it
+  should be adopted for a proven need.
+red_flags:
+  - Sharding adopted with no capacity, residency or isolation need behind it
+  - A shard key that concentrates traffic on a few shards
+  - Frequent queries or transactions across shards
+  - No tested way to rebalance or add shards
+good_looks_like:
+  - Clear evidence that a single database or vertical scaling cannot meet needs
+  - Shard key chosen from access patterns, with hotspots checked
+  - Cross-shard queries rare and handled deliberately
+  - A tested rebalancing procedure
+decide_between: Shard the data, scale vertically, split data by function into separate databases, or
+  use a distributed or NoSQL database. Vertical scaling, replicas and caching are simpler for as
+  long as they work. Distributed databases move sharding into the product at their own cost.
+also_fits: Scaling
+related:
+  - 31
+  - 86
+  - 18
+agent_check:
+  level: partial
+  search_hints:
+    - shardKey
+    - shard_key
+    - shardCollection
+    - vschema
+    - create_distributed_table
+    - ShardingSphere
+    - shard_id
+    - vitess
+    - citus
+    - consistent hashing
+    - mongos

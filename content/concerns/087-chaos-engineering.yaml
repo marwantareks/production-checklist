@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 87
+name: Chaos engineering
+category: resilience
+order: 110
+ownership: guardrail
+definition: Deliberately injecting failures to test resilience.
+how_it_works: Chaos engineering injects controlled failures, such as killing instances, adding
+  latency or cutting a dependency, to check that the system behaves as designed. Each experiment
+  defines a measurable steady state and a hypothesis, starts in a non-production environment, limits
+  the blast radius, stops automatically when a key alarm fires, and ends with fixes for what was
+  found. Faults must clear automatically if the experiment or its agent stops, and the experiment
+  role should reach only tagged targets. Production runs come later, with on-call informed.
+where_it_appears: Chaos tooling configuration, fault injection libraries, test and game day plans,
+  and resilience test suites in CI.
+review_question: Which failure modes are exercised, and in which environment?
+trade_off: Reveals weaknesses before users do, but needs mature observability and blast-radius controls.
+why_it_matters: Resilience features such as retries and failover are only trusted once they have
+  been seen working under failure.
+red_flags:
+  - Resilience mechanisms that have never been triggered outside real incidents
+  - Experiments with no automatic stop condition tied to latency or error alarms, or targets not
+    limited by tag or percentage
+  - Failures only simulated in unit tests with mocks
+  - Findings from experiments not tracked to fixes
+good_looks_like:
+  - Regular experiments with a stated hypothesis and a limited blast radius
+  - Stop conditions tied to alarms, plus a manual stop
+  - Monitoring in place so effects are visible
+  - Results turned into tracked fixes
+applies_when: Applies when the system relies on resilience mechanisms such as failover, retries or
+  breakers. If monitoring cannot show the effect of an experiment, fix that first.
+related:
+  - 10
+  - 85
+  - 66
+  - 83
+agent_check:
+  level: partial
+  search_hints:
+    - chaos-mesh
+    - PodChaos
+    - NetworkChaos
+    - StressChaos
+    - ChaosEngine
+    - litmuschaos
+    - chaostoolkit
+    - steady-state-hypothesis
+    - toxiproxy
+    - pumba
+    - aws_fis_experiment_template
+    - azurerm_chaos_studio
+    - stop_condition
+    - chaosmonkey
+    - ChaosExperiment

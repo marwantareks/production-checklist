@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meta.schema.json",
+  "title": "Site metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "author", "year", "updated"],
+  "properties": {
+    "title": { "type": "string", "minLength": 3, "maxLength": 80 },
+    "author": { "type": "string", "minLength": 2, "maxLength": 80 },
+    "year": { "type": "integer", "minimum": 2026, "maximum": 2100 },
+    "updated": { "type": "string", "pattern": "^[A-Z][a-z]+ [0-9]{4}$", "description": "Month and year, for example October 2026." }
+  }
+}

@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 42
+name: Garbage collection
+category: concurrency
+order: 40
+ownership: guardrail
+definition: Automatic memory reclamation; pauses can hurt latency.
+how_it_works: "Garbage collection frees memory the program no longer uses, automatically. Collection
+  can pause the application or use CPU, so heap size, collector choice and allocation rate affect
+  latency. Runtimes differ: Python frees most memory by reference counting, .NET offers server and
+  workstation modes, and Go favors short pauses over memory. CPU limits on containers slow collector
+  threads and can lengthen pauses. Tuning is guided by measuring pause times and memory use under
+  realistic load."
+where_it_appears: Runtime flags and container memory limits, GC logs and metrics, language runtime
+  settings, and high-allocation code paths.
+review_question: How were runtime memory and garbage collection settings chosen, and what pause time
+  and memory data supports them?
+trade_off: Larger heaps cut collection frequency but cost memory. With stop-the-world collectors
+  they can also lengthen pauses, while low-pause collectors keep pauses short at a cost in CPU.
+why_it_matters: Long pauses show up as latency spikes and timeouts, and containers with the wrong
+  memory settings can crash or thrash.
+red_flags:
+  - Heap limits that leave no headroom below the container memory limit for non-heap memory, or
+    fixed heap sizes that ignore it
+  - No GC metrics collected
+  - Latency spikes that match GC pauses and are unexplained
+  - Settings copied from old guides and never measured
+good_looks_like:
+  - Heap limits expressed relative to the container limit, with headroom, and rolled out gradually
+    after load testing
+  - GC pause and frequency metrics collected
+  - Settings chosen from measurement under realistic load
+  - Allocation hot spots reviewed in latency-sensitive code
+also_fits: Performance
+related:
+  - 41
+  - 93
+  - 89
+agent_check:
+  level: partial
+  search_hints:
+    - -Xmx
+    - -Xms
+    - -XX:+UseG1GC
+    - -XX:+UseZGC
+    - -XX:MaxRAMPercentage
+    - ServerGarbageCollector
+    - DOTNET_gcServer
+    - GCHeapHardLimit
+    - gc.set_threshold
+    - GOGC
+    - GOMEMLIMIT
+    - max-old-space-size
+    - NODE_OPTIONS
+    - resources.limits.memory
+    - GCLogFileSize

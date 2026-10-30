@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 27
+name: N+1 queries
+category: databases
+order: 30
+ownership: guardrail
+definition: One query plus N extra per-row queries; fix with joins or batching.
+how_it_works: An N+1 problem happens when code runs one query to get a list and then one more query
+  for each item, for example loading 100 orders and then each order’s customer separately. The cost
+  grows with the list size. Fixes are joins, eager loading and batching.
+where_it_appears: Loops in data access code, ORM lazy-loaded relations, GraphQL resolvers and
+  serializers that touch related objects.
+review_question: Which access paths could trigger per-row queries, and how are they detected?
+trade_off: Joins or eager loading fix it, but joining several collections at once multiplies rows,
+  so batched or split queries are often better.
+why_it_matters: It is invisible in small tests and becomes a major source of latency and database
+  load in production.
+red_flags:
+  - Queries inside loops
+  - Lazy loading of relations while serializing lists
+  - GraphQL resolvers fetching per field with no batching
+  - No query-count assertions in tests
+good_looks_like:
+  - Related data loaded with joins, eager loading or batching
+  - Batching tools such as dataloaders in GraphQL
+  - Tests or tools that flag excess queries per request
+  - Query counts per request visible in tracing
+also_fits: Performance
+related:
+  - 26
+  - 28
+agent_check:
+  level: code
+  search_hints:
+    - select_related
+    - prefetch_related
+    - joinedload
+    - selectinload
+    - JOIN FETCH
+    - "@EntityGraph"
+    - "@BatchSize"
+    - preload(
+    - "include: {"
+    - ".includes(:"
+    - .Include(
+    - dataloader
+    - FetchType.LAZY
+    - assertNumQueries
+    - nplusone
+  look_for:
+    - A database query inside a loop over query results
+    - A lazy-loaded relationship read for each row in a list

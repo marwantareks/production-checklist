@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 1
+name: Rate limiting
+category: traffic
+order: 10
+ownership: guardrail
+definition: Caps requests per client per time window to prevent abuse and overload.
+how_it_works: "A limit caps how many requests a client can make in a time window, for example 100
+  per minute per API key. Choose the key deliberately: an API key, user or tenant when callers are
+  authenticated, and the client IP only for anonymous traffic, taken from the trusted proxy settings
+  and allowing for many users behind one address. Over-limit requests get HTTP 429, usually with
+  Retry-After. Accurate global limits need shared counters, so decide what happens if the counter
+  store is down: usually fail open with a local fallback, and closed only on sensitive endpoints
+  such as login."
+where_it_appears: API gateway and reverse proxy configuration, application middleware, login and
+  password-reset endpoints, and any public or expensive endpoint.
+review_question: Which clients and endpoints are limited, at what thresholds, and what do callers
+  see when throttled?
+trade_off: Tight limits protect capacity but block legitimate bursts; fair per-client limits need
+  shared state.
+why_it_matters: Without limits, one misbehaving client, bug or attacker can use all your capacity
+  and degrade service for everyone.
+red_flags:
+  - No limit on public or unauthenticated endpoints
+  - Limits applied after authentication, body parsing or database work, so rejected requests still
+    cost full capacity
+  - Limits tracked per instance in memory, so scaling out multiplies them
+  - Login, signup or password-reset endpoints with no limit
+  - Limits keyed on a raw forwarded header or on a shared proxy address
+  - Rejected requests with no Retry-After header or error explanation
+good_looks_like:
+  - Limits per client, key or user on every public endpoint, stricter on expensive operations
+  - Login and reset endpoints limited per IP and per account, with delays or step-up challenges
+    rather than hard account lockout
+  - Counters shared across instances, with a defined behavior if the store is down
+  - Clear 429 responses with Retry-After
+  - Rate-limit rejections visible in metrics
+decide_between: Enforce at the edge or gateway, or in the application. The gateway protects
+  everything uniformly and early. Application limits can use business context such as plan or
+  tenant, and are often needed as well.
+also_fits: Security, Resilience
+related:
+  - 5
+  - 75
+  - 4
+  - 44
+agent_check:
+  level: code
+  search_hints:
+    - ratelimit
+    - rate_limit
+    - RateLimiter
+    - limit_req_zone
+    - limit_req
+    - express-rate-limit
+    - "@nestjs/throttler"
+    - slowapi
+    - django-ratelimit
+    - Rack::Attack
+    - golang.org/x/time/rate
+    - bucket4j
+    - resilience4j.ratelimiter
+    - RateLimit-Limit
+    - TooManyRequests

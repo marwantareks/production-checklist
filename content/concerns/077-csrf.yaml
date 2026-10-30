@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 77
+name: CSRF
+category: security
+order: 110
+ownership: guardrail
+definition: Attack tricking a logged-in browser into unwanted requests.
+how_it_works: Cross-site request forgery tricks a logged-in user’s browser into sending an unwanted
+  request, such as a transfer, because browsers attach cookies automatically. The main defenses are
+  anti-forgery tokens, or checks of the Origin or Sec-Fetch-Site headers, on every state-changing
+  request, plus no state changes on GET. SameSite cookies add a layer but are not enough alone,
+  because they do not separate subdomains of the same site and browser defaults differ. APIs that
+  authenticate with a header such as a bearer token, not cookies, are not exposed to CSRF.
+where_it_appears: Session and cookie settings, form and API handlers that change state, framework
+  security configuration and token validation code.
+review_question: How are state-changing requests protected against forged cross-site calls?
+trade_off: Token and cookie policies add friction for some client types.
+why_it_matters: One malicious page can trigger actions as any visitor who is logged in to your application.
+red_flags:
+  - Cookie-based sessions with no SameSite attribute and no tokens
+  - State-changing actions available through GET requests
+  - CSRF protection disabled in the framework
+  - Tokens accepted from anywhere or not tied to the session
+good_looks_like:
+  - SameSite=Lax or SameSite=Strict on session cookies, as an extra layer
+  - Anti-forgery tokens or origin checks on state-changing requests
+  - No state changes through GET
+  - Framework protections enabled and tested
+  - Double-submit tokens, where used, signed and tied to the session
+related:
+  - 76
+  - 79
+  - 69
+agent_check:
+  level: code
+  search_hints:
+    - csrf
+    - xsrf
+    - SameSite
+    - csrf_token
+    - csurf
+    - "@csrf"
+    - csrf().disable
+    - csrf_exempt
+    - skip_before_action :verify_authenticity_token
+    - protect_from_forgery
+    - IgnoreAntiforgeryToken
+    - ValidateAntiForgeryToken
+    - VerifyCsrfToken
+    - "csrf: false"
+    - Sec-Fetch-Site

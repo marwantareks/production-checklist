@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 2
+name: Caching
+category: caching
+order: 10
+ownership: own
+definition: Stores computed or fetched results for fast reuse, cutting latency and backend load.
+how_it_works: A cache keeps a copy of data that is expensive to fetch or compute so later requests
+  are served faster. Caches can sit in the browser, at a CDN, in the application, or next to the
+  database. Each entry needs a key, a lifetime and a rule for when it is refreshed or removed. When
+  a popular entry expires, many requests can miss at once and hit the source together, a cache
+  stampede, so let one request refill it while others wait or get the stale value, and add jitter to
+  lifetimes.
+where_it_appears: Cache clients such as Redis or Memcached, in-process caches, HTTP cache headers,
+  CDN configuration, and ORM or query caches.
+review_question: What is cached, where, for how long, and what happens on a miss storm?
+trade_off: Cuts latency and load at the price of stale data and invalidation complexity.
+why_it_matters: Done well it cuts latency and backend load. Done badly it serves stale or wrong data
+  and can fail badly when the cache is empty.
+red_flags:
+  - Cached data that changes but has neither an expiry nor a reliable invalidation
+  - Cache keys missing a tenant or user, so one user can see another’s data
+  - A cache with no size or memory limit, or no eviction policy chosen
+  - No plan for a cold or failed cache, so the database takes the full load
+  - Lookups for missing records never cached, so repeated requests for absent keys reach the database
+  - Caching write-heavy or rarely repeated data
+good_looks_like:
+  - Each cache has a defined purpose, key design and lifetime
+  - Keys include everything that changes the result, such as user and tenant
+  - Every cache has a size or memory limit and an eviction policy chosen for its access pattern
+  - Cache calls have short timeouts and the system works acceptably, though slower, when the cache
+    is empty or down
+  - Stampede protection, for example single-flight refill or jittered lifetimes
+  - Hit rate and evictions are measured
+decide_between: In-process or shared cache. In-process is fastest but each instance holds its own
+  copy and invalidation must reach all of them. A shared cache such as Redis keeps one copy but adds
+  a network hop and a dependency. Then choose cache-aside, read-through, write-through or
+  write-behind. Write-behind is fastest for writes but can lose data if the cache fails before
+  flushing.
+related:
+  - 50
+  - 48
+  - 49
+  - 11
+agent_check:
+  level: partial
+  search_hints:
+    - redis
+    - go-redis
+    - StackExchange.Redis
+    - memcached
+    - aws_elasticache
+    - IDistributedCache
+    - IMemoryCache
+    - "@Cacheable"
+    - Caffeine.newBuilder
+    - maximumSize
+    - lru_cache
+    - cachetools
+    - singleflight
+    - maxmemory
+    - maxmemory-policy
+  evidence_to_request:
+    - Cache hit rate and eviction metrics
+    - What happens to database load when the cache restarts

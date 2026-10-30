@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 83
+name: Disaster recovery
+category: resilience
+order: 70
+ownership: own
+definition: Plan to restore service after major failure (RTO/RPO targets).
+how_it_works: "Disaster recovery is the plan and the capability to restore service after a major
+  failure such as a region outage, data corruption or a lost environment. It is defined by two
+  targets: RTO, how quickly service must return (including the time to detect the problem and decide
+  to recover), and RPO, how much recent data you can afford to lose. Replication protects against
+  lost infrastructure but copies corruption and deletion at once, so those cases need point-in-time
+  backups. Restoring large data sets and obtaining capacity, which may be scarce in a regional
+  event, count towards recovery time."
+where_it_appears: Architecture documents, runbooks, infrastructure code for standby environments,
+  backup and replication configuration, and the results of recovery tests.
+review_question: What are the RTO and RPO for each system, and when were they last tested?
+trade_off: Tighter recovery targets cost significantly more in standby capacity and replication.
+why_it_matters: Recovery that has never been tested usually fails when it is needed, and untested
+  targets are guesses the business may not know about.
+red_flags:
+  - No stated RTO or RPO
+  - Backups exist but no restore has ever been tested
+  - A recovery plan that depends on one person, or on systems that would also be down
+  - Recovery steps that need the control plane of the failed region or provider
+  - No named person or criteria for declaring a disaster, and no plan to fail back
+  - Targets the current design cannot meet
+good_looks_like:
+  - RTO and RPO agreed with the business for each system
+  - A recovery runbook that someone other than its author has followed
+  - Restore or failover tested on a schedule, with recorded results
+  - Dependencies and recovery order documented
+decide_between: Backup and restore (rebuild from backups), pilot light (data replicated and a
+  minimal core running, the rest started on demand), warm standby (a scaled-down full copy running)
+  or active-active (full capacity in more than one site). Each step reduces recovery time and data
+  loss and increases cost and complexity. Choose by RTO and RPO, not by preference.
+related:
+  - 84
+  - 85
+  - 86
+  - 87
+agent_check:
+  level: people
+  evidence_to_request:
+    - The signed-off RTO and RPO for this system
+    - The date and result of the last restore or failover test
+    - The recovery time and data loss measured in the last test, compared with the targets
+    - The recovery runbook

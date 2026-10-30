@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 25
+name: Database indexing
+category: databases
+order: 10
+ownership: own
+definition: Structures that speed up lookups at the cost of slower writes and more storage.
+how_it_works: An index lets the database find rows without scanning the whole table, for example
+  with a B-tree on a column. It speeds up reads that filter, join or sort on the indexed columns. It
+  slows inserts, deletes and updates to those columns, and takes storage and memory. A composite
+  index helps queries that filter on its leading columns, so an index on customer and date helps a
+  filter on customer but not one on date alone. Partial and covering indexes serve narrower cases.
+where_it_appears: Schema definitions and migrations, ORM model annotations, query code, and
+  slow-query or index usage reports.
+review_question: Are indexes checked against the top query patterns using real query statistics?
+trade_off: Faster reads versus slower writes and more storage for every index.
+why_it_matters: Missing indexes cause slow queries that get worse as data grows. Too many indexes
+  slow writes and waste space.
+red_flags:
+  - Foreign key and frequently filtered columns with no index
+  - Indexes on columns that are never queried
+  - Composite indexes in an order that does not match the queries
+  - No review of indexes against real queries
+good_looks_like:
+  - Indexes match the main query patterns, including foreign keys
+  - Unused indexes removed only after checking every node over a full business cycle, and never if
+    they enforce a constraint
+  - Index changes made through migrations and tested on realistic data
+  - Indexes on large tables built online (for example CREATE INDEX CONCURRENTLY in PostgreSQL), with
+    invalid indexes checked after a failed build
+  - Slow query logs reviewed regularly
+also_fits: Performance
+related:
+  - 26
+  - 27
+  - 31
+agent_check:
+  level: partial
+  search_hints:
+    - CREATE INDEX
+    - CREATE UNIQUE INDEX
+    - INDEX idx_
+    - "@Index"
+    - "@Table(indexes"
+    - "@@index"
+    - add_index
+    - db_index=True
+    - HasIndex(
+    - Index(
+    - ensureIndex
+    - createIndex
+    - pg_stat_user_indexes

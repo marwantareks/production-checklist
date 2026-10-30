@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 45
+name: Autoscaling
+category: scaling
+order: 30
+ownership: own
+definition: Automatically adding or removing capacity based on load.
+how_it_works: Autoscaling adds and removes instances automatically based on load signals such as
+  CPU, request rate or queue depth. Memory is rarely a good signal, because garbage-collected
+  runtimes keep memory after load falls. Settings include minimum and maximum counts, the metric and
+  target, and cooldown periods. New pods need node capacity, which takes minutes to add and which
+  quotas or subnet addresses can block. It can react too slowly for spikes and can scale into the
+  limits of dependencies such as the database.
+where_it_appears: Autoscaler definitions (HPA, cloud auto scaling groups, serverless concurrency),
+  metric sources and scaling policies in infrastructure code.
+review_question: What bottleneck metric determines autoscaling thresholds, and what are its upper and lower bounds?
+trade_off: Matches cost to load but reacts with delay and can scale into downstream limits.
+why_it_matters: Fixed capacity is either wasteful or overwhelmed. Badly set autoscaling flaps,
+  scales too late, or scales a tier whose dependency cannot cope.
+red_flags:
+  - Fixed instance counts for services with variable load
+  - Autoscaling on CPU only for services limited by something else
+  - No maximum, or a maximum above what dependencies can handle
+  - Utilization targets with no resource requests set
+  - A fixed replicas value in manifests that an autoscaler also manages
+  - Scale-in without graceful shutdown or connection draining, so active work is dropped
+good_looks_like:
+  - The scaling metric reflects the real bottleneck
+  - A minimum for resilience and a maximum that protects dependencies
+  - Warm-up and stabilization or cooldown set and tested
+  - Scale-in drains connections and lets in-flight work finish within the termination grace period
+  - Scale events and capacity monitored
+also_fits: Resilience
+related:
+  - 46
+  - 28
+  - 88
+  - 89
+agent_check:
+  level: code
+  search_hints:
+    - HorizontalPodAutoscaler
+    - ScaledObject
+    - minReplicas
+    - maxReplicas
+    - stabilizationWindowSeconds
+    - scaleTargetRef
+    - aws_autoscaling_group
+    - aws_appautoscaling_policy
+    - azurerm_monitor_autoscale_setting
+    - google_compute_autoscaler
+    - karpenter
+    - cluster-autoscaler
+    - target tracking
+    - KEDA

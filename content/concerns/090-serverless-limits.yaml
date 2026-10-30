@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 90
+name: Serverless limits
+category: scaling
+order: 80
+ownership: own
+definition: Caps on execution time, memory, payload size and concurrency.
+how_it_works: "Serverless platforms impose limits on execution time, memory, temporary disk, payload
+  size, concurrency and request rate. Designs must work inside them: long jobs are split or moved,
+  large payloads go through storage, and concurrency is planned so a spike does not overload a
+  database. The caller’s timeout, such as an API gateway, may be shorter than the function’s. Event
+  sources retry failed work, so handlers must be idempotent, and a function that triggers itself can
+  loop and run up a large bill."
+where_it_appears: Function configuration (timeout, memory, concurrency), event source settings,
+  payload handling code and account quota settings.
+review_question: Do duration, memory, payload and concurrency limits fit your workloads?
+trade_off: Low operations burden versus hard platform ceilings that can force a redesign.
+why_it_matters: Hitting a hard limit in production causes failures that cannot be fixed by tuning,
+  only by redesign.
+red_flags:
+  - Work that can exceed the maximum execution time
+  - Large payloads passed through the function
+  - No concurrency limit, so a burst can exhaust database connections
+  - Queue visibility timeout not well above the function timeout
+  - Account-level quotas unknown
+good_looks_like:
+  - Workloads checked against platform limits
+  - Long work split into steps or moved to a different service
+  - Reserved or limited concurrency for critical functions, sized from peak load and tested, with
+    throttling monitored
+  - Quotas known and monitored
+applies_when: Applies when the system uses serverless functions or other platforms with fixed execution limits.
+related:
+  - 89
+  - 15
+  - 28
+  - 14
+agent_check:
+  level: partial
+  search_hints:
+    - reserved_concurrent_executions
+    - ReservedConcurrentExecutions
+    - maximum_concurrency
+    - ephemeral_storage
+    - function_timeout
+    - timeoutSeconds
+    - max_instance_request_concurrency
+    - maxInstances
+    - client_max_body_size
+    - maxConcurrency
+    - batchSize
+    - visibility_timeout_seconds
+    - AWS::Lambda::Function
+    - Step Functions

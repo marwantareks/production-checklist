@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 6
+name: CI/CD
+category: delivery
+order: 10
+ownership: guardrail
+definition: Automated build, test and deploy pipelines.
+how_it_works: Continuous integration builds and tests every change automatically. Continuous
+  delivery keeps every passing build ready to release, with a person deciding when, and continuous
+  deployment releases every passing change automatically. Build the artifact once, identify it by
+  version or digest, and promote that same artifact through every environment, changing only
+  configuration. The pipeline is the controlled path to production, so who can change it, what
+  secrets it holds and which checks it enforces need care.
+where_it_appears: Pipeline definitions (GitHub Actions, GitLab CI, Jenkins, Azure Pipelines and
+  others), build and test scripts, deployment scripts and environment configuration.
+review_question: What automated gates exist between commit and production?
+trade_off: More gates catch more problems before production but slow feedback and delivery. Fast
+  pipelines depend on strong automated tests to stay safe.
+why_it_matters: Manual builds and releases are slow and inconsistent, and a weak pipeline lets
+  untested or unauthorized code reach production.
+red_flags:
+  - Deployments done manually from a laptop
+  - Required checks or approvals that can be skipped, marked allowed to fail, or bypassed by admins
+  - Long-lived credentials with broad access stored in the pipeline, or a token with default broad
+    permissions
+  - Pull requests from forks that can run with access to secrets or write tokens
+  - Third-party actions or plugins referenced by a mutable tag or branch instead of a commit
+  - The artifact rebuilt for each environment, or the same credentials able to deploy to test and
+    production
+good_looks_like:
+  - Every change built and tested automatically
+  - Deployments made from the pipeline only, with an audit trail
+  - Protected main branch with required reviews, and production deployments limited to a protected
+    environment with named approvers
+  - Cloud access through short-lived federated credentials, token permissions set to the minimum,
+    and third-party actions pinned to a commit
+  - Security and quality checks as required steps
+  - One artifact built once and promoted by digest
+related:
+  - 52
+  - 53
+  - 67
+  - 81
+agent_check:
+  level: partial
+  search_hints:
+    - .github/workflows/
+    - .gitlab-ci.yml
+    - Jenkinsfile
+    - azure-pipelines.yml
+    - .circleci/config.yml
+    - buildspec.yml
+    - bitbucket-pipelines.yml
+    - cloudbuild.yaml
+    - pull_request_target
+    - "id-token: write"
+    - allow_failure
+    - continue-on-error
+    - "permissions:"
+    - "environment:"
+    - "kind: Pipeline"
+  evidence_to_request:
+    - Branch protection and required reviewers in the hosting platform
+    - Who holds production deploy access, and any deployments made outside the pipeline

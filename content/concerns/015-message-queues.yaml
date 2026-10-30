@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 15
+name: Message queues
+category: messaging
+order: 10
+ownership: own
+definition: Async buffer between producers and consumers (SQS, RabbitMQ).
+how_it_works: A message queue holds messages between a producer and a consumer so they do not need
+  to run at the same time or speed. Consumers take a message, process it and acknowledge it.
+  Unacknowledged messages are redelivered when a visibility timeout or lock expires, so the timeout
+  must exceed the slowest processing time or be extended while work continues. Log systems such as
+  Kafka commit an offset per consumer group instead. Most systems deliver at least once, so
+  consumers must handle duplicates, and exactly-once features cover only part of the path.
+where_it_appears: Queue and broker clients (SQS, RabbitMQ, Kafka, Service Bus and similar),
+  background job frameworks (Celery, Sidekiq, BullMQ, Hangfire and similar), consumer and producer
+  code, broker configuration and infrastructure definitions.
+review_question: Which flows are queued, with what ordering, durability and delivery guarantees?
+trade_off: Decouples and smooths load, but adds latency, operational overhead and eventual consistency.
+why_it_matters: Queues absorb bursts and decouple services, but they add delay, make failures
+  asynchronous and deliver messages more than once.
+red_flags:
+  - Consumers that are not safe to run twice on the same message
+  - Messages acknowledged before processing completes, including automatic acknowledgement or offset
+    commit on consumers whose work can fail
+  - No alert on backlog or on the age of the oldest message
+  - A queue length limit with no defined overflow behavior, which can silently drop messages
+  - Failed messages requeued immediately with no delay and no attempt limit
+  - Large payloads placed directly in messages
+good_looks_like:
+  - Consumers are idempotent and acknowledge after success
+  - A dead letter queue for messages that keep failing
+  - Backlog and age of the oldest message monitored and alerted
+  - Consumer prefetch limits configured so one worker cannot exhaust its memory
+  - Where order matters, it is scoped by key and retries do not reorder messages for that key
+  - Message schema and size limits defined
+decide_between: Queue or stream. A queue suits independent tasks, each handled by one of several
+  competing consumers. A log or stream suits many consumer groups, replay and ordering by key, which
+  holds only within a partition and only if each partition is processed in order.
+related:
+  - 20
+  - 14
+  - 44
+agent_check:
+  level: code
+  search_hints:
+    - sqs
+    - rabbitmq
+    - servicebus
+    - amqp
+    - basicAck
+    - autoAck
+    - enable.auto.commit
+    - VisibilityTimeout
+    - visibility_timeout_seconds
+    - ReceiveMessage
+    - "@RabbitListener"
+    - "@KafkaListener"
+    - "@SqsListener"
+    - celery
+    - sidekiq

@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 122
+name: Bulkheads and resource isolation
+category: resilience
+order: 150
+ownership: guardrail
+definition: Giving each dependency or workload its own limited pool of resources so one cannot
+  exhaust everything.
+how_it_works: "A bulkhead limits how much of a shared resource one dependency, tenant or kind of
+  work can use. Examples are a separate thread pool or connection pool per downstream service, a
+  semaphore or concurrency limit, separate queues for urgent and bulk work, and separate deployments
+  or cells. In async runtimes the bulkhead is a concurrency limit and a per-host connection cap.
+  When a pool is full, calls must be rejected or time out quickly, with a bounded queue, or callers
+  still wait and the outage returns. Size limits with Little’s Law: concurrent calls equal request
+  rate times latency, plus headroom."
+where_it_appears: Thread pool and executor definitions, connection pool settings per client,
+  concurrency limits and semaphores, queue and worker separation, resource limits in orchestrator
+  manifests, and cell or tenant partitioning.
+review_question: What stops one slow dependency or noisy workload from using up the threads,
+  connections or memory the rest needs?
+trade_off: Isolation limits blast radius but wastes some capacity, because idle pools cannot lend
+  resources to busy ones.
+why_it_matters: Shared pools can turn a slow dependency into a full outage, because every request
+  ends up waiting on the same limited resource.
+red_flags:
+  - One shared thread or connection pool for every downstream call
+  - Unbounded queues or thread pools, including executors created with a default unbounded queue
+  - Background and bulk work competing with user requests for the same workers
+  - No per-dependency limit on concurrent calls
+  - A noisy tenant able to use all capacity
+  - Limits set without measurement and never reviewed
+good_looks_like:
+  - Separate pools or concurrency limits per dependency and per workload type
+  - Bounded queues and executors with a defined behavior when full
+  - Bulk and background work isolated from interactive traffic
+  - Pool saturation and rejection metrics monitored
+  - Tests that slow one dependency and show the rest keep working
+related:
+  - 10
+  - 11
+  - 44
+  - 120
+agent_check:
+  level: partial
+  search_hints:
+    - "@Bulkhead"
+    - SemaphoreBulkhead
+    - ThreadPoolBulkhead
+    - ArrayBlockingQueue
+    - maxConcurrentCalls
+    - max_workers
+    - SemaphoreSlim
+    - MaxDegreeOfParallelism
+    - AddConcurrencyLimiter
+    - MaxConnectionsPerServer
+    - setMaxPerRoute
+    - maxSockets
+    - p-limit
+    - asyncio.Semaphore
+    - ResourceQuota
+  look_for:
+    - One executor or connection pool shared by calls to several downstream services
+  evidence_to_request:
+    - Pool saturation and rejection metrics
+    - Results of a test that slowed one dependency

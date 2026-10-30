@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 92
+name: Throughput
+category: caching
+order: 60
+ownership: own
+definition: Requests or data handled per unit of time.
+how_it_works: "Throughput is how much work the system completes per unit of time, such as requests
+  per second or messages per minute. Capacity planning compares expected peak throughput with what
+  the system sustains, leaving headroom below the point where latency climbs steeply. Throughput,
+  latency and concurrency are linked: work in progress equals throughput times latency, which helps
+  size pools and queues. Batching usually raises throughput and can add latency for individual
+  items."
+where_it_appears: Capacity plans, load test results, scaling policies, and metrics for request rate and queue depth.
+review_question: What peak request or data rate must be sustained, and how much headroom is planned?
+trade_off: Maximizing throughput through batching and high concurrency increases queuing and tail
+  latency, and reserving headroom increases infrastructure cost.
+why_it_matters: If peak demand exceeds capacity, latency rises and failures follow. Unknown capacity
+  means you find the limit in production.
+red_flags:
+  - No estimate of peak load
+  - Capacity never tested beyond normal traffic
+  - Scaling limits set without knowing the bottleneck
+  - A shared dependency that caps throughput and is not monitored
+  - Load tests that call real third-party services or shared production systems
+good_looks_like:
+  - Expected peak and growth stated in numbers
+  - Load tests find the highest rate the system sustains while meeting its latency targets, and the
+    point where it degrades
+  - Headroom set against peak, with the bottleneck known
+  - Throughput, saturation and queue depth monitored
+also_fits: Observability
+related:
+  - 91
+  - 45
+  - 44
+  - 28
+agent_check:
+  level: people
+  evidence_to_request:
+    - Expected peak load and growth
+    - The latest load test report and its bottleneck
+    - Current headroom against peak

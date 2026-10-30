@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 72
+name: Encryption at rest
+category: security
+order: 60
+ownership: own
+definition: Encrypting stored data.
+how_it_works: Encryption at rest protects stored data in databases, disks, object storage and
+  backups against lost or stolen media. With transparent encryption, anyone with valid access to the
+  service still sees plaintext, so it does not replace access control. It relies on keys held in a
+  key management service, and field-level or customer-managed keys narrow who can read data.
+  Decisions include who controls the keys, how often they rotate and who can use them.
+where_it_appears: Storage, database and backup settings in infrastructure code, key management
+  configuration, and application-level encryption of sensitive fields.
+review_question: What is encrypted, with whose keys, and how are keys managed?
+trade_off: Meets compliance but adds key management and a small performance cost.
+why_it_matters: It reduces the damage of lost media and some access mistakes, and it is often
+  required for compliance.
+red_flags:
+  - Storage, databases or backups with encryption off, judged against each service’s default rather
+    than whether a setting is present
+  - Keys stored next to the data they protect
+  - One key for every data set, or keys never rotated
+  - Sensitive fields stored in plain text where field-level protection is needed
+good_looks_like:
+  - Encryption on for all data stores and backups
+  - Keys managed in a key service with access controls and rotation
+  - Access to keys separate from access to data
+  - Sensitive fields protected at application level where required
+decide_between: Provider-managed keys or customer-managed keys. Provider-managed is simpler.
+  Customer-managed gives more control and audit but adds operating work, and a deleted key makes
+  every copy of the data, including backups, unreadable, so it needs deletion protection and a
+  waiting period.
+also_fits: Databases
+related:
+  - 73
+  - 67
+  - 84
+agent_check:
+  level: partial
+  search_hints:
+    - kms
+    - storage_encrypted
+    - kms_key_id
+    - server_side_encryption_configuration
+    - encrypt_at_rest
+    - kms_key_name
+    - aws_ebs_encryption_by_default
+    - disk_encryption_set_id
+    - encryption_configuration
+    - customer managed key
+    - cmek
+    - TDE

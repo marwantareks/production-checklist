@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 5
+name: API gateways
+category: traffic
+order: 40
+ownership: own
+definition: "Single entry point for APIs: auth, routing, throttling, logging."
+how_it_works: An API gateway is a single entry point for client requests to many services. It
+  handles cross-cutting work such as authentication, routing, rate limiting, request transformation,
+  logging and sometimes caching, so each service doesn’t need its own copy. Managed gateways impose
+  their own timeouts, payload limits and per-request charges, so check them against your slowest and
+  largest requests and your expected volume.
+where_it_appears: Gateway configuration or infrastructure code (cloud API gateway, Kong, Apigee and
+  similar), route and policy definitions, and service manifests that expose APIs.
+review_question: Which cross-cutting policies live in the gateway and which stay in services?
+trade_off: One enforcement point simplifies governance but can become a bottleneck and a coupling hub.
+why_it_matters: Without a gateway each service implements security and traffic rules differently,
+  and gaps appear. With one, the gateway becomes a bottleneck and a coupling point if too much logic
+  moves into it.
+red_flags:
+  - Services exposed to clients directly as well as through the gateway
+  - Business logic implemented in gateway policies
+  - Authentication enforced on some routes and forgotten on others
+  - Services that trust identity headers from the gateway without verifying them
+  - Gateway running as a single instance, or in fewer regions than the services behind it
+good_looks_like:
+  - Every external route passes through the gateway with authentication enforced by default
+  - Services accept traffic only from the gateway, verify the identity token or signed headers it
+    forwards, and still enforce authorization on each resource
+  - Gateway authorizers and plugins have strict timeouts and token caching
+  - Gateway holds only cross-cutting policy, not business logic
+  - Policies are defined as code and reviewed
+  - Gateway is redundant and monitored for latency and errors
+decide_between: One shared gateway or one per domain or team. A shared gateway is simpler to govern.
+  Separate gateways reduce blast radius and team coupling but multiply operations.
+related:
+  - 1
+  - 69
+  - 102
+agent_check:
+  level: partial
+  search_hints:
+    - aws_api_gateway
+    - aws_apigatewayv2
+    - x-amazon-apigateway
+    - azurerm_api_management
+    - x-google-backend
+    - kong
+    - KongPlugin
+    - apigee
+    - krakend
+    - emissary
+    - HTTPRoute
+    - spring-cloud-gateway
+    - YARP
+    - ocelot
+    - tyk

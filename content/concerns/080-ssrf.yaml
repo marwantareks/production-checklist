@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 80
+name: SSRF
+category: security
+order: 140
+ownership: guardrail
+definition: "Server-side request forgery: tricking the server into calling internal resources."
+how_it_works: Server-side request forgery makes a server send requests to places the attacker
+  chooses, such as internal services or cloud metadata endpoints, usually through features that
+  fetch a URL. Defenses are allow lists of destinations, blocking internal and metadata addresses,
+  validating after DNS resolution, restricted network egress and metadata service protections.
+where_it_appears: Code that fetches user-supplied URLs (webhooks, imports, image fetch, link
+  previews), HTTP client wrappers, network egress rules and cloud metadata settings.
+review_question: Can the server be made to call internal addresses, and are outbound calls restricted?
+trade_off: Egress restrictions limit risk but complicate legitimate integrations.
+why_it_matters: SSRF has led to major breaches through stolen cloud credentials from metadata services.
+red_flags:
+  - Fetching any URL a user supplies
+  - Checking the URL text but not the address it resolves to, including forms such as 0.0.0.0, IPv6
+    and decimal or hex notation
+  - Following redirects to internal addresses
+  - The cloud metadata service reachable with its weaker, older access mode (for example IMDSv1 on
+    AWS)
+good_looks_like:
+  - An allow list of permitted destinations where possible
+  - Private, loopback, link-local and metadata ranges blocked for IPv4 and IPv6, with the connection
+    pinned to the checked address
+  - Only http and https schemes allowed
+  - Redirects disabled or revalidated
+  - Egress filtering and the hardened metadata service version
+related:
+  - 101
+  - 74
+  - 68
+  - 73
+agent_check:
+  level: code
+  search_hints:
+    - requests.get(
+    - urlopen
+    - 169.254.169.254
+    - fd00:ec2::254
+    - metadata.google.internal
+    - http_tokens
+    - HttpTokens
+    - metadata_options
+    - file://
+    - gopher://
+    - maxRedirects
+    - follow_redirects
+    - allow_redirects
+    - HttpClient
+    - fetch(

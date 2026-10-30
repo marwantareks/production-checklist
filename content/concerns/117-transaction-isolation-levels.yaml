@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 117
+name: Transaction isolation levels
+category: databases
+order: 170
+ownership: guardrail
+definition: How much concurrent transactions can see of each other’s work, and which anomalies the
+  database allows.
+how_it_works: Isolation levels trade correctness against concurrency, and level names are not
+  portable. Read committed, the default in PostgreSQL, SQL Server and Oracle, lets a transaction see
+  changes committed by others between its statements, so a read then a write can overwrite an update
+  made in between (a lost update). Repeatable read and snapshot isolation prevent some anomalies,
+  but what they prevent depends on the database (MySQL InnoDB defaults to it and can still lose
+  updates), and all can allow write skew. True serializable prevents these by aborting or locking,
+  so the application must retry.
+where_it_appears: Transaction settings in database drivers and ORMs, connection defaults, explicit
+  isolation statements, locking clauses in queries, retry logic for serialization failures, and
+  tests for concurrent updates.
+review_question: Which isolation level does each critical transaction run at, and what anomalies could it allow?
+trade_off: Stronger isolation prevents subtle data bugs but lowers throughput and needs retries.
+  Raise it per transaction and load test it first, because locking databases can block or deadlock.
+why_it_matters: Isolation bugs corrupt money, stock and booking data only under concurrent load, so
+  tests rarely catch them and production does.
+red_flags:
+  - Code that assumes serializable behavior while running at the default level
+  - Read then write sequences on shared rows inside a default level transaction
+  - No retry on serialization failure or deadlock errors
+  - Isolation changed globally to fix one problem
+  - Business rules spanning several rows enforced only by application checks
+good_looks_like:
+  - The isolation level stated for each critical transaction and tested under concurrency
+  - Atomic statements, row locks or version checks used where lost updates matter (see 36 and 37)
+  - Retry of the whole transaction on serialization failures and deadlocks, with a limit and
+    backoff, and no external side effects inside it
+  - Rules across rows enforced by serializable transactions, by locking a shared parent row, or by a
+    unique or exclusion constraint where one fits
+  - The default level of each database known and documented
+decide_between: Atomic updates, version checks, row locks or serializable isolation. Atomic updates
+  and row locks suit contention on a few rows. Version checks suit rare conflicts. Serializable
+  isolation suits rules that span several rows, at the cost of throughput and retries.
+related:
+  - 37
+  - 39
+  - 40
+  - 118
+agent_check:
+  level: partial
+  search_hints:
+    - SET TRANSACTION ISOLATION LEVEL
+    - isolation_level
+    - Isolation.SERIALIZABLE
+    - IsolationLevel.Serializable
+    - default_transaction_isolation
+    - FOR UPDATE
+    - select_for_update
+    - with_for_update
+    - PESSIMISTIC_WRITE
+    - READ_COMMITTED_SNAPSHOT
+    - SerializationFailure
+    - could not serialize access
+    - 40P01
+    - "@Transactional(isolation"
+    - TransactionIsolationLevel
+  evidence_to_request:
+    - The isolation level used by each critical transaction
+    - Concurrent update tests for money, stock and booking flows

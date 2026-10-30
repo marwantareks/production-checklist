@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../../schema/concern.schema.json
+id: 59
+name: Logging
+category: observability
+order: 20
+ownership: guardrail
+definition: Recording events for debugging and audit.
+how_it_works: Logging records events from the application for debugging, audit and analysis. Good
+  logs are structured (such as JSON), carry a request or trace id, use levels consistently, avoid
+  sensitive data and are collected centrally. Logging should not block requests, so writes are
+  asynchronous with bounded buffers. Audit logs need tamper-resistant storage and a minimum
+  retention, while other logs are kept no longer than needed and with restricted access, because
+  they often contain personal data.
+where_it_appears: Logging libraries and configuration, middleware that logs requests, error handling
+  code, and log shipping and retention settings.
+review_question: What is logged for each service, and how are sensitive fields kept out of it?
+trade_off: Rich logs aid debugging but raise storage cost and may expose sensitive data.
+why_it_matters: Logs are often the main source of truth during an incident, and they can also leak
+  personal data and secrets if written carelessly.
+red_flags:
+  - Unstructured text logs with no correlation id
+  - Passwords, tokens or personal data written to logs
+  - Request or response bodies, headers or full URLs logged without filtering
+  - User input written to logs without encoding, or logging libraries with message lookups enabled
+  - Logs kept only on instances that are replaced
+  - Debug logging left on in production with no control
+good_looks_like:
+  - Structured logs with a request or trace id
+  - Sensitive fields removed or masked in the application before logs are written
+  - Logging is asynchronous with a bounded buffer, and high-volume logs are sampled or rate limited,
+    with volume and cost tracked
+  - Logs shipped to central storage with defined retention
+  - Log level adjustable at runtime
+also_fits: Security (audit trail)
+related:
+  - 60
+  - 66
+  - 62
+  - 67
+agent_check:
+  level: partial
+  search_hints:
+    - console.log
+    - log4j2.xml
+    - logback.xml
+    - Serilog
+    - NLog
+    - go.uber.org/zap
+    - zerolog
+    - logrus
+    - slog
+    - winston
+    - pino
+    - structlog
+    - MDC
+    - X-Request-ID
+    - retention_in_days
+  look_for:
+    - A password, token or Authorization header passed to a log call
+    - Request or response bodies logged without filtering
+    - Log entries with no request or correlation id
+  evidence_to_request:
+    - The central log platform and its retention settings
+    - Who can read production logs
