@@ -181,6 +181,7 @@ h1,h2,h3{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,s
 
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
 .fgrid.f5{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.fgrid.f6{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .fcard{background:var(--bg);border:2px solid var(--ol);border-radius:14px;padding:22px 18px;text-align:center}
 .fcard .tile{margin:0 auto 12px}
 .fcard h3{font-size:1rem;margin:0 0 6px;font-weight:700}
