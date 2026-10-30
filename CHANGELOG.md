@@ -14,3 +14,4 @@ All notable changes are listed here. Dates use the year and month.
 - Content, page and browser layout tests.
 - Plainer wording in agent review mode: a short intro, a note on the paste step, a clearer placeholder and friendlier import errors.
 - Fixed the build, validate and review scripts doing nothing on Windows.
+- Added a "What you get" section that leads with the benefits, widened the agent review text to the full box, and added build steps to the README.

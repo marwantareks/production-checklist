@@ -16,12 +16,25 @@ The output is a single self-contained HTML file with light and dark themes and n
 Requires Node.js 20 or later.
 
 ```sh
-npm ci
-npm run check      # validate content, build the page, run the tests
-open dist/index.html
+npm ci             # install dependencies, once
+npm run build      # write dist/index.html
 ```
 
+Then open `dist/index.html` in a browser: `open dist/index.html` on macOS, `start dist\index.html` on Windows, `xdg-open dist/index.html` on Linux.
+
+`npm run check` validates the content, builds the page and runs the tests in one step. Run it before every commit.
+
 To host it, copy `dist/index.html` to any static host. It has no other files.
+
+## Building the page
+
+`npm run build` reads `content/`, `src/template.html`, `src/styles.css`, `src/lib/prompt.js` and `src/app.js`, and inlines them all into one file, `dist/index.html`. It creates `dist/` if it is missing. The build fails if a `{{PLACEHOLDER}}` in the template is left unreplaced.
+
+1. Edit the source: a concern in `content/concerns/`, or the page in `src/`.
+2. Run `npm run check`. It validates, rebuilds and tests.
+3. Reload `dist/index.html` in your browser.
+
+`dist/` is generated and not committed, so a fresh clone has no `dist/` until you build. Never edit it by hand, because the next build overwrites it. `npm run prompts` also writes the Claude Code prompts to `dist/prompts/`.
 
 ## Commands
 
@@ -63,7 +76,7 @@ CLAUDE.md                project instructions for Claude Code
 
 ## Editing content
 
-Edit the YAML in `content/concerns/`, then run `npm run check`. Never edit `dist/`. The fields are described in [docs/SCHEMA.md](docs/SCHEMA.md) and the writing rules are in [docs/CONTENT_STYLE_GUIDE.md](docs/CONTENT_STYLE_GUIDE.md). For how the pieces fit together, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Edit the YAML in `content/concerns/`, then run `npm run check` to rebuild. The fields are described in [docs/SCHEMA.md](docs/SCHEMA.md) and the writing rules are in [docs/CONTENT_STYLE_GUIDE.md](docs/CONTENT_STYLE_GUIDE.md). For how the pieces fit together, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## How agent review works
 
