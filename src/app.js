@@ -223,10 +223,10 @@ function importFindings(text){
   if(!s)throw new Error("Paste the findings first.");
   var m=s.match(/```(?:json)?\s*([\s\S]*?)```/);if(m)s=m[1].trim();
   var a=s.indexOf("{"),b=s.lastIndexOf("}");
-  if(a<0||b<=a)throw new Error("No JSON object found in the pasted text.");
+  if(a<0||b<=a)throw new Error("That doesn’t look like Claude Code’s results. Copy the whole reply and try again.");
   var o;
-  try{o=JSON.parse(s.slice(a,b+1))}catch(e){throw new Error("The JSON could not be read. Ask Claude Code to return valid JSON only.")}
-  if(!o||!Array.isArray(o.findings))throw new Error("Expected an object with a findings array.");
+  try{o=JSON.parse(s.slice(a,b+1))}catch(e){throw new Error("The results could not be read. Ask Claude Code to send the results again as JSON only, then paste the new reply.")}
+  if(!o||!Array.isArray(o.findings))throw new Error("This reply has no findings in it. Make sure you copied the whole reply from Claude Code.");
   var n=0,ig=0;
   o.findings.forEach(function(f){
     var id=(f&&typeof f.id==="number")?f.id:parseInt(f&&f.id,10);

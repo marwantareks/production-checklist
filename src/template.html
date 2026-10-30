@@ -96,7 +96,7 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.doc
 
 <section id="agentPanel" class="agent" aria-labelledby="ag-h" hidden>
 <h3 id="ag-h">Review your application with Claude Code</h3>
-<p class="lede">Claude Code reads your repository and reports what it finds for each concern. You check the evidence and decide. Nothing leaves this page: the prompt is built here and the findings are pasted back here.</p>
+<p class="lede">Three steps: copy the prompt, run it in Claude Code, then paste its reply back here. Claude Code reads your repository and reports what it finds for each concern. You check the evidence and decide. Nothing leaves this page.</p>
 <ol class="steps">
 <li>
 <h4>Choose what to review</h4>
@@ -115,8 +115,9 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.doc
 </li>
 <li>
 <h4>Paste the findings back</h4>
+<p class="note">When Claude Code finishes, it replies with a block of results. Copy that whole reply and paste it below. Each concern will then show what Claude Code found in your code, with the file and line it looked at. Nothing is marked for you. You check the evidence and decide.</p>
 <label for="agIn" class="sr">Findings from Claude Code</label>
-<textarea id="agIn" rows="6" placeholder="Paste the JSON that Claude Code returns"></textarea>
+<textarea id="agIn" rows="6" placeholder="Paste Claude Code’s full reply here"></textarea>
 <div class="row"><button id="agImport" class="btn" type="button">Import findings</button><button id="agClear" class="chip" type="button">Clear findings</button><span id="agErr" class="err" role="alert"></span></div>
 <p id="agSum" class="note"></p>
 </li>

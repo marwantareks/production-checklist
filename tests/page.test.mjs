@@ -108,7 +108,7 @@ test("importing ignores unknown ids and invalid results", () => {
 test("importing reports unreadable input and never changes review status", () => {
   const p = loadPage();
   importWith(p, "not json at all");
-  assert.match(p.d.getElementById("agErr").textContent, /No JSON object/);
+  assert.match(p.d.getElementById("agErr").textContent, /doesn.t look like Claude Code/);
   importWith(p, JSON.stringify({ findings: [{ id: 67, result: "found" }] }));
   assert.equal(p.w.localStorage.getItem("reviewStatus"), null);
 });
