@@ -1,3 +1,0 @@
-I built a free checklist of 115 production concerns for architects: each one has a review question and a trade-off.
-There's also a read-only agent review for Claude Code that cites file and line, and says cannot_determine instead of guessing.
-https://marwantareks.github.io/production-checklist/
