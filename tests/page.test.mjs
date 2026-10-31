@@ -37,8 +37,8 @@ test("review status updates progress and is saved in the browser", () => {
   p.click(p.pill("Retries"));
   p.click(p.d.querySelector('.sb[data-st="decided"]'));
   assert.match(p.d.getElementById("progText").textContent, /^1 of /);
-  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("reviewStatus")), { 12: "decided" });
-  const again = loadPage({ storage: { reviewStatus: p.w.localStorage.getItem("reviewStatus") } });
+  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("prc.reviewStatus")), { 12: "decided" });
+  const again = loadPage({ storage: { "prc.reviewStatus": p.w.localStorage.getItem("prc.reviewStatus") } });
   assert.match(again.d.getElementById("progText").textContent, /^1 of /);
 });
 
@@ -110,7 +110,7 @@ test("importing reports unreadable input and never changes review status", () =>
   importWith(p, "not json at all");
   assert.match(p.d.getElementById("agErr").textContent, /doesn.t look like Claude Code/);
   importWith(p, JSON.stringify({ findings: [{ id: 67, result: "found" }] }));
-  assert.equal(p.w.localStorage.getItem("reviewStatus"), null);
+  assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), null);
 });
 
 test("Use suggested status is offered only for found and not found", () => {
@@ -135,7 +135,7 @@ test("theme toggle switches and remembers the theme", () => {
   assert.equal(p.d.documentElement.getAttribute("data-theme"), "light");
   p.click(p.d.getElementById("themeBtn"));
   assert.equal(p.d.documentElement.getAttribute("data-theme"), "dark");
-  assert.equal(p.w.localStorage.getItem("theme"), "dark");
+  assert.equal(p.w.localStorage.getItem("prc.theme"), "dark");
 });
 
 test("not applicable is a review status that leaves the progress count", () => {
@@ -143,7 +143,7 @@ test("not applicable is a review status that leaves the progress count", () => {
   const total = content.concerns.length;
   p.click(p.pill("Timeouts"));
   p.click(p.d.querySelector('.sb[data-st="na"]'));
-  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("reviewStatus")), { 11: "na" });
+  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("prc.reviewStatus")), { 11: "na" });
   assert.equal(p.d.getElementById("progText").textContent, `0 of ${total - 1} reviewed, 1 not applicable`);
   assert.equal(p.d.getElementById("nNA").textContent, "1");
   assert.equal(p.d.getElementById("nNone").textContent, String(total - 1));
@@ -206,10 +206,74 @@ test("importing masks anything that looks like a credential before it is stored 
     { file: "db.ts", line: 1, quote: "postgres://admin:s3cretpass@db.internal/app" },
   ], red_flags: [{ flag: "Key in source", evidence: [{ file: "x", line: 1, quote: "api_key=" + aws }] }], note: "Found secret_key = hunter2hunter2 in the file." }] };
   importWith(p, JSON.stringify(payload));
-  const stored = p.w.localStorage.getItem("agentFindings");
+  const stored = p.w.sessionStorage.getItem("prc.agentFindings");
   for (const s of [aws, "hunter2hunter2", secrets[2], secrets[3], "s3cretpass", "MIIEowIBAAKCAQEA", "SflKxwRJSMeKKF2QT4"]) assert.ok(!stored.includes(s), `stored findings still contain ${s}`);
   p.click(p.pill("Secrets management"));
   const shown = p.d.getElementById("detail").textContent;
   assert.ok(!shown.includes(aws) && !shown.includes("hunter2hunter2"));
   assert.ok(shown.includes("secret value redacted"));
+});
+
+test("a stored review status that is an inherited property name does not break the page", () => {
+  const storage = { "prc.reviewStatus": JSON.stringify({ 11: "constructor", 12: "__proto__", 13: ["decided"], 14: "decided", constructor: "decided" }) };
+  const p = loadPage({ storage });
+  assert.deepEqual(p.errors, []);
+  assert.equal(p.d.querySelectorAll("#grid .pill").length, content.concerns.length);
+  assert.equal(p.d.getElementById("nDec").textContent, "1");
+});
+
+test("masking covers file paths, quoted values with spaces and quoted JSON keys", () => {
+  const p = loadPage();
+  const payload = { findings: [{ id: 67, result: "not_found", evidence: [
+    { file: "deploy/https://ci-user:p4ssw0rdvalue@host/repo.yml", line: 1, quote: 'config = { "password": "correct horse battery" }' },
+    { file: "a.env", line: 2, quote: "api_key='two words here' and \"client_secret\": \"abcd1234efgh\"" },
+  ], note: "ok" }] };
+  importWith(p, JSON.stringify(payload));
+  const stored = p.w.sessionStorage.getItem("prc.agentFindings");
+  for (const s of ["p4ssw0rdvalue", "correct horse battery", "two words here", "abcd1234efgh"]) assert.ok(!stored.includes(s), `stored findings still contain ${s}`);
+});
+
+test("importing rejects huge pastes and ignores findings past the cap", () => {
+  const p = loadPage();
+  importWith(p, "x".repeat(1000001));
+  assert.match(p.d.getElementById("agErr").textContent, /too much text/);
+  const junk = Array.from({ length: 499 }, () => ({ id: 99999, result: "found" }));
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "found" }, ...junk, { id: 67, result: "found" }] }));
+  assert.match(p.d.getElementById("agSum").textContent, /Imported 1 finding.*ignored 500/);
+  assert.ok(!JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"))["67"]);
+});
+
+test("importing says so when the browser cannot store the findings", () => {
+  const p = loadPage();
+  p.w.Storage.prototype.setItem = () => { throw new Error("quota"); };
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "found" }] }));
+  assert.match(p.d.getElementById("agSum").textContent, /could not store them/);
+});
+
+test("the page carries a CSP that allows only its own inline code, and has no inline handlers", async () => {
+  const { buildHtml, contentSecurityPolicy } = await import("../scripts/build.mjs");
+  const crypto = await import("node:crypto");
+  const html = buildHtml();
+  const csp = html.match(/http-equiv="Content-Security-Policy" content="([^"]*)"/)[1];
+  const hash = (s) => `'sha256-${crypto.createHash("sha256").update(s.replace(/\r\n?/g, "\n"), "utf8").digest("base64")}'`;
+  for (const tag of ["script", "style"]) {
+    const blocks = [...html.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, "g"))];
+    assert.ok(blocks.length > 0);
+    for (const b of blocks) assert.ok(csp.includes(hash(b[1])), `${tag} block is not covered by the CSP`);
+  }
+  assert.match(csp, /^default-src 'none'; /);
+  assert.ok(!/unsafe-inline|unsafe-eval/.test(csp));
+  assert.ok(!/<[a-z][^>]*\s(on[a-z]+|style)\s*=/i.test(html), "inline event handler or style attribute found");
+  assert.ok(!/\b(?:src|href)\s*=\s*["']?(?:https?:)?\/\/(?!marwantareks\.github\.io)/i.test(html), "external reference found");
+  assert.throws(() => contentSecurityPolicy('<script src="x.js"></script><script>1</script>'), /plain <script> block/);
+});
+
+test("agent findings live in sessionStorage only and a planted localStorage copy is ignored", () => {
+  const planted = JSON.stringify({ 11: { result: "found", evidence: [], red_flags: [], note: "planted" } });
+  const p = loadPage({ storage: { "prc.agentFindings": planted, agentFindings: planted } });
+  assert.equal(p.d.querySelectorAll(".ag").length, 0);
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "found" }] }));
+  assert.ok(p.w.sessionStorage.getItem("prc.agentFindings"));
+  assert.equal(p.w.localStorage.getItem("prc.agentFindings"), planted);
+  assert.equal(p.d.querySelectorAll(".ag").length, 1);
 });

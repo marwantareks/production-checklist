@@ -63,4 +63,4 @@ A concern that only applies under a condition has an `applies_when` sentence. If
 
 ## Site metadata
 
-`content/meta.yaml` holds the author, year and "last updated" month that the build puts in the page.
+`content/meta.yaml` holds the canonical page URL (https only, URL safe characters only), the year and the "last updated" month that the build puts in the page.

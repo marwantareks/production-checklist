@@ -16,6 +16,30 @@ const vRetired = ajv.compile(schema("retired.schema.json"));
 const GENERIC = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, "scripts/lib/generic-hints.json"), "utf8")).words);
 const STOP = new Set(["a", "an", "the", "with", "without", "of", "in", "for", "to", "no", "is", "are", "that", "which", "any"]);
 
+// Concern text is copied into the prompt that readers give to their coding agents, so it must read as data about
+// a practice and never as an instruction to the agent. These rules catch the usual ways to smuggle one in.
+// Search hints are literal strings, so they only get the structural rules, not the prose rules.
+const HIDDEN_CHARS = /[\u0000-\u0008\u000B-\u001F\u007F​-‏‪-‮⁠-⁩﻿\u{E0000}-\u{E007F}]/u;
+const STRUCTURAL_RULES = [
+  [HIDDEN_CHARS, "contains a control, zero width, direction override or tag character"],
+  [/[\r\n]/, "contains a line break; every field is a single line"],
+  [/```/, "contains a code fence"],
+  [/^\s*#{1,6}\s/, "starts like a Markdown heading, which could fake a section of the prompt"],
+  [/^\s*(assistant|system|human|user)\s*:/i, "starts with a chat role label"],
+  [/\b(ignore|disregard|forget|override|bypass)\b[^.]{0,40}\b(previous|prior|above|earlier|all|any|these|the)\b[^.]{0,30}\b(instructions?|rules?|guidelines?|prompt|constraints?)\b/i, "tells the reader to ignore instructions or rules"],
+  [/\b(system|developer) (prompt|message|instructions?)\b/i, "refers to a system or developer prompt"],
+  [/\b(new|updated|additional|hidden) instructions?\b|\bfrom now on\b|\bas an? (ai|assistant|language model)\b/i, "addresses the agent with new instructions"],
+];
+const PROSE_RULES = [
+  [/https?:\/\/|\bwww\./i, "contains a web address; agents are told never to make network requests"],
+  [/[\w.+-]+@[\w-]+\.[a-z]{2,}/i, "contains an email address"],
+  [/\b(curl|wget)\b[^.]*\|\s*(sh|bash)\b|\brm -rf\b|\bsudo\b|\bchmod \+x\b|base64 -d|powershell -enc/i, "contains a command that runs or changes something"],
+];
+export function injectionProblems(text, isHint) {
+  const rules = isHint ? STRUCTURAL_RULES : [...STRUCTURAL_RULES, ...PROSE_RULES];
+  return rules.filter(([re]) => re.test(text)).map(([, why]) => why);
+}
+
 const errors = [];
 const warnings = [];
 const err = (where, msg) => errors.push(`${where}: ${msg}`);
@@ -103,6 +127,13 @@ export function validate(root = ROOT) {
         if (words.length >= 4 && words.some((w) => STOP.has(w.toLowerCase()))) err(where, `search hint “${h}” reads like a sentence; put patterns described in words in look_for`);
       }
     }
+    const scan = (value, field) => {
+      if (typeof value === "string") {
+        for (const why of injectionProblems(value, /\bsearch_hints\b/.test(field))) err(where, `${field} ${why}; write it as a fact about the practice, not an instruction`);
+      } else if (Array.isArray(value)) value.forEach((v, i) => scan(v, `${field}[${i}]`));
+      else if (value && typeof value === "object") for (const [k, v] of Object.entries(value)) scan(v, field ? `${field}.${k}` : k);
+    };
+    scan(data, "");
     if (c.name !== c.name.trim() || /^[a-z]/.test(c.name)) err(where, "name should start with a capital letter and have no stray whitespace");
 
     for (const r of c.related) {

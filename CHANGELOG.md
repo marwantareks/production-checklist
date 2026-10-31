@@ -16,3 +16,8 @@ All notable changes are listed here. Dates use the year and month.
 - Fixed the build, validate and review scripts doing nothing on Windows.
 - Added a "What you get" section that leads with the benefits, widened the agent review text to the full box, and added build steps to the README.
 - Reworked "What every concern includes" into "Inside every concern", covering definition, review question, trade-off, red flags, where it appears and the agent check.
+- Security hardening: a Content Security Policy built from hashes of the inline code, a canonical URL, a no-referrer policy and a GitHub Pages deploy workflow that publishes the page with its SHA-256. Actions are pinned to commit SHAs, Pages permissions are limited to the deploy job and CI runs on Node 22.
+- Fixed a stored review status such as "constructor" breaking the page after reload. Imported findings now mask credentials in file paths, quoted values with spaces and quoted JSON keys, cap the paste size and number of findings, and say when the browser cannot store them.
+- The author name is fixed in the page template. `content/meta.yaml` now holds the canonical URL instead.
+- The validator now rejects instruction-like text in concern content: hidden or direction control characters, line breaks, code fences, headings, chat role labels, "ignore the previous instructions" phrasing, and in prose web addresses, email addresses and commands. Added CODEOWNERS for content, page source, scripts, workflows and agent instructions.
+- Imported agent findings are kept in sessionStorage instead of localStorage, and all storage keys start with `prc.`, so other pages on the same github.io origin cannot read the findings or collide with the keys.

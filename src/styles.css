@@ -99,6 +99,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .s-ok{background:var(--ok)}.s-def{background:var(--defer)}.s-miss{background:var(--miss)}.s-na{background:transparent;border:2px dashed var(--ink2)}.s-none{background:var(--line2)}
 .fl{font-size:.85rem;color:var(--ink2)}
 .note{margin:10px 0 0;font-size:.85rem;color:var(--ink2)}
+.note.flush{margin:0}
 .st{display:inline-flex}.st svg{width:14px;height:14px}
 .st-decided{color:var(--ok)}.st-deferred{color:var(--defer)}.st-missing{color:var(--miss)}.st-na{color:var(--ink2)}
 .blk{margin:10px 0 0}.blk strong{font-size:.88rem}.blk p{margin:2px 0 0}

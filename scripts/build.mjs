@@ -1,5 +1,6 @@
 // Builds dist/index.html: one self-contained file with the CSS, content, prompt kit and page script inlined.
 import { pathToFileURL } from "node:url";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { ROOT, loadContent, toLegacy } from "./lib/model.mjs";
@@ -8,6 +9,18 @@ const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "e
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 // JSON that is safe inside an inline <script> element.
 const json = (v) => JSON.stringify(v).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+
+// The page is one file with inline code, so the policy allows exactly those blocks by hash and nothing else.
+// A meta tag cannot set frame-ancestors, so framing is not covered here.
+// Browsers turn CRLF into LF before they hash inline code, so the hash is taken over the LF form.
+export function contentSecurityPolicy(html) {
+  const hashes = (tag) => {
+    const found = [...html.matchAll(new RegExp("<" + tag + ">([\\s\\S]*?)</" + tag + ">", "g"))].map((m) => "'sha256-" + crypto.createHash("sha256").update(m[1].replace(/\r\n?/g, "\n"), "utf8").digest("base64") + "'");
+    if ((html.match(new RegExp("<" + tag + "[\\s>]", "g")) || []).length !== found.length) throw new Error("Every <" + tag + "> element must be a plain <" + tag + "> block with no attributes, so it can be hashed for the CSP.");
+    return found.join(" ");
+  };
+  return ["default-src 'none'", "script-src " + hashes("script"), "style-src " + hashes("style"), "img-src data:", "base-uri 'none'", "form-action 'none'"].join("; ");
+}
 
 export function buildHtml(root = ROOT) {
   const content = loadContent(root);
@@ -35,7 +48,7 @@ export function buildHtml(root = ROOT) {
     CATEGORY_COUNT: String(categoryCount),
     CATEGORY_COUNT_WORD: catWord,
     CATEGORY_COUNT_WORD_CAP: cap(catWord),
-    AUTHOR: content.meta.author,
+    URL: content.meta.url,
     YEAR: String(content.meta.year),
     UPDATED: content.meta.updated,
   };
@@ -48,6 +61,8 @@ export function buildHtml(root = ROOT) {
     html = html.split(`{{${key}}}`).join(val);
   }
   for (const key of ["STYLES", "DATA", "PROMPT_KIT", "APP"]) html = html.split("\u0000" + key + "\u0000").join(values[key]);
+
+  html = html.split("{{CSP}}").join(contentSecurityPolicy(html));
 
   const left = html.match(/\{\{[A-Z_]+\}\}/g);
   if (left) throw new Error("Unreplaced placeholders: " + [...new Set(left)].join(", "));

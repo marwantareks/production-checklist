@@ -13,7 +13,7 @@ The output is a single self-contained HTML file with light and dark themes and n
 
 ## Quick start
 
-Requires Node.js 20 or later.
+Requires Node.js 22 or later.
 
 ```sh
 npm ci             # install dependencies, once
@@ -56,7 +56,7 @@ For the browser tests, set `CHROMIUM_PATH` to an existing Chromium, or run `npx 
 ```
 content/
   categories.yaml        the ten categories, their order and icons
-  meta.yaml              site title, author, year, last updated
+  meta.yaml              site title, canonical URL, year, last updated
   concerns/              one YAML file per concern (the source of truth)
 schema/                  JSON Schemas for content, agent findings and review findings
 src/

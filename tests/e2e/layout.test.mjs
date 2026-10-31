@@ -64,3 +64,30 @@ test("the page has no horizontal overflow on a phone", { skip }, async () => {
 });
 
 test.after(async () => { if (browser) await browser.close(); fs.rmSync(dir, { recursive: true, force: true }); });
+
+test("the page works under its own CSP and the CSP blocks injected script", { skip }, async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const problems = [];
+  page.on("pageerror", (e) => problems.push(e.message));
+  page.on("console", (m) => { if (m.type() === "error") problems.push(m.text()); });
+  await page.addInitScript(() => document.addEventListener("securitypolicyviolation", (e) => (window.__csp = (window.__csp || []).concat(e.violatedDirective))));
+  await page.goto(url);
+  await page.click(".pill >> nth=0");
+  await page.click("#modeAgent");
+  const dl = page.waitForEvent("download");
+  await page.click("#agSkill");
+  assert.equal((await dl).suggestedFilename(), "SKILL.md");
+  await page.fill("#agIn", JSON.stringify({ findings: [{ id: 11, result: "found" }] }));
+  await page.click("#agImport");
+  assert.match(await page.textContent("#agSum"), /Imported 1 finding/);
+  await page.evaluate(() => {
+    const s = document.createElement("script");
+    s.textContent = "window.__injected = true";
+    document.body.appendChild(s);
+  });
+  assert.equal(await page.evaluate(() => window.__injected), undefined);
+  const violations = await page.evaluate(() => window.__csp || []);
+  assert.deepEqual(violations, ["script-src-elem"]);
+  assert.deepEqual(problems.filter((p) => !/Content Security Policy/.test(p)), []);
+  await page.close();
+});

@@ -33,13 +33,15 @@ The build turns the YAML into the globals the page script reads: `C` (categories
 
 ## Browser storage
 
-- `theme`: light or dark.
-- `reviewStatus`: concern id to decided, deferred, missing or na (not applicable).
-- `agentFindings`: imported agent findings, validated and truncated on the way in and again on load.
+Keys start with `prc.` because every page on a github.io user site shares one origin.
+
+- `prc.theme` (localStorage): light or dark.
+- `prc.reviewStatus` (localStorage): concern id to decided, deferred, missing or na (not applicable).
+- `prc.agentFindings` (sessionStorage, so it stays in the tab and is gone when it closes): imported agent findings, validated and truncated on the way in and again on load.
 
 ## Changing things
 
 - **Add a concern:** add a YAML file. See `.claude/skills/add-concern/SKILL.md`.
 - **Add a category:** add an entry to `content/categories.yaml`. Pick an unused `hue` or reuse one, and supply an icon path.
-- **Change the page:** edit `src/`. Keep placeholders such as `{{AUTHOR}}` intact. The build fails if one is left unreplaced.
+- **Change the page:** edit `src/`. Keep placeholders such as `{{YEAR}}` intact. The build also fills `{{CSP}}` with a Content Security Policy made from hashes of the inline scripts and styles, so inline code must stay in plain `<script>` and `<style>` blocks, with no inline event handler or style attributes. The build fails if one is left unreplaced.
 - **Change the prompt:** edit `src/lib/prompt.js` and the tests that check its rules.

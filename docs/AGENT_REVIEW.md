@@ -39,7 +39,7 @@ The ground rules came out of the review rounds. They cover, in short: read-only 
 | Text in the repository redirects the agent | Prompt says to treat repository text as data | This reduces the risk but does not remove it. Use repositories you trust. |
 | The agent guesses | Prompt demands evidence and allows `cannot_determine` | An agent can still cite plausible but wrong evidence. Verify before marking decided. |
 | Pasted findings attack the page | Findings are validated, truncated, masked, and shown as plain text | None known. |
-| Findings leak from the browser | Stored in `localStorage` only, with a Clear findings button | Anyone with access to the browser profile can read them. |
+| Findings leak from the browser | Kept in `sessionStorage` (this tab only, gone when it closes), with a Clear findings button | Anyone using the open tab can read them. Other tabs and other sites on the same origin cannot. |
 
 ## Limits
 

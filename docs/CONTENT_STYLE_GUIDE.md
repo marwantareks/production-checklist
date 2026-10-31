@@ -18,6 +18,7 @@
 - Items in `red_flags` and `good_looks_like` do not end with a full stop.
 - Start every field with a capital letter. Search hints are exempt.
 - No `<` or `>` in prose.
+- Concern text is copied into the prompt that readers give to their agents, so write facts about a practice, never instructions to the agent. The validator rejects line breaks, hidden or direction control characters, code fences, headings, chat role labels, phrases such as “ignore the previous instructions”, and in prose also web addresses, email addresses and commands that run or change something. Search hints may contain a literal such as `http://`.
 
 ## Writing each field
 

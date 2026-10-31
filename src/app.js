@@ -16,10 +16,10 @@ C.forEach(function(c){c[3].forEach(function(it){IDX[it[0]]=it;HUE[it[0]]=c[1]})}
 var TOTAL=Object.keys(IDX).length;
 var review={};
 try{
-  var raw=localStorage.getItem("reviewStatus");
-  if(raw){var o=JSON.parse(raw);if(o&&typeof o==="object"){Object.keys(o).forEach(function(k){if(IDX[k]&&ST[o[k]])review[k]=o[k]})}}
+  var raw=localStorage.getItem("prc.reviewStatus");
+  if(raw){var o=JSON.parse(raw);if(o&&typeof o==="object"){Object.keys(o).forEach(function(k){if(own(IDX,k)&&typeof o[k]==="string"&&own(ST,o[k]))review[k]=o[k]})}}
 }catch(e){}
-function save(){try{localStorage.setItem("reviewStatus",JSON.stringify(review))}catch(e){}}
+function save(){try{localStorage.setItem("prc.reviewStatus",JSON.stringify(review))}catch(e){}}
 /* Concerns marked not applicable leave the denominator, so progress reflects only what applies. */
 function tally(items){
   var c={decided:0,deferred:0,missing:0,na:0,total:0};
@@ -123,7 +123,7 @@ function syncTheme(){var dark=root.getAttribute("data-theme")==="dark";themeBtn.
 themeBtn.onclick=function(){
   var next=root.getAttribute("data-theme")==="dark"?"light":"dark";
   root.setAttribute("data-theme",next);
-  try{localStorage.setItem("theme",next)}catch(e){}
+  try{localStorage.setItem("prc.theme",next)}catch(e){}
   syncTheme();
 };
 function svgI(d){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+d+'"/></svg>'}
@@ -171,6 +171,7 @@ function own(o,k){return Object.prototype.hasOwnProperty.call(o,k)}
 
 var mode="browse",pilotOnly=false,openDeep={};
 var FIND={};
+/* Keys carry a prefix because every page on the same github.io origin shares one storage. Findings can quote code from a private repository, so they live in sessionStorage: they stay in this tab, other tabs and sites on the origin cannot read them, and they are gone when the tab closes. Review marks and the theme are harmless and stay in localStorage. */
 /* Agents are told never to print secrets, but a pasted finding is untrusted text. Mask anything that looks like a credential before it is stored or shown. */
 var SECRET_PATTERNS=[
   /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)/g,
@@ -186,7 +187,7 @@ function maskSecrets(t){
   if(typeof t!=="string")return"";
   SECRET_PATTERNS.forEach(function(re){t=t.replace(re,SECRET_MASK)});
   t=t.replace(/\b([a-z][a-z0-9+.-]*:\/\/)[^\s\/:@]+:[^\s\/@]+@/gi,"$1"+"[redacted]@");
-  t=t.replace(/\b([A-Za-z0-9_.-]*(?:password|passwd|pwd|secret|token|api[_-]?key|apikey|private[_-]?key|access[_-]?key|client[_-]?secret|authorization)[A-Za-z0-9_.-]*)(\s*[:=]\s*)(["']?)[^\s"',;]{4,}\3/gi,function(m,k,sep){return k+sep+SECRET_MASK});
+  t=t.replace(/\b([A-Za-z0-9_.-]*(?:password|passwd|pwd|secret|token|api[_-]?key|apikey|private[_-]?key|access[_-]?key|client[_-]?secret|authorization)[A-Za-z0-9_.-]*)(["']?\s*[:=]\s*)(?:"[^"\r\n]+"|'[^'\r\n]+'|["']?[^\s"',;]{4,}["']?)/gi,function(m,k,sep){return k+sep+SECRET_MASK});
   return t;
 }
 function cleanEvidence(arr){
@@ -195,7 +196,7 @@ function cleanEvidence(arr){
     arr.slice(0,5).forEach(function(e){
       if(e&&typeof e.file==="string"){
         var ln=parseInt(e.line,10);
-        ev.push({file:e.file.slice(0,200),line:(isFinite(ln)&&ln>0)?ln:0,quote:maskSecrets(typeof e.quote==="string"?e.quote.slice(0,200):"")});
+        ev.push({file:maskSecrets(e.file.slice(0,200)),line:(isFinite(ln)&&ln>0)?ln:0,quote:maskSecrets(typeof e.quote==="string"?e.quote.slice(0,200):"")});
       }
     });
   }
@@ -213,30 +214,31 @@ function cleanFinding(f){
   return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:maskSecrets(typeof f.note==="string"?f.note.slice(0,600):"")};
 }
 try{
-  var rfd=localStorage.getItem("agentFindings");
+  var rfd=sessionStorage.getItem("prc.agentFindings");
   if(rfd){var fo=JSON.parse(rfd);if(fo&&typeof fo==="object"){Object.keys(fo).forEach(function(k){var f=cleanFinding(fo[k]);if(f&&own(DEEP,k))FIND[k]=f})}}
 }catch(e){}
-function saveFind(){try{localStorage.setItem("agentFindings",JSON.stringify(FIND))}catch(e){}}
+function saveFind(){try{sessionStorage.setItem("prc.agentFindings",JSON.stringify(FIND));return true}catch(e){return false}}
+var MAX_PASTE=1000000,MAX_FINDINGS=500;
 
 function importFindings(text){
   var s=text.trim();
   if(!s)throw new Error("Paste the findings first.");
+  if(s.length>MAX_PASTE)throw new Error("That is too much text to be Claude Code’s results. Paste only the final JSON reply.");
   var m=s.match(/```(?:json)?\s*([\s\S]*?)```/);if(m)s=m[1].trim();
   var a=s.indexOf("{"),b=s.lastIndexOf("}");
   if(a<0||b<=a)throw new Error("That doesn’t look like Claude Code’s results. Copy the whole reply and try again.");
   var o;
   try{o=JSON.parse(s.slice(a,b+1))}catch(e){throw new Error("The results could not be read. Ask Claude Code to send the results again as JSON only, then paste the new reply.")}
   if(!o||!Array.isArray(o.findings))throw new Error("This reply has no findings in it. Make sure you copied the whole reply from Claude Code.");
-  var n=0,ig=0;
-  o.findings.forEach(function(f){
+  var n=0,ig=Math.max(0,o.findings.length-MAX_FINDINGS);
+  o.findings.slice(0,MAX_FINDINGS).forEach(function(f){
     var id=(f&&typeof f.id==="number")?f.id:parseInt(f&&f.id,10);
     var c=cleanFinding(f);
     if(!c||!isFinite(id)||!own(DEEP,id)){ig++;return}
     FIND[id]=c;n++;
   });
   if(!n)throw new Error("No valid findings were found.");
-  saveFind();
-  return {n:n,ig:ig};
+  return {n:n,ig:ig,saved:saveFind()};
 }
 
 var PK=PromptKit.create({C:C,IDX:IDX,DEEP:DEEP,X:X});
@@ -316,7 +318,7 @@ document.getElementById("agImport").onclick=function(){
   agErr.textContent="";agSum.textContent="";
   try{
     var r=importFindings(agIn.value);
-    agSum.textContent="Imported "+r.n+" finding"+(r.n===1?"":"s")+(r.ig?", ignored "+r.ig:"")+". Open a concern to see the evidence.";
+    agSum.textContent="Imported "+r.n+" finding"+(r.n===1?"":"s")+(r.ig?", ignored "+r.ig:"")+". Open a concern to see the evidence."+(r.saved?"":" This browser could not store them, so they will be lost when you close or reload the page.");
     agIn.value="";render();
   }catch(e){agErr.textContent=e.message}
 };

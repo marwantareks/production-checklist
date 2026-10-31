@@ -2,12 +2,16 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{{CSP}}">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Production Readiness Checklist for Architects</title>
 <meta name="description" content="A free checklist of {{CONCERN_COUNT}} production concerns for architects and review boards. Every concern has a review question and a trade-off. Mark each one decided, deferred, missing or not applicable.">
-<meta name="author" content="{{AUTHOR}}">
+<meta name="author" content="Marwan Tarek">
+<link rel="canonical" href="{{URL}}">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
+<meta property="og:url" content="{{URL}}">
 <meta property="og:title" content="Production Readiness Checklist for Architects">
 <meta property="og:description" content="{{CONCERN_COUNT}} production concerns in {{CATEGORY_COUNT_WORD}} categories, each with a review question and a trade-off. Free to use.">
 <meta name="twitter:card" content="summary">
@@ -15,7 +19,7 @@
 <meta name="twitter:description" content="{{CONCERN_COUNT}} production concerns in {{CATEGORY_COUNT_WORD}} categories, each with a review question and a trade-off. Free to use.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B6E78'/%3E%3Cpath d='M9 16.5l5 5 9-10' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script>
-try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}
+try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}
 </script>
 <style>
 {{STYLES}}
@@ -108,7 +112,7 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.doc
 <li>
 <h4>Run it in Claude Code</h4>
 <p>Open your repository and start Claude Code in plan mode, which is read-only: run <code>claude --permission-mode plan</code>, or press Shift+Tab to cycle to plan mode, or type <code>/plan</code>. Then paste the prompt.</p>
-<div class="row"><button id="agCopy" class="btn alt" type="button">Copy prompt</button><button id="agSkill" class="btn alt" type="button">Download as skill</button><span id="agMsg" class="note" role="status" style="margin:0"></span></div>
+<div class="row"><button id="agCopy" class="btn alt" type="button">Copy prompt</button><button id="agSkill" class="btn alt" type="button">Download as skill</button><span id="agMsg" class="note flush" role="status"></span></div>
 <p class="note">Only run an agent on a repository you trust, or on a throwaway copy. A repository can contain text, hooks, settings or MCP servers that try to steer an agent. For code you do not trust, use a fresh checkout with project hooks, MCP servers and project settings turned off, and no credentials in the environment.</p>
 <details><summary>Preview the prompt</summary><pre id="agPrev" class="pre"></pre></details>
 <p class="note">To use the skill, save the file as <code>.claude/skills/production-readiness-review/SKILL.md</code> in your repository, then ask Claude Code to run it. Skill support depends on your Claude Code version, so use Copy prompt if it isn’t available.</p>
@@ -122,7 +126,7 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.doc
 <p id="agSum" class="note"></p>
 </li>
 </ol>
-<p class="note">Findings include file paths and short code quotes. They are stored in this browser only, so clear them when you are done. The agent suggests and you decide: verify the evidence before marking anything decided.</p>
+<p class="note">Findings include file paths and short code quotes. They are kept in this browser tab only and disappear when you close it. Clear them sooner on a shared machine. The agent suggests and you decide: verify the evidence before marking anything decided.</p>
 </section>
 
 <section class="how" aria-labelledby="how-h">
@@ -234,7 +238,7 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.doc
 <a href="#included">What’s included</a>
 </div>
 </div>
-<div class="fb"><span>© {{YEAR}} {{AUTHOR}}</span><span>Last updated {{UPDATED}}</span></div>
+<div class="fb"><span>© {{YEAR}} Marwan Tarek</span><span>Last updated {{UPDATED}}</span></div>
 </div>
 </footer>
 

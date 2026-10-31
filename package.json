@@ -16,7 +16,7 @@
   "license": "MIT",
   "author": "Marwan Tarek",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "validate": "node scripts/validate.mjs",
