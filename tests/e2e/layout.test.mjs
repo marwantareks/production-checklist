@@ -86,6 +86,7 @@ test("the page works under its own CSP and the CSP blocks injected script", { sk
     document.body.appendChild(s);
   });
   assert.equal(await page.evaluate(() => window.__injected), undefined);
+  await page.waitForFunction(() => (window.__csp || []).length > 0);
   const violations = await page.evaluate(() => window.__csp || []);
   assert.deepEqual(violations, ["script-src-elem"]);
   assert.deepEqual(problems.filter((p) => !/Content Security Policy/.test(p)), []);
