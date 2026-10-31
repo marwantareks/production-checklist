@@ -6,3 +6,4 @@ review/out/
 .DS_Store
 .env
 .env.*
+.hyperframes/
