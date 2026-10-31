@@ -1,0 +1,2 @@
+Vibe coding your way to launch and not sure what you've missed? This free checklist has 115 concerns in ten areas, each with a review question, a trade-off, red flags and what good looks like. Then point it at your own repo: copy the prompt or download it as a skill, run it in Claude Code, paste the reply back and decide. It's an agentic, read-only review with no copy of your repo, and it's free.
+https://marwantareks.github.io/production-checklist/
