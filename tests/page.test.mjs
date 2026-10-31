@@ -277,3 +277,28 @@ test("agent findings live in sessionStorage only and a planted localStorage copy
   assert.equal(p.w.localStorage.getItem("prc.agentFindings"), planted);
   assert.equal(p.d.querySelectorAll(".ag").length, 1);
 });
+
+test("the intro video card stays hidden and the video unloaded until the poster is found and the card is clicked", () => {
+  const p = loadPage();
+  const btn = p.d.getElementById("introBtn");
+  const vid = p.d.getElementById("introVid");
+  assert.ok(btn.hidden, "card must be hidden when the poster is missing");
+  assert.equal(p.d.getElementById("introImg").getAttribute("src"), null);
+  assert.equal(vid.getAttribute("src"), null, "video must not load before it is opened");
+  assert.equal(vid.getAttribute("preload"), "none");
+  p.w.HTMLMediaElement.prototype.play = function () {};
+  p.w.HTMLMediaElement.prototype.pause = function () {};
+  p.click(btn);
+  assert.equal(vid.getAttribute("src"), "brag.mp4");
+  assert.ok(p.d.getElementById("introDlg").hasAttribute("open"));
+  p.click(p.d.getElementById("introX"));
+  assert.ok(!p.d.getElementById("introDlg").hasAttribute("open"));
+  assert.deepEqual(p.errors, []);
+});
+
+test("the CSP lets the page load only its own intro video and poster", async () => {
+  const { buildHtml } = await import("../scripts/build.mjs");
+  const csp = buildHtml().match(/http-equiv="Content-Security-Policy" content="([^"]*)"/)[1];
+  assert.match(csp, /img-src 'self' data:/);
+  assert.match(csp, /media-src 'self'/);
+});

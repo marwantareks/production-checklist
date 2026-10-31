@@ -66,6 +66,10 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 </div>
 </div>
 <div class="vis">
+<button class="intro" id="introBtn" type="button" aria-haspopup="dialog" hidden>
+<span class="intro-th"><img id="introImg" alt="" width="160" height="90"><span class="intro-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span></span>
+<span class="intro-tx"><b>Watch the 30-second intro</b><small>What the checklist is and how to use it</small></span>
+</button>
 <div class="hc">
 <div class="hc-top">
 <span class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h9"/></svg></span>
@@ -81,6 +85,10 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 </div>
 </div>
 </header>
+<dialog id="introDlg" class="introdlg" aria-labelledby="introT">
+<div class="introdlg-h"><h2 id="introT">The checklist in 30 seconds</h2><button id="introX" class="chip" type="button" aria-label="Close the video">Close</button></div>
+<video id="introVid" controls playsinline preload="none" poster="brag.jpg">Your browser cannot play this video. <a href="brag.mp4">Open the video file</a>.</video>
+</dialog>
 
 <section class="sect band" id="categories" aria-labelledby="cat-h">
 <div class="wrap">

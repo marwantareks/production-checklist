@@ -19,7 +19,7 @@ export function contentSecurityPolicy(html) {
     if ((html.match(new RegExp("<" + tag + "[\\s>]", "g")) || []).length !== found.length) throw new Error("Every <" + tag + "> element must be a plain <" + tag + "> block with no attributes, so it can be hashed for the CSP.");
     return found.join(" ");
   };
-  return ["default-src 'none'", "script-src " + hashes("script"), "style-src " + hashes("style"), "img-src data:", "base-uri 'none'", "form-action 'none'"].join("; ");
+  return ["default-src 'none'", "script-src " + hashes("script"), "style-src " + hashes("style"), "img-src 'self' data:", "media-src 'self'", "base-uri 'none'", "form-action 'none'"].join("; ");
 }
 
 export function buildHtml(root = ROOT) {

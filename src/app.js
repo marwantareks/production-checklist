@@ -439,3 +439,22 @@ function detail(it,hue){
 }
 
 syncTheme();render();
+
+// The intro video is an optional file beside the page. The card shows only when its poster loads, and the video is fetched only on play.
+(function(){
+  var btn=document.getElementById("introBtn"),dlg=document.getElementById("introDlg"),vid=document.getElementById("introVid"),img=document.getElementById("introImg");
+  var probe=new Image();
+  probe.onload=function(){img.src="brag.jpg";btn.hidden=false};
+  probe.src="brag.jpg";
+  function stop(){vid.pause()}
+  btn.onclick=function(){
+    if(!vid.getAttribute("src"))vid.setAttribute("src","brag.mp4");
+    if(typeof dlg.showModal==="function")dlg.showModal();else dlg.setAttribute("open","");
+    var p=vid.play();if(p&&p.catch)p.catch(function(){});
+  };
+  function close(){stop();if(typeof dlg.close==="function")dlg.close();else dlg.removeAttribute("open");btn.focus()}
+  document.getElementById("introX").onclick=close;
+  dlg.addEventListener("click",function(e){if(e.target===dlg)close()});
+  dlg.addEventListener("cancel",stop);
+  dlg.addEventListener("close",stop);
+})();
