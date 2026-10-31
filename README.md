@@ -2,11 +2,11 @@
 
 **[Open the checklist](https://marwantareks.github.io/production-checklist/)** (free, no sign-up, works offline once loaded)
 
-https://github.com/user-attachments/assets/031663bf-a174-4ba6-bbe5-005b6a63c7f3
+<p align="center">
+  <video src="https://github.com/user-attachments/assets/031663bf-a174-4ba6-bbe5-005b6a63c7f3" width="480" controls muted></video>
+</p>
 
-[![Video did not load? Select this image to watch the 30-second intro. Title card: Are you vibe coding? Know what your architecture is missing before go-live.](docs/media/brag.jpg)](docs/media/brag.mp4)
-
-*If the player above does not load, select the image to watch the 30-second intro.*
+<p align="center"><sub>Video not loading? <a href="docs/media/brag.mp4">Watch the 30-second intro here</a>.</sub></p>
 
 A checklist of 115 production concerns, in 10 categories, for architects and architecture review boards. It helps you find what is missing between "it works" and "it is ready for real users".
 
