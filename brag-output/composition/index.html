@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Production Readiness Checklist</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1080px;overflow:hidden;background:#F6F8FA}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#16212B}
+  .mono{font-family:Consolas,monospace}
+  #root{position:relative;width:1080px;height:1080px;background:#F6F8FA;overflow:hidden}
+  .clip{position:absolute;inset:0;opacity:0}
+  .glow{position:absolute;left:140px;top:140px;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,#DDF1F2 0%,rgba(221,241,242,0) 68%);opacity:.5}
+  .card{background:#fff;border:4px solid #1B2733;border-radius:26px;box-shadow:10px 10px 0 #1B2733}
+  .tag{display:inline-block;font-weight:700;font-size:28px;letter-spacing:.04em;text-transform:uppercase;color:#0B6E78;background:#DDF1F2;border:3px solid #1B2733;border-radius:99px;padding:6px 20px}
+  /* scene 1 */
+  #s1 .card{position:absolute;left:90px;top:300px;width:900px;padding:60px 60px 64px}
+  #s1 h1{font-size:92px;line-height:1.06;font-weight:800;letter-spacing:-.015em}
+  #s1 h1 em{font-style:normal;color:#0B6E78}
+  #s1 .tag{position:absolute;left:90px;top:200px}
+  /* scene 2 */
+  #s2 .count{position:absolute;left:0;right:0;top:90px;text-align:center}
+  #s2 .num{font-size:230px;font-weight:800;line-height:1;letter-spacing:-.03em;color:#0B6E78}
+  #s2 .lbl{font-size:44px;font-weight:700;margin-top:6px}
+  #s2 .grid{position:absolute;left:60px;top:470px;width:960px;display:grid;grid-template-columns:1fr 1fr;gap:18px 22px}
+  .tile{display:flex;align-items:center;height:96px;padding:0 26px;font-size:29px;font-weight:700;background:var(--pb);color:var(--pf);border:3px solid #1B2733;border-radius:16px;box-shadow:5px 5px 0 #1B2733;opacity:0}
+  .h-blue{--pb:#E6F1FB;--pf:#0C447C}.h-teal{--pb:#E1F5EE;--pf:#085041}.h-red{--pb:#FCEBEB;--pf:#791F1F}.h-purple{--pb:#EEEDFE;--pf:#3C3489}.h-green{--pb:#EAF3DE;--pf:#27500A}.h-coral{--pb:#FAECE7;--pf:#712B13}.h-pink{--pb:#FBEAF0;--pf:#72243E}.h-amber{--pb:#FAEEDA;--pf:#633806}
+  /* scene 3 */
+  #s3 .tag{position:absolute;left:90px;top:120px;color:#085041;background:#E1F5EE}
+  #s3 .card{position:absolute;left:90px;top:210px;width:900px;padding:50px 56px 56px}
+  #s3 h2{font-size:78px;font-weight:800;letter-spacing:-.015em}
+  #s3 .k{font-size:28px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#52606D;margin-top:34px}
+  #s3 .q{font-size:40px;line-height:1.28;font-weight:600;margin-top:8px}
+  #s3 .t{font-size:36px;line-height:1.3;color:#52606D;margin-top:8px}
+  .chips{display:flex;gap:16px;margin-top:40px}
+  .chip{font-size:30px;font-weight:700;padding:12px 26px;border:3px solid #1B2733;border-radius:12px;background:#fff;box-shadow:4px 4px 0 #1B2733}
+  .chip.sel{background:#DDF1F2;color:#0B6E78;box-shadow:1px 1px 0 #1B2733;transform:translate(3px,3px)}
+  #cur{position:absolute;left:0;top:0;width:44px;height:44px;opacity:0;z-index:5;filter:drop-shadow(2px 3px 0 rgba(27,39,51,.35))}
+  /* scene 4 */
+  #s4 .tag{position:absolute;left:90px;top:130px}
+  #s4 .card{position:absolute;left:90px;top:220px;width:900px;padding:44px 50px 46px;background:#16212B;color:#E7EDF2}
+  #s4 .rule{font-size:34px;line-height:1.35;font-weight:600}
+  #s4 .rule b{color:#5CC8D2}
+  .row{display:flex;align-items:center;justify-content:space-between;margin-top:22px;padding:20px 24px;background:#1f2d3a;border-radius:14px;opacity:0}
+  .row .n{font-size:34px;font-weight:700}
+  .row .f{font-size:28px;color:#9AA8B5;margin-top:4px}
+  .st{font-size:28px;font-weight:700;padding:8px 18px;border-radius:99px;border:3px solid currentColor}
+  .st.p{color:#F0A93B}.st.c{color:#9FB3D9}.st.m{color:#F2827C}
+  #s4 .note{position:absolute;left:90px;top:920px;font-size:28px;color:#52606D}
+  /* scene 5 */
+  #s5 .wrap{position:absolute;left:90px;top:240px;width:900px}
+  #s5 .big{font-size:96px;font-weight:800;line-height:1.05;letter-spacing:-.02em}
+  #s5 .big span{display:block}
+  #s5 .name{margin-top:60px;font-size:42px;font-weight:700;color:#0B6E78}
+  #s5 .url{margin-top:12px;font-size:32px;color:#52606D}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-width="1080" data-height="1080" data-start="0" data-duration="21">
+  <div class="glow" id="glow"></div>
+
+  <div id="s1" class="clip" data-start="0" data-duration="3.6">
+    <span class="tag">Production Readiness Checklist</span>
+    <div class="card" id="s1card"><h1>Know what your architecture is <em>missing</em> before go&#8209;live</h1></div>
+  </div>
+
+  <div id="s2" class="clip" data-start="3.3" data-duration="4.4">
+    <div class="count"><div class="num mono" id="num">0</div><div class="lbl">production concerns</div></div>
+    <div class="grid" id="grid">
+      <div class="tile h-blue">Traffic, networking and APIs</div>
+      <div class="tile h-teal">Caching and performance</div>
+      <div class="tile h-red">Resilience and fault tolerance</div>
+      <div class="tile h-purple">Messaging and async processing</div>
+      <div class="tile h-green">Databases and data consistency</div>
+      <div class="tile h-coral">Concurrency and memory</div>
+      <div class="tile h-pink">Scaling and infrastructure</div>
+      <div class="tile h-amber">Build, deployment and release</div>
+      <div class="tile h-teal">Observability and operations</div>
+      <div class="tile h-red">Security</div>
+    </div>
+  </div>
+
+  <div id="s3" class="clip" data-start="7.4" data-duration="6.3">
+    <span class="tag">Resilience and fault tolerance</span>
+    <div class="card">
+      <h2>Retries</h2>
+      <div class="k">Review question</div>
+      <div class="q">Which failures are retried, how many times, and is the operation safe to repeat?</div>
+      <div class="k">Trade-off</div>
+      <div class="t">Improves success rates but can turn an outage into a retry storm.</div>
+      <div class="chips"><span class="chip" id="c1">Decided</span><span class="chip" id="c2">Deferred</span><span class="chip" id="c3">Missing</span></div>
+    </div>
+    <svg id="cur" viewBox="0 0 24 24"><path d="M4 2l15 9-6.5 1.6L9.6 19z" fill="#16212B" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+  </div>
+
+  <div id="s4" class="clip" data-start="13.4" data-duration="4.9">
+    <span class="tag">Agent review</span>
+    <div class="card">
+      <div class="rule"><b>Read-only.</b> Never runs anything.<br><b>cannot_determine</b> instead of guessing.</div>
+      <div class="row" id="r1"><div><div class="n">Retries</div><div class="f mono">src/payments/client.ts:42</div></div><span class="st p">partial</span></div>
+      <div class="row" id="r2"><div><div class="n">Idempotency</div><div class="f mono">no evidence in repository</div></div><span class="st c">cannot_determine</span></div>
+      <div class="row" id="r3"><div><div class="n">Circuit breakers</div><div class="f mono">searched, nothing found</div></div><span class="st m">not_found</span></div>
+    </div>
+    <div class="note">Sample findings. File names are fictional.</div>
+  </div>
+
+  <div id="s5" class="clip" data-start="18" data-duration="3">
+    <div class="wrap">
+      <div class="big"><span>Free.</span><span>One HTML file.</span><span>No external requests.</span></div>
+      <div class="name">Production Readiness Checklist</div>
+      <div class="url mono">marwantareks.github.io/production-checklist</div>
+    </div>
+  </div>
+
+  <audio id="bgm" data-start="0" data-duration="21" data-track-index="10" data-volume="0.30" data-fade-out="1.5" src="assets/music/happy-beats-business-moves-vol-12-by-ende-dot-app.mp3"></audio>
+  <audio id="sfx1" data-start="3.75" data-duration="1" data-track-index="11" data-volume="0.55" src="assets/sfx/interface/drop_001.ogg"></audio>
+  <audio id="sfx2" data-start="4.25" data-duration="1" data-track-index="12" data-volume="0.55" src="assets/sfx/interface/drop_002.ogg"></audio>
+  <audio id="sfx3" data-start="4.8" data-duration="1" data-track-index="13" data-volume="0.55" src="assets/sfx/interface/drop_001.ogg"></audio>
+  <audio id="sfx4" data-start="7.6" data-duration="1" data-track-index="14" data-volume="0.55" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+  <audio id="sfx5" data-start="12.4" data-duration="1" data-track-index="15" data-volume="0.65" src="assets/sfx/interface/click_001.ogg"></audio>
+  <audio id="sfx6" data-start="18" data-duration="2" data-track-index="16" data-volume="0.5" src="assets/sfx/impact/impactBell_heavy_000.ogg"></audio>
+</div>
+
+<script src="assets/js/gsap.min.js"></script>
+<script>
+  const tl = gsap.timeline({ paused: true });
+  const fadeIn = (id, t) => tl.fromTo(id, { opacity: 0 }, { opacity: 1, duration: 0.3 }, t);
+  const fadeOut = (id, t) => tl.to(id, { opacity: 0, duration: 0.3 }, t);
+
+  tl.fromTo("#glow", { x: -60, y: -40 }, { x: 80, y: 60, duration: 21, ease: "none" }, 0);
+
+  // Scene 1: hook // settle motion from frame 0
+  tl.set("#s1", { opacity: 1 }, 0);
+  tl.fromTo("#s1card", { y: 40, scale: 0.97 }, { y: 0, scale: 1, duration: 0.6, ease: "power3.out" }, 0);
+  fadeOut("#s1", 3.3);
+
+  // Scene 2: counter + tiles // beat-grid: tiles 3.75 4.25 4.8 ... roughly every 0.26s, full set held 1.3s
+  fadeIn("#s2", 3.3);
+  const o = { v: 0 };
+  tl.to(o, { v: 115, duration: 1.5, ease: "power2.out", onUpdate: () => { document.getElementById("num").textContent = Math.round(o.v); } }, 3.5);
+  document.querySelectorAll(".tile").forEach((el, i) =>
+    tl.fromTo(el, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 3.75 + i * 0.27));
+  fadeOut("#s2", 7.4);
+
+  // Scene 3: concern + simulated click // beat-grid: card at 7.64s
+  fadeIn("#s3", 7.4);
+  tl.fromTo("#s3 .card", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 7.64);
+  tl.set("#cur", { x: 700, y: 900 }, 7.4);
+  tl.to("#cur", { opacity: 1, duration: 0.2 }, 11.4);
+  tl.to("#cur", { x: 320, y: 880, duration: 0.7, ease: "power2.inOut" }, 11.5);
+  tl.to("#cur", { scale: 0.85, duration: 0.1 }, 12.3);
+  tl.to("#cur", { scale: 1, duration: 0.1 }, 12.4);
+  tl.set("#c2", { className: "chip sel" }, 12.4);
+  fadeOut("#s3", 13.4);
+
+  // Scene 4: findings, each held >= 1s // beat-grid: panel at 13.64s
+  fadeIn("#s4", 13.4);
+  tl.fromTo("#s4 .card", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 13.64);
+  tl.fromTo("#r1", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4 }, 15.0);
+  tl.fromTo("#r2", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4 }, 15.9);
+  tl.fromTo("#r3", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4 }, 16.8);
+  fadeOut("#s4", 18.0);
+
+  // Scene 5: outro // beat-grid: first line at 18.02s
+  fadeIn("#s5", 18.0);
+  tl.fromTo("#s5 .big span", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, stagger: 0.3, ease: "power2.out" }, 18.02);
+  tl.fromTo("#s5 .name", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 18.8);
+  tl.fromTo("#s5 .url", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 18.95);
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines["root"] = tl;
+</script>
+</body>
+</html>
