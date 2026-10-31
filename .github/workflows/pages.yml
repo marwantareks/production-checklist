@@ -34,7 +34,7 @@ jobs:
           touch site/.nojekyll
           (cd site && sha256sum index.html | tee index.html.sha256)
           echo "SHA-256 of index.html: \`$(cut -d' ' -f1 site/index.html.sha256)\`" >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site
 
