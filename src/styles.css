@@ -252,6 +252,10 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .svcard .sd{margin:4px 0 12px;color:var(--ink2);font-size:.92rem}
 .svcard .row{margin:0 0 8px}
 .svcard .err{margin:4px 0 0}
+.chip.danger{color:var(--miss);border-color:var(--miss)}
+.btn.danger{background:var(--miss);color:#fff;border-color:var(--miss)}
+.svconfirm{margin:10px 0 0;padding:10px 12px;border:1px solid var(--miss);border-radius:8px;background:var(--bg)}
+.svconfirm p{margin:0 0 8px}
 .svcard [hidden]{display:none}
 details.deep{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
 details.deep>summary{cursor:pointer;font-weight:600;font-size:.92rem}
@@ -289,6 +293,11 @@ details.deep>summary:focus-visible{outline:2px solid var(--accent);outline-offse
 .gd-c{display:inline-flex;flex:none;width:30px;height:30px;align-items:center;justify-content:center;border:2px solid var(--ol);border-radius:8px;background:var(--btn);color:var(--btn-ink)}
 .gd-c svg{width:18px;height:18px;transition:transform .15s}
 details.deep[open]>summary .gd-c svg{transform:rotate(180deg)}
+details.deep[open]{padding:0 16px 14px;border:2px solid var(--ol);border-radius:14px;background:var(--surface)}
+details.deep[open]>summary{padding:12px 0;margin:0 0 12px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
+details.deep[open]>summary:hover{transform:none;box-shadow:none}
+.runbox{margin:14px 0 0;padding:12px 14px;border:1px solid var(--line2);border-radius:10px;background:var(--bg)}
+.runbox>strong{font-size:.95rem}
 @media (prefers-reduced-motion:reduce){.gd-c svg{transition:none}}
 
 .sect{scroll-margin-top:-48px}

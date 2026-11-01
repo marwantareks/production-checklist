@@ -172,6 +172,11 @@ Then paste the prompt.</div>
 <div class="row"><button id="svFile" class="btn alt sm" type="button">Save review file</button><button id="svLoad" class="btn alt sm" type="button">Load review file</button><button id="svReport" class="btn alt sm" type="button">Download report</button><input id="svIn" type="file" accept=".json,application/json" hidden></div>
 <label class="ck"><input type="checkbox" id="svRem"> Remember my findings in this browser for 30 days</label> <span id="svRemNote" class="note flush"></span>
 <p class="note">The review file holds your marks and findings, so you can load it later or on another computer. The report is a Markdown file to read or share. Findings include file paths and code quotes, so keep both somewhere private. Remembering is off by default: leave it off on a shared computer.</p>
+<div class="row"><button id="svClearAll" class="chip danger" type="button">Clear all review data</button></div>
+<div id="svConfirm" class="svconfirm" role="group" aria-labelledby="svConfirmT" hidden>
+<p id="svConfirmT"></p>
+<div class="row"><button id="svClrSave" class="btn alt sm" type="button">Save review file first, then clear</button><button id="svClrGo" class="btn sm danger" type="button">Clear without saving</button><button id="svClrNo" class="chip" type="button">Cancel</button></div>
+</div>
 <p id="svMsg" class="note" role="status"></p><p id="svErr" class="err" role="alert"></p>
 </section>
 </div>

@@ -33,7 +33,7 @@
           },
           "evidence": {
             "type": "array",
-            "maxItems": 5,
+            "maxItems": 8,
             "items": {
               "type": "object",
               "required": [
@@ -57,7 +57,7 @@
           },
           "note": {
             "type": "string",
-            "maxLength": 1200
+            "maxLength": 2000
           },
           "recommendation": {
             "type": "string",

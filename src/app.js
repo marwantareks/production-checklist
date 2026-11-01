@@ -213,10 +213,24 @@ function maskSecrets(t){
 }
 /* Anything cut to a limit ends with an ellipsis, and secrets are masked first so a cut can never leave half a secret behind. */
 function capText(s,n){return s.length>n?s.slice(0,n-1)+"…":s}
-function cleanEvidence(arr){
+/* A note that is too long is cut at its last whole line, never in the middle of a bullet, and ends with a visible marker. A heading left with no lines under it goes too. */
+function capNote(s,n){
+  if(s.length<=n)return s;
+  var mark="\u2026 note shortened",lines=s.split(/\r?\n/),out=[],len=0;
+  for(var i=0;i<lines.length;i++){
+    var add=lines[i].length+1;
+    if(len+add+mark.length>n)break;
+    out.push(lines[i]);len+=add;
+  }
+  while(out.length&&/^[A-Za-z ]{3,20}:\s*$/.test(out[out.length-1].trim()))out.pop();
+  if(!out.length)return capText(s,n);
+  out.push(mark);
+  return out.join("\n");
+}
+function cleanEvidence(arr,max){
   var ev=[];
   if(Array.isArray(arr)){
-    arr.slice(0,5).forEach(function(e){
+    arr.slice(0,max||8).forEach(function(e){
       if(e&&typeof e.file==="string"){
         var ln=parseInt(e.line,10);
         ev.push({file:capText(maskSecrets(e.file),200),line:(isFinite(ln)&&ln>0)?ln:0,quote:capText(maskSecrets(e.quote),200)});
@@ -231,11 +245,11 @@ function cleanFinding(f){
   if(Array.isArray(f.red_flags)){
     f.red_flags.slice(0,6).forEach(function(r){
       var t=typeof r==="string"?r:(r&&typeof r.flag==="string"?r.flag:"");
-      if(t)rf.push({flag:capText(maskSecrets(t),200),evidence:cleanEvidence(r&&r.evidence)});
+      if(t)rf.push({flag:capText(maskSecrets(t),200),evidence:cleanEvidence(r&&r.evidence,5)});
     });
   }
   var rec=(f.result==="partial"||f.result==="not_found")&&typeof f.recommendation==="string"?capText(maskSecrets(f.recommendation),600):"";
-  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:typeof f.note==="string"?capText(maskSecrets(f.note),1200):"",recommendation:rec};
+  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:typeof f.note==="string"?capNote(maskSecrets(f.note),2000):"",recommendation:rec};
 }
 try{
   var rfd=sessionStorage.getItem("prc.agentFindings");
@@ -499,6 +513,34 @@ svIn.onchange=function(){
   rd.onerror=function(){svErr.textContent="That file could not be read."};
   rd.readAsText(file);
 };
+var svConfirm=document.getElementById("svConfirm"),svConfirmT=document.getElementById("svConfirmT");
+function clearAll(){
+  review={};save();
+  try{localStorage.removeItem(REM_KEY)}catch(e){}
+  FIND={};saveFind();
+  svConfirm.hidden=true;
+  render();
+}
+document.getElementById("svClearAll").onclick=function(){
+  svErr.textContent="";svMsg.textContent="";
+  var nm=Object.keys(review).length,nf=Object.keys(FIND).length,rem=!!remGet();
+  if(!nm&&!nf&&!rem){svMsg.textContent="Nothing to clear.";return}
+  svConfirmT.textContent="Clear "+plural(nm,"mark")+" and "+plural(nf,"finding")+(rem?", and the copy remembered in this browser":"")+"? This cannot be undone. Save a review file first if you want to keep them.";
+  svConfirm.hidden=false;
+  document.getElementById("svClrNo").focus();
+};
+document.getElementById("svClrNo").onclick=function(){svConfirm.hidden=true;svMsg.textContent="Nothing was cleared.";document.getElementById("svClearAll").focus()};
+document.getElementById("svClrGo").onclick=function(){
+  var nm=Object.keys(review).length,nf=Object.keys(FIND).length;
+  clearAll();
+  svMsg.textContent="Cleared "+plural(nm,"mark")+" and "+plural(nf,"finding")+".";
+};
+document.getElementById("svClrSave").onclick=function(){
+  var nm=Object.keys(review).length,nf=Object.keys(FIND).length,name="prc-review-"+today()+".json";
+  if(nm||nf)download(name,reviewFile(),"application/json");
+  clearAll();
+  svMsg.textContent=(nm||nf?"Saved "+name+", then cleared ":"Cleared ")+plural(nm,"mark")+" and "+plural(nf,"finding")+".";
+};
 svRem.onchange=function(){
   svErr.textContent="";
   if(svRem.checked){
@@ -618,6 +660,18 @@ function detail(it,hue){
     var cm=el("p","meta");cm.appendChild(el("span","chk chk-"+dp.chk,CHK[dp.chk]));d.appendChild(cm);
     d.appendChild(el("p","meta chk-why",CHKX[dp.chk]));
     var fb=findingBlock(id);if(fb)d.appendChild(fb);
+    var run=el("div","runbox");
+    run.appendChild(el("strong",null,"Check this concern with Claude Code"));
+    var row=el("div","row");row.style.marginTop="8px";row.style.gap="14px";
+    var cb=el("button","btn alt","Copy Claude Code prompt for this concern");cb.type="button";
+    var cmsg=el("span","note");cmsg.setAttribute("role","status");cmsg.style.margin="0";
+    var holder=el("div","pastebox");
+    cb.onclick=function(){copyText(buildPrompt([id]),cmsg,function(){pasteOpen[id]=true;if(!holder.firstChild)holder.appendChild(pasteBox(id))})};
+    row.appendChild(cb);row.appendChild(cmsg);run.appendChild(row);
+    run.appendChild(el("p","note full","Paste it into Claude Code in plan mode, which stops the agent from editing files. Start it with claude --permission-mode plan, or press Shift+Tab."));
+    if(pasteOpen[id])holder.appendChild(pasteBox(id));
+    run.appendChild(holder);
+    d.appendChild(run);
     var det=document.createElement("details");det.className="deep";det.open=!!openDeep[id];
     det.ontoggle=function(){openDeep[id]=det.open};
     var sm=document.createElement("summary");
@@ -639,7 +693,7 @@ function detail(it,hue){
       ac.appendChild(el("p",null,"This needs people or runtime data, so a coding agent cannot settle it from the code alone."));
       det.appendChild(ac);
       det.appendChild(askBlock());
-      ac=el("div","blk");
+      ac=null;
     }else{
       ac.appendChild(el("p",null,"Search hints for Claude Code:"));
       var sg=el("div","sigs");dp.sig.forEach(function(s){sg.appendChild(el("code",null,s))});ac.appendChild(sg);
@@ -650,19 +704,10 @@ function detail(it,hue){
       if(dp.ask){
         det.appendChild(ac);
         det.appendChild(askBlock("The repository cannot show everything here."));
-        ac=el("div","blk");
+        ac=null;
       }
     }
-    var row=el("div","row");row.style.marginTop="14px";row.style.gap="14px";
-    var cb=el("button","btn alt","Copy Claude Code prompt for this concern");cb.type="button";
-    var cmsg=el("span","note");cmsg.setAttribute("role","status");cmsg.style.margin="0";
-    var holder=el("div","pastebox");
-    cb.onclick=function(){copyText(buildPrompt([id]),cmsg,function(){pasteOpen[id]=true;if(!holder.firstChild)holder.appendChild(pasteBox(id))})};
-    row.appendChild(cb);row.appendChild(cmsg);ac.appendChild(row);
-    ac.appendChild(el("p","note full","Paste it into Claude Code in plan mode, which stops the agent from editing files. Start it with claude --permission-mode plan, or press Shift+Tab."));
-    if(pasteOpen[id])holder.appendChild(pasteBox(id));
-    ac.appendChild(holder);
-    det.appendChild(ac);
+    if(ac)det.appendChild(ac);
     d.appendChild(det);
   }else{
     d.appendChild(el("p","meta","Full detail and agent review for this concern are coming in the complete version."));

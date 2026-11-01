@@ -370,18 +370,18 @@ test("the CSP lets the page load only its own intro video and poster", async () 
   assert.match(csp, /media-src 'self'/);
 });
 
-test("a note is masked, then cut at 1200 characters with an ellipsis", () => {
+test("a note is masked, then cut at 2000 characters with an ellipsis", () => {
   const p = loadPage();
   const aws = "AKIA" + "ABCDEFGHIJKLMNOP";
   importWith(p, JSON.stringify({ findings: [
-    { id: 11, result: "partial", evidence: [], red_flags: [], note: "Key " + aws + " " + "w".repeat(1500) },
-    { id: 12, result: "partial", evidence: [], red_flags: [], note: "k".repeat(1200) },
+    { id: 11, result: "partial", evidence: [], red_flags: [], note: "Key " + aws + " " + "w".repeat(2500) },
+    { id: 12, result: "partial", evidence: [], red_flags: [], note: "k".repeat(2000) },
   ] }));
   const stored = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"));
-  assert.equal(stored[11].note.length, 1200);
+  assert.equal(stored[11].note.length, 2000);
   assert.ok(stored[11].note.endsWith("…"));
   assert.ok(!stored[11].note.includes(aws), "secret masked before the cut");
-  assert.equal(stored[12].note, "k".repeat(1200), "a note of exactly 1200 characters is kept whole");
+  assert.equal(stored[12].note, "k".repeat(2000), "a note of exactly 2000 characters is kept whole");
 });
 
 test("the Agent check block explains what the check level means", () => {
@@ -753,4 +753,152 @@ test("after an import, the message offers to save the review", () => {
   assert.deepEqual(b, ["Show concerns with findings", "Save your review"]);
   p.click(p.d.querySelectorAll("#agSum button")[1]);
   assert.deepEqual(p.errors, []);
+});
+
+test("a long note is cut at its last whole line, with a marker and no heading left alone", () => {
+  const p = loadPage();
+  const bullets = (n, w) => Array.from({ length: n }, (_, i) => "- " + String(i).padStart(2, "0") + " " + "b".repeat(w)).join("\n");
+  const note = "Coverage:\n- ok\nGaps:\n" + bullets(8, 150) + "\nNeeds people:\n" + bullets(8, 150) + "\nStrengths:\n- last";
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note }] }));
+  const kept = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"))[11].note;
+  assert.ok(kept.length <= 2000);
+  const lines = kept.split("\n");
+  assert.equal(lines[lines.length - 1], "\u2026 note shortened");
+  for (const l of lines.slice(0, -1)) assert.ok(l === "Coverage:" || l === "Gaps:" || l === "Needs people:" || l === "- ok" || /^- \d\d b{150}$/.test(l), "whole lines only: " + l.slice(0, 20));
+  assert.ok(!kept.includes("Strengths:"), "later sections are dropped whole");
+  p.click(p.pill("Timeouts"));
+  assert.match(p.d.querySelector("#detail .finding .nbody").textContent, /note shortened$/);
+
+  const q = loadPage();
+  importWith(q, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "Coverage:\n- ok\nGaps:\n- " + "c".repeat(2100) }] }));
+  const k2 = JSON.parse(q.w.sessionStorage.getItem("prc.agentFindings"))[11].note;
+  assert.ok(!/Gaps:$/.test(k2.split("\n").slice(-2)[0]) || k2.endsWith("note shortened"), "no dangling heading");
+  const oneLine = loadPage();
+  importWith(oneLine, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "d".repeat(2500) }] }));
+  const k3 = JSON.parse(oneLine.w.sessionStorage.getItem("prc.agentFindings"))[11].note;
+  assert.equal(k3.length, 2000);
+  assert.ok(k3.endsWith("\u2026"), "a single huge line still ends with an ellipsis");
+});
+
+test("a finding keeps up to 8 evidence entries and a red flag up to 5", () => {
+  const p = loadPage();
+  const ev = (n) => ({ file: "f" + n + ".py", line: n, quote: "q" + n });
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", note: "n",
+    evidence: Array.from({ length: 10 }, (_, i) => ev(i + 1)),
+    red_flags: [{ flag: "Calls with no timeout", evidence: Array.from({ length: 7 }, (_, i) => ev(i + 1)) }] }] }));
+  const f = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"))[11];
+  assert.equal(f.evidence.length, 8);
+  assert.equal(f.red_flags[0].evidence.length, 5);
+});
+
+test("the copy prompt block sits above Go deeper and stays visible while it is closed", () => {
+  const people = content.concerns.find((c) => c.agent_check.level === "people");
+  for (const name of ["Timeouts", "Authentication and session management", people.name]) {
+    const p = loadPage();
+    p.click(p.pill(name));
+    const det = p.d.querySelector("#detail details.deep");
+    assert.equal(det.open, false, name + ": Go deeper starts closed");
+    const run = p.d.querySelector("#detail .runbox");
+    assert.ok(run, name + ": has the block");
+    assert.equal(run.closest("details"), null, name + ": not inside Go deeper");
+    assert.equal(det.previousElementSibling, run, name + ": directly above Go deeper");
+    assert.match(run.querySelector("button").textContent, /^Copy Claude Code prompt for this concern$/);
+    assert.match(run.textContent, /plan mode/);
+    assert.equal(det.querySelector("button"), null, name + ": no copy button inside Go deeper");
+    assert.equal([...det.querySelectorAll(".blk")].filter((b) => !b.textContent.trim()).length, 0, name + ": no empty block left behind");
+  }
+});
+
+test("the paste box opens inside the always visible block, not inside Go deeper", () => {
+  const p = loadPage();
+  p.click(p.pill("Timeouts"));
+  p.d.execCommand = () => true;
+  p.click(copyButton(p));
+  const box = p.d.getElementById("pasteIn");
+  assert.ok(box);
+  assert.ok(box.closest(".runbox"));
+  assert.equal(box.closest("details"), null);
+});
+
+// Clear all review data.
+function withData() {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "n" }, { id: 14, result: "found", evidence: [], red_flags: [], note: "n" }] }));
+  p.click(p.pill("Retries"));
+  p.click(p.d.querySelector('.sb[data-st="decided"]'));
+  return p;
+}
+const clickId = (p, id) => p.click(p.d.getElementById(id));
+
+test("Clear all review data sits in the Save your review card beside the older buttons, which stay", () => {
+  const p = loadPage();
+  assert.ok(p.d.querySelector("#svBox #svClearAll"));
+  assert.ok(p.d.getElementById("resetBtn"), "Reset review stays");
+  assert.ok(p.d.getElementById("agClear"), "Clear findings stays");
+  assert.equal(p.d.getElementById("svConfirm").hidden, true);
+});
+
+test("Clear all says so when there is nothing to clear", () => {
+  const p = loadPage();
+  clickId(p, "svClearAll");
+  assert.match(svText(p, "svMsg"), /Nothing to clear/);
+  assert.equal(p.d.getElementById("svConfirm").hidden, true);
+});
+
+test("Clear all asks first with the counts and Cancel keeps everything", () => {
+  const p = withData();
+  clickId(p, "svClearAll");
+  assert.equal(p.d.getElementById("svConfirm").hidden, false);
+  assert.match(svText(p, "svConfirmT"), /^Clear 1 mark and 2 findings\? This cannot be undone\. Save a review file first/);
+  assert.equal(p.d.activeElement.id, "svClrNo", "focus starts on the safe choice");
+  clickId(p, "svClrNo");
+  assert.equal(p.d.getElementById("svConfirm").hidden, true);
+  assert.match(svText(p, "svMsg"), /Nothing was cleared/);
+  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("prc.reviewStatus")), { 12: "decided" });
+  assert.equal(Object.keys(JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"))).length, 2);
+});
+
+test("Clear without saving removes the marks, the findings and the remembered copy", () => {
+  const p = withData();
+  check(p, true);
+  assert.ok(p.w.localStorage.getItem("prc.rememberedFindings"));
+  clickId(p, "svClearAll");
+  assert.match(svText(p, "svConfirmT"), /and the copy remembered in this browser\?/);
+  clickId(p, "svClrGo");
+  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("prc.reviewStatus")), {});
+  assert.deepEqual(JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings")), {});
+  assert.equal(p.w.localStorage.getItem("prc.rememberedFindings"), null);
+  assert.equal(p.d.getElementById("svRem").checked, false);
+  assert.equal(p.d.getElementById("afRow").hidden, true);
+  assert.equal(p.d.querySelectorAll("#grid .pill .ag").length, 0);
+  assert.match(p.d.getElementById("progText").textContent, /^0 of /);
+  assert.match(svText(p, "svMsg"), /^Cleared 1 mark and 2 findings\.$/);
+  assert.equal(p.d.getElementById("svConfirm").hidden, true);
+  assert.deepEqual(p.errors, []);
+  const again = loadPage({ storage: { "prc.reviewStatus": p.w.localStorage.getItem("prc.reviewStatus") } });
+  assert.equal(again.d.querySelectorAll("#grid .pill .ag").length, 0, "nothing comes back on reload");
+});
+
+test("Save first downloads the review file and then clears everything", () => {
+  const p = withData();
+  const got = capture(p);
+  clickId(p, "svClearAll");
+  clickId(p, "svClrSave");
+  assert.equal(got.length, 1);
+  assert.match(got[0].name, /^prc-review-\d{4}-\d{2}-\d{2}\.json$/);
+  const file = JSON.parse(got[0].text);
+  assert.deepEqual(file.review, { 12: "decided" });
+  assert.deepEqual(Object.keys(file.findings).sort(), ["11", "14"]);
+  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("prc.reviewStatus")), {});
+  assert.match(svText(p, "svMsg"), /^Saved prc-review-\d{4}-\d{2}-\d{2}\.json, then cleared 1 mark and 2 findings\.$/);
+});
+
+test("Clear all removes a remembered copy even when no findings are on the page", () => {
+  const p = loadPage();
+  check(p, true);
+  assert.ok(p.w.localStorage.getItem("prc.rememberedFindings"));
+  clickId(p, "svClearAll");
+  assert.match(svText(p, "svConfirmT"), /^Clear 0 marks and 0 findings, and the copy remembered/);
+  clickId(p, "svClrGo");
+  assert.equal(p.w.localStorage.getItem("prc.rememberedFindings"), null);
 });

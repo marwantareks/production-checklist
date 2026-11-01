@@ -27,7 +27,7 @@ red_flags:
   - Limits tracked per instance in memory, so scaling out multiplies them
   - Login, signup or password-reset endpoints with no limit
   - Limits keyed on a raw forwarded header or on a shared proxy address
-  - Rejected requests with no Retry-After header or error explanation
+  - Rejected requests with no Retry-After header
 good_looks_like:
   - Limits per client, key or user on every public endpoint, stricter on expensive operations
   - Login and reset endpoints limited per IP and per account, with delays or step-up challenges
