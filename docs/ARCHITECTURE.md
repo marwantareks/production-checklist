@@ -38,6 +38,9 @@ Keys start with `prc.` because every page on a github.io user site shares one or
 - `prc.theme` (localStorage): light or dark.
 - `prc.reviewStatus` (localStorage): concern id to decided, deferred, missing or na (not applicable).
 - `prc.agentFindings` (sessionStorage, so it stays in the tab and is gone when it closes): imported agent findings, validated and truncated on the way in and again on load.
+- `prc.rememberedFindings` (localStorage, only when the person turns on Remember): a copy of the findings with a 30 day expiry. It is read through the same cleaning as the session copy, is removed when it expires, when Remember is turned off and by Clear findings.
+
+A review file (`prc-review`, version 1) is made by Save review file and holds the review marks and the findings. Loading it cleans every entry the way a pasted reply is cleaned, ignores ids the checklist does not have and asks before replacing what is on the page. The Markdown report lists every concern and escapes agent text so it cannot turn into markup.
 
 ## Changing things
 

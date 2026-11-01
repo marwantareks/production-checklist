@@ -40,7 +40,7 @@ The ground rules came out of the review rounds. They cover, in short: read-only 
 | The agent guesses | Prompt demands evidence and allows `cannot_determine` | An agent can still cite plausible but wrong evidence. Verify before marking decided. |
 | Pasted findings attack the page | Findings are validated, truncated, masked, and shown as plain text | None known. |
 | A recommendation carries a secret fragment, personal data or bad advice | Prompt asks for it only on `partial` and `not_found`, forbids any part of a secret, and ties it to cited evidence. The page masks it, caps it at 600 characters with an ellipsis, and shows it as plain text | Masking needs the full token, so fragments can pass. The advice can be wrong. The page says to check it against the evidence before acting. |
-| Findings leak from the browser | Kept in `sessionStorage` (this tab only, gone when it closes), with a Clear findings button | Anyone using the open tab can read them. Other tabs and other sites on the same origin cannot. |
+| Findings leak from the browser | Kept in `sessionStorage` (this tab only, gone when it closes), with a Clear findings button. Remember is off by default; when on, it keeps a copy in `localStorage` for 30 days after a confirm, and Clear findings removes it. A saved review file or report is a file the person keeps, and the page warns that it holds file paths and code quotes | Anyone using the open tab can read them. Other tabs and other sites on the same origin cannot. |
 
 ## Limits
 

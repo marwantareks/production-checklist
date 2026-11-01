@@ -564,3 +564,193 @@ test("after an import, a button shows only the concerns that have findings", () 
   assert.equal(afChip(p, "With findings").getAttribute("aria-pressed"), "true");
   assert.deepEqual(p.errors, []);
 });
+
+// Saving, loading, the report and remembering findings.
+const tick = () => new Promise((r) => setTimeout(r, 40));
+function capture(p) {
+  const got = [];
+  p.w.Blob = function (parts, o) { this.text = parts.join(""); this.type = o.type; };
+  p.w.URL.createObjectURL = (b) => { got.push(b); return "blob:x"; };
+  p.w.URL.revokeObjectURL = () => {};
+  p.w.HTMLAnchorElement.prototype.click = function () { got[got.length - 1].name = this.download; };
+  return got;
+}
+async function loadFile(p, text) {
+  const input = p.d.getElementById("svIn");
+  Object.defineProperty(input, "files", { value: [new p.w.File([text], "review.json")], configurable: true });
+  input.dispatchEvent(new p.w.Event("change", { bubbles: true }));
+  for (let i = 0; i < 50 && !p.d.getElementById("svMsg").textContent && !p.d.getElementById("svErr").textContent; i++) await tick();
+}
+const svText = (p, id) => p.d.getElementById(id).textContent;
+const svFileOf = (findings = {}, review = {}, extra = {}) => JSON.stringify({ format: "prc-review", version: 1, saved: "2026-11-01T10:00:00.000Z", review, findings, ...extra });
+const fnd = (note = "n") => ({ result: "partial", evidence: [], red_flags: [], note });
+const check = (p, on) => { const b = p.d.getElementById("svRem"); b.checked = on; b.dispatchEvent(new p.w.Event("change", { bubbles: true })); return b; };
+
+test("the save block is its own card after Review progress and the privacy note mentions it", () => {
+  const p = loadPage();
+  const box = p.d.querySelector("section#svBox");
+  assert.ok(box, "its own section");
+  assert.equal(box.previousElementSibling.className, "prog", "directly after Review progress");
+  assert.equal(box.querySelector("h3").textContent, "Save your review");
+  for (const id of ["svFile", "svLoad", "svReport", "svRem"]) assert.ok(box.querySelector("#" + id), id);
+  assert.equal(p.d.getElementById("svRem").checked, false, "remembering is off by default");
+  assert.match(p.d.getElementById("agentPanel").textContent, /unless you save a review file or choose to remember them/);
+});
+
+test("Save review file has nothing to save at first, then downloads marks and findings", () => {
+  const p = loadPage();
+  const got = capture(p);
+  p.click(p.d.getElementById("svFile"));
+  assert.equal(got.length, 0);
+  assert.match(svText(p, "svMsg"), /Nothing to save yet/);
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "n" }] }));
+  p.click(p.pill("Retries"));
+  p.click(p.d.querySelector('.sb[data-st="decided"]'));
+  p.click(p.d.getElementById("svFile"));
+  assert.equal(got.length, 1);
+  assert.match(got[0].name, /^prc-review-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.equal(got[0].type, "application/json");
+  const file = JSON.parse(got[0].text);
+  assert.equal(file.format, "prc-review");
+  assert.equal(file.version, 1);
+  assert.deepEqual(file.review, { 12: "decided" });
+  assert.deepEqual(Object.keys(file.findings), ["11"]);
+  assert.match(svText(p, "svMsg"), /1 finding and 1 mark/);
+});
+
+test("a saved review loads into a fresh page with its marks and findings", async () => {
+  const a = loadPage();
+  const got = capture(a);
+  importWith(a, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [{ file: "a.ts", line: 3, quote: "fetch(url)" }], red_flags: [], note: "Gaps:\n- no timeout" }] }));
+  a.click(a.pill("Retries"));
+  a.click(a.d.querySelector('.sb[data-st="deferred"]'));
+  a.click(a.d.getElementById("svFile"));
+  const b = loadPage();
+  await loadFile(b, got[0].text);
+  assert.equal(svText(b, "svErr"), "");
+  assert.match(svText(b, "svMsg"), /Loaded 1 finding and 1 mark from a review saved on \d{4}-\d{2}-\d{2}\./);
+  assert.deepEqual(JSON.parse(b.w.localStorage.getItem("prc.reviewStatus")), { 12: "deferred" });
+  b.click(b.pill("Timeouts"));
+  assert.match(b.d.querySelector("#detail .finding").textContent, /no timeout/);
+  assert.match(b.d.getElementById("progText").textContent, /^1 of /);
+  assert.deepEqual(b.errors, []);
+});
+
+test("loading a file cleans it like a pasted reply and ignores what does not match", async () => {
+  const p = loadPage();
+  const aws = "AKIA" + "ABCDEFGHIJKLMNOP";
+  const text = svFileOf(
+    { 11: fnd("Key " + aws + " <img src=x onerror=alert(1)>"), 999: fnd(), 12: { result: "bogus" } },
+    { 12: "decided", 13: "constructor", 9999: "decided" },
+  );
+  await loadFile(p, text);
+  assert.match(svText(p, "svMsg"), /Loaded 1 finding and 1 mark/);
+  assert.match(svText(p, "svMsg"), /Ignored 4 entries/);
+  const stored = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"));
+  assert.ok(!stored[11].note.includes(aws), "secret masked");
+  p.click(p.pill("Timeouts"));
+  assert.equal(p.d.querySelector("#detail .finding img"), null, "rendered as text");
+});
+
+test("loading rejects files that are not a saved review", async () => {
+  for (const [text, re] of [
+    ["not json", /could not be read/],
+    [JSON.stringify({ hello: 1 }), /not a saved review/],
+    [svFileOf({}, {}, { version: 2 }), /newer version/],
+    [svFileOf({}, {}), /no review marks or findings/],
+  ]) {
+    const p = loadPage();
+    await loadFile(p, text);
+    assert.match(svText(p, "svErr"), re);
+    assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), null, "nothing was changed");
+  }
+});
+
+test("loading asks before replacing what is there and keeps it when declined", async () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "found", evidence: [], red_flags: [], note: "mine" }] }));
+  let asked = "";
+  p.w.confirm = (m) => { asked = m; return false; };
+  await loadFile(p, svFileOf({ 12: fnd("theirs") }));
+  assert.match(asked, /Replace your current 0 marks and 1 finding with the ones in this file\?/);
+  assert.deepEqual(Object.keys(JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"))), ["11"]);
+  p.w.confirm = () => true;
+  await loadFile(p, svFileOf({ 12: fnd("theirs") }));
+  assert.deepEqual(Object.keys(JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"))), ["12"]);
+});
+
+test("the report lists every concern, a short list of what is unreviewed and the findings as safe Markdown", () => {
+  const p = loadPage();
+  const got = capture(p);
+  const note = "Coverage:\n- 3 services\nGaps:\n- <b>no</b> timeout [x](javascript:alert(1)) `tick`\nSearched: bcrypt";
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [{ file: "src/a`b.ts", line: 3, quote: "x_y <script>" }],
+    red_flags: [{ flag: "Calls with no timeout", evidence: [{ file: "a.ts", line: 1, quote: "q" }] }], note, recommendation: "Set a *timeout*." }] }));
+  p.click(p.pill("Retries"));
+  p.click(p.d.querySelector('.sb[data-st="decided"]'));
+  p.click(p.d.getElementById("svReport"));
+  const md = got[0].text;
+  assert.match(got[0].name, /^prc-report-\d{4}-\d{2}-\d{2}\.md$/);
+  assert.equal((md.match(/^### \d+\. /gm) || []).length, content.concerns.length, "every concern");
+  assert.match(md, /^## Summary/m);
+  assert.match(md, /- Reviewed: 1 of \d+ \(1 decided, 0 deferred, 0 missing\)/);
+  assert.match(md, /- Agent findings: 1 \(1 partial\)/);
+  const at = md.indexOf("## Still to review");
+  const still = md.slice(at, md.indexOf("\n## ", at + 5));
+  assert.ok(still.includes("Timeouts") && !still.includes("Retries"), "unreviewed listed, marked concern left out");
+  assert.match(md, /### 12\. Retries\n\n- Status: Decided/);
+  assert.match(md, /### 11\. Timeouts\n\n- Status: Not reviewed\n- Agent result: Partial/);
+  assert.ok(md.includes("`src/a'b.ts:3`"), "backtick removed from a code span");
+  assert.ok(md.includes("\\<b\\>no\\</b\\>") && md.includes("\\[x\\]") && md.includes("x\\_y"), "markup characters escaped");
+  assert.ok(!/<b>|<script>/.test(md), "no raw markup");
+  assert.match(md, /\*\*Suggested fix\*\*[^\n]*\n\nSet a \\\*timeout\\\*\./);
+  assert.ok(md.endsWith("\n") && !md.endsWith("\n\n"));
+});
+
+test("remember keeps findings for 30 days, brings them back on load, and is turned off with the checkbox", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "n" }] }));
+  assert.equal(p.w.localStorage.getItem("prc.rememberedFindings"), null, "off by default");
+  check(p, true);
+  const rem = JSON.parse(p.w.localStorage.getItem("prc.rememberedFindings"));
+  assert.ok(Math.abs(rem.expires - rem.saved - 30 * 864e5) < 1000);
+  assert.deepEqual(Object.keys(rem.findings), ["11"]);
+  assert.match(svText(p, "svRemNote"), /^Remembered until \d{4}-\d{2}-\d{2}\.$/);
+  importWith(p, JSON.stringify({ findings: [{ id: 12, result: "found", evidence: [], red_flags: [], note: "n" }] }));
+  assert.deepEqual(Object.keys(JSON.parse(p.w.localStorage.getItem("prc.rememberedFindings")).findings).sort(), ["11", "12"], "later imports are kept too");
+  const again = loadPage({ storage: { "prc.rememberedFindings": p.w.localStorage.getItem("prc.rememberedFindings") } });
+  assert.equal(again.d.getElementById("svRem").checked, true);
+  assert.equal(again.d.querySelectorAll("#grid .pill .ag").length, 2, "findings are back with no session");
+  check(p, false);
+  assert.equal(p.w.localStorage.getItem("prc.rememberedFindings"), null);
+});
+
+test("remember asks first, ignores an expired copy, cleans what it reads and goes with Clear findings", () => {
+  const p = loadPage();
+  p.w.confirm = () => false;
+  const box = check(p, true);
+  assert.equal(box.checked, false);
+  assert.equal(p.w.localStorage.getItem("prc.rememberedFindings"), null);
+
+  const expired = loadPage({ storage: { "prc.rememberedFindings": JSON.stringify({ saved: 1, expires: Date.now() - 1000, findings: { 11: fnd() } }) } });
+  assert.equal(expired.d.querySelectorAll("#grid .pill .ag").length, 0);
+  assert.equal(expired.w.localStorage.getItem("prc.rememberedFindings"), null, "expired copy removed");
+
+  const aws = "AKIA" + "ABCDEFGHIJKLMNOP";
+  const planted = loadPage({ storage: { "prc.rememberedFindings": JSON.stringify({ saved: 1, expires: Date.now() + 1e6, findings: { 11: fnd("Key " + aws), 999: fnd(), 12: { result: "bogus" } } }) } });
+  assert.deepEqual(planted.errors, []);
+  assert.equal(planted.d.querySelectorAll("#grid .pill .ag").length, 1);
+  planted.click(planted.pill("Timeouts"));
+  assert.ok(!planted.d.getElementById("detail").textContent.includes(aws));
+  planted.click(planted.d.getElementById("agClear"));
+  assert.equal(planted.w.localStorage.getItem("prc.rememberedFindings"), null, "Clear findings removes the remembered copy");
+  assert.equal(planted.d.getElementById("svRem").checked, false);
+});
+
+test("after an import, the message offers to save the review", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "n" }] }));
+  const b = [...p.d.querySelectorAll("#agSum button")].map((x) => x.textContent);
+  assert.deepEqual(b, ["Show concerns with findings", "Save your review"]);
+  p.click(p.d.querySelectorAll("#agSum button")[1]);
+  assert.deepEqual(p.errors, []);
+});

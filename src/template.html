@@ -137,7 +137,7 @@ Then paste the prompt.</div>
 <p id="agSum" class="note"></p>
 </li>
 </ol>
-<p class="note">Findings include file paths and short code quotes. They are kept in this browser tab only and disappear when you close it. Clear them sooner on a shared machine. The agent suggests and you decide: verify the evidence before marking anything decided.</p>
+<p class="note">Findings include file paths and short code quotes. They stay in this browser tab and disappear when you close it, unless you save a review file or choose to remember them in Save your review. Clear them sooner on a shared machine. The agent suggests and you decide: verify the evidence before marking anything decided.</p>
 </section>
 
 <section class="how" aria-labelledby="how-h">
@@ -164,6 +164,15 @@ Then paste the prompt.</div>
 </ul>
 <div class="row"><span class="fl">Show</span><div id="stChips" class="row chips" role="group" aria-label="Filter by review status"></div><button id="resetBtn" class="chip" type="button">Reset review</button></div>
 <p class="note">Select a concept, then mark it decided, deferred, missing or not applicable. Concerns marked not applicable leave the progress count. Marks are saved in this browser only.</p>
+</section>
+
+<section id="svBox" class="prog svcard" aria-labelledby="sv-h">
+<h3 id="sv-h">Save your review</h3>
+<p class="sd">Keep your marks and agent findings after you close this page, or turn them into a report to share.</p>
+<div class="row"><button id="svFile" class="btn alt sm" type="button">Save review file</button><button id="svLoad" class="btn alt sm" type="button">Load review file</button><button id="svReport" class="btn alt sm" type="button">Download report</button><input id="svIn" type="file" accept=".json,application/json" hidden></div>
+<label class="ck"><input type="checkbox" id="svRem"> Remember my findings in this browser for 30 days</label> <span id="svRemNote" class="note flush"></span>
+<p class="note">The review file holds your marks and findings, so you can load it later or on another computer. The report is a Markdown file to read or share. Findings include file paths and code quotes, so keep both somewhere private. Remembering is off by default: leave it off on a shared computer.</p>
+<p id="svMsg" class="note" role="status"></p><p id="svErr" class="err" role="alert"></p>
 </section>
 </div>
 

@@ -94,7 +94,7 @@ function goTo(id){
   if(p){alignTo(p.closest(".sec")||p);p.focus({preventScroll:true})}
 }
 function render(){
-  drawChips();drawProgress();drawExtras();if(mode==="agent")updateAgent();grid.innerHTML="";var n=0;
+  drawChips();drawProgress();drawExtras();drawSave();if(mode==="agent")updateAgent();grid.innerHTML="";var n=0;
   dualBtn.setAttribute("aria-pressed",dual?"true":"false");
   C.forEach(function(c,i){
     if(cat>=0&&cat!==i)return;
@@ -241,7 +241,23 @@ try{
   var rfd=sessionStorage.getItem("prc.agentFindings");
   if(rfd){var fo=JSON.parse(rfd);if(fo&&typeof fo==="object"){Object.keys(fo).forEach(function(k){var f=cleanFinding(fo[k]);if(f&&own(DEEP,k))FIND[k]=f})}}
 }catch(e){}
-function saveFind(){try{sessionStorage.setItem("prc.agentFindings",JSON.stringify(FIND));return true}catch(e){return false}}
+/* Findings stay in the tab unless the person turns on Remember. That copy lives in localStorage for 30 days and goes with Clear findings. */
+var REM_KEY="prc.rememberedFindings",REM_DAYS=30;
+function remGet(){
+  try{var r=JSON.parse(localStorage.getItem(REM_KEY));if(r&&typeof r==="object"&&typeof r.expires==="number"&&r.expires>Date.now())return r;localStorage.removeItem(REM_KEY)}catch(e){}
+  return null;
+}
+function remWrite(){try{var t=Date.now();localStorage.setItem(REM_KEY,JSON.stringify({saved:t,expires:t+REM_DAYS*864e5,findings:FIND}));return true}catch(e){return false}}
+try{
+  var rm=remGet();
+  if(rm&&rm.findings&&typeof rm.findings==="object")Object.keys(rm.findings).forEach(function(k){if(own(FIND,k))return;var f=cleanFinding(rm.findings[k]);if(f&&own(DEEP,k))FIND[k]=f});
+}catch(e){}
+function saveFind(){
+  var ok=false;
+  try{sessionStorage.setItem("prc.agentFindings",JSON.stringify(FIND));ok=true}catch(e){}
+  if(remGet())remWrite();
+  return ok;
+}
 var MAX_PASTE=1000000,MAX_FINDINGS=500;
 var pasteOpen={},pasteDraft={},pasteMsg={};
 
@@ -280,8 +296,8 @@ function copyText(t,msgEl,onOk){
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(function(){done(true)},fallback)}
   else fallback();
 }
-function download(name,text){
-  var b=new Blob([text],{type:"text/markdown"});var u=URL.createObjectURL(b);
+function download(name,text,type){
+  var b=new Blob([text],{type:type||"text/markdown"});var u=URL.createObjectURL(b);
   var a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(u)},1000);
 }
@@ -350,13 +366,151 @@ document.getElementById("agImport").onclick=function(){
     var show=el("button","chip","Show concerns with findings");show.type="button";
     show.onclick=function(){q="";qIn.value="";dual=false;sf="all";cat=-1;sel=null;af="any";render();alignTo(grid)};
     agSum.appendChild(show);
+    agSum.appendChild(document.createTextNode(" "));
+    var sv=el("button","chip","Save your review");sv.type="button";
+    sv.onclick=function(){alignTo(svBox)};
+    agSum.appendChild(sv);
     agIn.value="";render();
   }catch(e){agErr.textContent=e.message}
 };
 document.getElementById("agClear").onclick=function(){
-  if(Object.keys(FIND).length&&window.confirm("Clear all imported agent findings from this browser?")){FIND={};saveFind();agSum.textContent="Findings cleared.";render()}
+  if(Object.keys(FIND).length&&window.confirm("Clear all imported agent findings from this browser?")){try{localStorage.removeItem(REM_KEY)}catch(e){}FIND={};saveFind();agSum.textContent="Findings cleared.";render()}
 };
 agIn.oninput=function(){agErr.textContent=""};
+
+/* Saving a review. A review file holds the marks and the findings so a person can keep them wherever they choose. Everything read from a file is cleaned the same way as a pasted reply, so a hand edited file can plant nothing the paste could not. */
+var REVIEW_FORMAT="prc-review",REVIEW_VERSION=1,MAX_FILE=5000000;
+function today(){return new Date().toISOString().slice(0,10)}
+function plural(n,w){return n+" "+w+(n===1?"":"s")}
+function reviewFile(){
+  return JSON.stringify({format:REVIEW_FORMAT,version:REVIEW_VERSION,saved:new Date().toISOString(),review:review,findings:FIND},null,2);
+}
+function parseReviewFile(text){
+  if(text.length>MAX_FILE)throw new Error("That file is too large to be a saved review.");
+  var o;
+  try{o=JSON.parse(text)}catch(e){throw new Error("That file could not be read. Choose a file made with Save review file.")}
+  if(!o||o.format!==REVIEW_FORMAT)throw new Error("That is not a saved review. Choose a file made with Save review file.");
+  if(typeof o.version!=="number"||o.version>REVIEW_VERSION)throw new Error("That file was saved by a newer version of this page. Open the latest page and try again.");
+  var rv={},fd={},m=0,n=0,ig=0;
+  if(o.review&&typeof o.review==="object")Object.keys(o.review).forEach(function(k){
+    var v=o.review[k];
+    if(own(IDX,k)&&typeof v==="string"&&own(ST,v)){rv[k]=v;m++}else ig++;
+  });
+  if(o.findings&&typeof o.findings==="object"){
+    var ks=Object.keys(o.findings);
+    ig+=Math.max(0,ks.length-MAX_FINDINGS);
+    ks.slice(0,MAX_FINDINGS).forEach(function(k){
+      var f=cleanFinding(o.findings[k]);
+      if(f&&own(DEEP,k)){fd[k]=f;n++}else ig++;
+    });
+  }
+  if(!m&&!n)throw new Error("That file has no review marks or findings in it.");
+  return {review:rv,findings:fd,m:m,n:n,ig:ig,saved:(typeof o.saved==="string"&&/^\d{4}-\d{2}-\d{2}/.test(o.saved))?o.saved.slice(0,10):""};
+}
+
+/* The report is for people to read and share, so agent text is escaped for Markdown and nothing in it can turn into a link, an image or markup. */
+function mdText(s){return String(s).replace(/\s+/g," ").replace(/([\\`*_{}\[\]<>#|~!])/g,"\\$1")}
+function mdCode(s){return "`"+String(s).replace(/`/g,"'").replace(/\s+/g," ")+"`"}
+function mdEv(e){return mdCode(e.file+(e.line?":"+e.line:""))+(e.quote?" “"+mdText(e.quote)+"”":"")}
+function buildReport(){
+  var L=[],t=tally(allIds()),nf=Object.keys(FIND).length;
+  L.push("# Production readiness review","");
+  L.push("Created "+today()+" with the Production Readiness Checklist. Agent findings were written by an AI and have not been verified, so they can be wrong. This report can include file paths and short code quotes, so keep it private.","");
+  L.push("## Summary","");
+  L.push("- Reviewed: "+t.done+" of "+t.den+" ("+t.decided+" decided, "+t.deferred+" deferred, "+t.missing+" missing)"+(t.na?", plus "+t.na+" not applicable":""));
+  var by={};Object.keys(FIND).forEach(function(k){by[FIND[k].result]=(by[FIND[k].result]||0)+1});
+  var parts=Object.keys(RL).filter(function(k){return by[k]}).map(function(k){return by[k]+" "+RL[k].toLowerCase()});
+  L.push("- Agent findings: "+nf+(nf?" ("+parts.join(", ")+")":""),"");
+  L.push("## Still to review","");
+  var any=false;
+  C.forEach(function(c){
+    var names=c[3].filter(function(it){return !review[it[0]]}).map(function(it){return mdText(it[1])});
+    if(names.length){any=true;L.push("- **"+mdText(c[0])+"** ("+names.length+"): "+names.join(", "))}
+  });
+  if(!any)L.push("Every concern has a status.");
+  L.push("");
+  C.forEach(function(c){
+    L.push("## "+mdText(c[0]),"");
+    c[3].forEach(function(it){
+      var id=it[0],st=review[id],f=FIND[id];
+      L.push("### "+id+". "+mdText(it[1]),"");
+      L.push("- Status: "+(st?ST[st]:"Not reviewed"));
+      if(!f){L.push("");return}
+      L.push("- Agent result: "+RL[f.result],"");
+      if(f.evidence.length){L.push("**Evidence**","");f.evidence.forEach(function(e){L.push("- "+mdEv(e))});L.push("")}
+      if(f.red_flags.length){
+        L.push("**Red flags the agent reports**","");
+        f.red_flags.forEach(function(r){L.push("- "+mdText(r.flag));r.evidence.forEach(function(e){L.push("  - "+mdEv(e))})});
+        L.push("");
+      }
+      if(f.note){
+        L.push("**Note**","");
+        noteParts(f.note).forEach(function(p){
+          if(p.t==="h"){if(L[L.length-1]!=="")L.push("");L.push("_"+mdText(p.x)+"_","")}
+          else if(p.t==="li")L.push("- "+mdText(p.x));
+          else L.push(mdText(p.x),"");
+        });
+        if(L[L.length-1]!=="")L.push("");
+      }
+      if(f.recommendation)L.push("**Suggested fix** (the agent’s advice, check it against the evidence before acting)","",mdText(f.recommendation),"");
+    });
+  });
+  return L.join("\n").replace(/\n{3,}/g,"\n\n").replace(/\n*$/,"\n");
+}
+
+var svBox=document.getElementById("svBox"),svMsg=document.getElementById("svMsg"),svErr=document.getElementById("svErr"),svIn=document.getElementById("svIn"),svRem=document.getElementById("svRem"),svRemNote=document.getElementById("svRemNote");
+function drawSave(){
+  var r=remGet();
+  svRem.checked=!!r;
+  svRemNote.textContent=r?"Remembered until "+new Date(r.expires).toISOString().slice(0,10)+".":"";
+}
+document.getElementById("svFile").onclick=function(){
+  svErr.textContent="";
+  var nm=Object.keys(review).length,nf=Object.keys(FIND).length;
+  if(!nm&&!nf){svMsg.textContent="Nothing to save yet. Mark a concern or import findings first.";return}
+  var name="prc-review-"+today()+".json";
+  download(name,reviewFile(),"application/json");
+  svMsg.textContent="Saved "+name+" with "+plural(nf,"finding")+" and "+plural(nm,"mark")+". It holds file paths and code quotes, so keep it somewhere private.";
+};
+document.getElementById("svReport").onclick=function(){
+  svErr.textContent="";
+  var name="prc-report-"+today()+".md";
+  download(name,buildReport(),"text/markdown");
+  svMsg.textContent="Downloaded "+name+". It lists every concern. Agent text in it is unverified, and it can include file paths and code quotes.";
+};
+document.getElementById("svLoad").onclick=function(){svIn.value="";svIn.click()};
+svIn.onchange=function(){
+  var file=svIn.files&&svIn.files[0];
+  svErr.textContent="";svMsg.textContent="";
+  if(!file)return;
+  if(file.size>MAX_FILE){svErr.textContent="That file is too large to be a saved review.";return}
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var r=parseReviewFile(String(rd.result));
+      var hm=Object.keys(review).length,hf=Object.keys(FIND).length;
+      if((hm||hf)&&!window.confirm("Replace your current "+plural(hm,"mark")+" and "+plural(hf,"finding")+" with the ones in this file?")){svMsg.textContent="Nothing was changed.";return}
+      review=r.review;save();
+      FIND=r.findings;var ok=saveFind();
+      render();
+      svMsg.textContent="Loaded "+plural(r.n,"finding")+" and "+plural(r.m,"mark")+(r.saved?" from a review saved on "+r.saved:"")+"."+(r.ig?" Ignored "+r.ig+(r.ig===1?" entry":" entries")+" that did not match this checklist.":"")+(ok?"":" This browser could not keep the findings for this tab.");
+    }catch(e){svErr.textContent=e.message}
+  };
+  rd.onerror=function(){svErr.textContent="That file could not be read."};
+  rd.readAsText(file);
+};
+svRem.onchange=function(){
+  svErr.textContent="";
+  if(svRem.checked){
+    if(!window.confirm("Findings include file paths and short code quotes from your repository. Keep them in this browser for "+REM_DAYS+" days? Anyone who uses this browser profile can read them. You can turn this off at any time.")){svRem.checked=false;return}
+    if(!remWrite()){svRem.checked=false;svErr.textContent="This browser could not store them.";return}
+    svMsg.textContent="Findings will be kept in this browser for "+REM_DAYS+" days.";
+  }else{
+    try{localStorage.removeItem(REM_KEY)}catch(e){}
+    svMsg.textContent="Stopped remembering findings. The stored copy was removed.";
+  }
+  drawSave();
+};
 
 function list(label,arr){
   var b=el("div","blk");b.appendChild(el("strong",null,label));
@@ -375,20 +529,24 @@ function evidenceList(arr){
 }
 /* The prompt asks for a note in sections: a known heading on its own line, then lines that start with "- ". Anything else, including an old style paragraph, shows as plain text. All of it goes in with textContent. */
 var NOTE_HEADS={coverage:"Coverage",strengths:"Strengths",gaps:"Gaps","needs people":"Needs people",searched:"Searched"};
-function noteBody(text){
-  var box=el("div","nbody"),ul=null;
+function noteParts(text){
+  var out=[];
   text.split(/\r?\n/).forEach(function(raw){
     var line=raw.trim();if(!line)return;
     var b=line.match(/^[-*•]\s+(.+)$/);
-    if(b){if(!ul){ul=el("ul","nl");box.appendChild(ul)}ul.appendChild(el("li",null,b[1]));return}
-    ul=null;
+    if(b){out.push({t:"li",x:b[1]});return}
     var h=line.match(/^([A-Za-z ]{3,20}):\s*(.*)$/),key=h?h[1].toLowerCase():"";
-    if(h&&own(NOTE_HEADS,key)){
-      box.appendChild(el("strong","nh",NOTE_HEADS[key]));
-      if(h[2])box.appendChild(el("p",null,h[2]));
-      return;
-    }
-    box.appendChild(el("p",null,line));
+    if(h&&own(NOTE_HEADS,key)){out.push({t:"h",x:NOTE_HEADS[key]});if(h[2])out.push({t:"p",x:h[2]});return}
+    out.push({t:"p",x:line});
+  });
+  return out;
+}
+function noteBody(text){
+  var box=el("div","nbody"),ul=null;
+  noteParts(text).forEach(function(p){
+    if(p.t==="li"){if(!ul){ul=el("ul","nl");box.appendChild(ul)}ul.appendChild(el("li",null,p.x));return}
+    ul=null;
+    box.appendChild(el(p.t==="h"?"strong":"p",p.t==="h"?"nh":null,p.x));
   });
   return box;
 }

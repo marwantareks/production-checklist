@@ -22,6 +22,7 @@ All notable changes are listed here. Dates use the year and month.
 - After you copy the prompt for one concern, a paste box appears under the copy button so you can import the reply without going back to the agent review panel.
 - All text in a concern's detail panel now runs the full width of the panel. Paragraphs were capped at 70 characters wide.
 - An "Agent finding" filter row appears once findings are imported: All, With findings, one chip per result with its count, and No finding yet. It combines with the category, status and search filters, and the import message has a button that shows only the concerns with findings.
+- A "Save your review" block in the Review progress card: Save review file and Load review file (marks and findings, cleaned on the way in, with a confirm before replacing), Download report (Markdown with every concern, a short list of what is still unreviewed and escaped agent text), and a Remember option, off by default, that keeps findings in the browser for 30 days. Clear findings removes the remembered copy.
 - Fixed the build, validate and review scripts doing nothing on Windows.
 - Added a "What you get" section that leads with the benefits, widened the agent review text to the full box, and added build steps to the README.
 - Reworked "What every concern includes" into "Inside every concern", covering definition, review question, trade-off, red flags, where it appears and the agent check.
