@@ -416,7 +416,7 @@ function detail(it,hue){
     var cmsg=el("span","note");cmsg.setAttribute("role","status");cmsg.style.margin="0";
     cb.onclick=function(){copyText(buildPrompt([id]),cmsg)};
     row.appendChild(cb);row.appendChild(cmsg);ac.appendChild(row);
-    ac.appendChild(el("p","note","Paste it into Claude Code in plan mode, which stops the agent from editing files. Start it with claude --permission-mode plan, or press Shift+Tab."));
+    ac.appendChild(el("p","note full","Paste it into Claude Code in plan mode, which stops the agent from editing files. Start it with claude --permission-mode plan, or press Shift+Tab."));
     det.appendChild(ac);
     d.appendChild(det);
   }else{

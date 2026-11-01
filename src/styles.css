@@ -73,6 +73,7 @@ input[type=search]::placeholder{color:var(--ink2)}
 .detail{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--pf);border-radius:8px;padding:12px 14px;margin:0 0 14px}
 .detail h3{margin:0 0 4px;font-size:1rem;font-weight:600}
 .detail p{margin:4px 0 0;max-width:70ch}
+.detail p.full{max-width:none}
 .detail .meta{font-size:.88rem;color:var(--ink2);display:flex;align-items:center;gap:7px}
 .empty{padding:28px 0;color:var(--ink2)}
 .legend{margin:20px 0 0;padding:16px 0 0;border-top:1px solid var(--line)}
@@ -204,6 +205,8 @@ h1,h2,h3{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,s
 .foot{padding:40px 0 48px}
 .fg{display:grid;grid-template-columns:1.4fr 1fr;gap:32px;align-items:start}
 .foot p{margin:10px 0 0;color:var(--ink2);font-size:.9rem;max-width:48ch}
+.fr{display:flex;flex-direction:column;align-items:flex-end}
+.foot .fr .fdis{text-align:right;margin-top:14px}
 .fl2{display:flex;gap:24px;flex-wrap:wrap;justify-content:flex-end}
 .fl2 a{color:var(--ink2);text-decoration:none;font-size:.92rem}
 .fl2 a:hover{color:var(--ink)}
@@ -218,6 +221,8 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .vis{padding:24px 0}
   .fg{grid-template-columns:1fr}
   .fl2{justify-content:flex-start}
+  .fr{align-items:flex-start}
+  .foot .fr .fdis{text-align:left}
   .nav .btn{padding:8px 12px;font-size:.88rem}
 }
 @media (max-width:420px){.nav .btn{display:none}}

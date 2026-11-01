@@ -174,6 +174,7 @@ test("the page carries the AI disclaimer above the copy button and in the footer
   const dis = panel.querySelector("p.disclaimer");
   assert.ok(dis && /written with AI/.test(dis.textContent) && /own responsibility/.test(dis.textContent));
   assert.ok(dis.compareDocumentPosition(p.d.getElementById("agCopy")) & 4, "disclaimer comes before the copy button");
+  assert.ok(p.d.querySelector("footer .fr .fdis"), "footer disclaimer sits in the right column");
   assert.match(p.d.querySelector("footer").textContent, /have not had human expert review\. Review the prompts and their results, and use them at your own responsibility\./);
 });
 
