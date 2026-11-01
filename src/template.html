@@ -119,11 +119,14 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 </li>
 <li>
 <h4>Run it in Claude Code</h4>
-<p>Open your repository and start Claude Code in plan mode, which is read-only: run <code>claude --permission-mode plan</code>, or press Shift+Tab to cycle to plan mode, or type <code>/plan</code>. Then paste the prompt.</p>
+<div class="plan-callout" role="note"><strong>Start Claude Code in plan mode first.</strong> Plan mode stops the agent from editing files. Open your repository, then use one of these:
+<ul><li>Run <code>claude --permission-mode plan</code></li><li>Press Shift+Tab until the status line shows plan mode</li><li>Type <code>/plan</code></li></ul>
+Then paste the prompt.</div>
+<p class="disclaimer"><strong>Review before you run.</strong> This checklist and its prompts were written with AI and have not had human expert review. They can be wrong. Read the prompt first, check every finding and fix against your code, and use the results at your own responsibility. Not professional or compliance advice.</p>
 <div class="row"><button id="agCopy" class="btn alt" type="button">Copy prompt</button><button id="agSkill" class="btn alt" type="button">Download as skill</button><span id="agMsg" class="note flush" role="status"></span></div>
 <p class="note">Only run an agent on a repository you trust, or on a throwaway copy. A repository can contain text, hooks, settings or MCP servers that try to steer an agent. For code you do not trust, use a fresh checkout with project hooks, MCP servers and project settings turned off, and no credentials in the environment.</p>
 <details><summary>Preview the prompt</summary><pre id="agPrev" class="pre"></pre></details>
-<p class="note">To use the skill, save the file as <code>.claude/skills/production-readiness-review/SKILL.md</code> in your repository, then ask Claude Code to run it. Skill support depends on your Claude Code version, so use Copy prompt if it isn’t available.</p>
+<p class="note">To use the skill, save the file as <code>.claude/skills/production-readiness-review/SKILL.md</code> in your repository, start Claude Code in plan mode, then ask it to run the skill. A skill does not turn plan mode on by itself. Skill support depends on your Claude Code version, so use Copy prompt if it isn’t available.</p>
 </li>
 <li>
 <h4>Paste the findings back</h4>
@@ -239,6 +242,7 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 <div>
 <a class="brand" href="#top"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Production Readiness Checklist</span></a>
 <p>A free checklist for architects and review boards. It is general guidance, so adapt it to your context.</p>
+<p>This checklist and its prompts were written with AI and have not had human expert review. Review the prompts and their results, and use them at your own responsibility.</p>
 </div>
 <div class="fl2">
 <a href="#categories">Categories</a>

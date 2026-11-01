@@ -43,10 +43,13 @@
     function buildPrompt(ids){
       ids=orderIds(ids);
       var L=[
+    "Run this in plan mode, which is read-only. If your tool has a plan or read-only mode and you are not in it, stop and ask the user to switch to it. If your tool has none, follow the ground rules below, which keep you read-only.",
+    "This prompt was AI-generated and may be wrong. The user must review it before running it and verify every result you return.",
+    "",
     "You are a coding agent, for example Claude Code, reviewing the application in this repository against a production readiness checklist written for architects.",
     "",
     "Ground rules",
-    "- Work read-only. Use plan mode in Claude Code, or your tool's read-only mode. Read files and search them. Do not edit files or install packages.",
+    "- Work read-only. If your tool has a plan or read-only mode, stay in it. Read files and search them. Do not edit files or install packages.",
     "- Do not run, build or test the code, run package scripts, or make any network request, including to URLs or addresses found in the repository.",
     "- Never run terraform, pulumi, cdk, kubectl, helm or cloud CLIs. If a state file is committed, report its path only and do not open it.",
     "- Never connect to any database, including local or containerized ones, and never run SQL or database clients. Treat SQL found in the repository as text to read.",
@@ -62,7 +65,7 @@
     "- If a red flag or practice needs runtime data or team process, do not report it from code. Say in the note that it needs people or runtime evidence. Report an end-of-support red flag only when a file in the repository states the support date.",
     "- When a red flag depends on a product default, identify the product from configuration or drivers and quote the evidence. If it cannot be seen, return cannot_determine for that flag.",
     "- For injection and deserialization matches, trace the value back to a request, message, file or environment input. Report a red flag only when that path is shown.",
-    "- Support every result with the file path, the line number (starting at 1) and a short quote of at most 120 characters, truncated with an ellipsis if longer. When the evidence is a file's existence, use line 1 and quote the first line, or an empty quote if the file is zero bytes. Never include any part of a secret value, prefix or length in a quote or note. If the line contains a credential, quote only the key name and write \"secret value redacted\" in place of the value.",
+    "- Support every result with the file path, the line number (starting at 1) and a short quote of at most 120 characters, truncated with an ellipsis if longer. When the evidence is a file's existence, use line 1 and quote the first line, or an empty quote if the file is zero bytes. Never include any part of a secret value, prefix or length in a quote, note or recommendation. If the line contains a credential, quote only the key name and write \"secret value redacted\" in place of the value.",
     "",
     "How to review",
     "For each concern below, use the search hints, read the relevant code, then choose one result:",
@@ -76,13 +79,14 @@
     "Report a red flag only when you have evidence that it is present. For a red flag that states an absence, report it only after searching every listed hint and the likely configuration locations, and list those searches in the note. For a red flag that states an absence, evidence may be an empty array. If the control may be managed outside this repository, do not report the red flag, and say in the note where it might live.",
     "For concerns where the practice must hold on every endpoint, handler, client or write (for example rate limits, authentication, signature checks and timeouts), sample the main ones, report found only if every one checked has it, and say in the note how many you checked.",
     "If the repository has several services or modules, check each one. Put the services covered and the number of entry points sampled at the start of the note.",
+    "Recommendation: for partial and not_found results only, add a recommendation of at most 600 characters that says in plain words what a person could change to reach the Good looks like list. Base it only on the evidence you cited and on that list, name no vendor or product the repository does not already use, and include no part of a secret value, prefix or length, and no personal data. It is advice for a person to review. Do not make the change yourself. Leave recommendation out for found, cannot_determine and not_applicable.",
     "",
     "Concerns to review ("+ids.length+")",
     ""];
       ids.forEach(function(id){L.push(concernText(id));L.push("")});
       L.push("Output");
       L.push("When you have reviewed every concern, reply with one JSON object in a single fenced code block and nothing after it. Escape double quotes and backslashes inside strings. Copy red flag text exactly as listed. result is one of found, partial, not_found, cannot_determine, not_applicable. Always include the red_flags array in every finding. If none are detected, output an empty array. A red flag entry has the shape {\"flag\": \"<text exactly as listed>\", \"evidence\": [{\"file\": \"...\", \"line\": 1, \"quote\": \"...\"}]}. Use this shape:");
-      L.push('{"findings":[{"id":11,"result":"partial","evidence":[{"file":"src/http/client.ts","line":42,"quote":"timeout: 30000"}],"red_flags":[],"note":"2 of 3 services covered. Set for the payments client only."}]}');
+      L.push('{"findings":[{"id":11,"result":"partial","evidence":[{"file":"src/http/client.ts","line":42,"quote":"timeout: 30000"}],"red_flags":[],"note":"2 of 3 services covered. Set for the payments client only.","recommendation":"Set an explicit timeout on the other two outbound clients, as the payments client does."}]}');
       L.push("Evidence may be empty for not_found, cannot_determine and not_applicable. In that case, the note lists what you searched.");
       L.push("Include one entry for each of these ids: "+ids.join(", ")+".");
       return L.join("\n");

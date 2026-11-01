@@ -202,6 +202,7 @@ function cleanEvidence(arr){
   }
   return ev;
 }
+function capText(s,n){return s.length>n?s.slice(0,n-1)+"…":s}
 function cleanFinding(f){
   if(!f||typeof f!=="object"||typeof f.result!=="string"||!own(RL,f.result))return null;
   var rf=[];
@@ -211,7 +212,8 @@ function cleanFinding(f){
       if(t)rf.push({flag:maskSecrets(t.slice(0,200)),evidence:cleanEvidence(r&&r.evidence)});
     });
   }
-  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:maskSecrets(typeof f.note==="string"?f.note.slice(0,600):"")};
+  var rec=(f.result==="partial"||f.result==="not_found")&&typeof f.recommendation==="string"?capText(maskSecrets(f.recommendation),600):"";
+  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:maskSecrets(typeof f.note==="string"?f.note.slice(0,600):""),recommendation:rec};
 }
 try{
   var rfd=sessionStorage.getItem("prc.agentFindings");
@@ -245,7 +247,7 @@ var PK=PromptKit.create({C:C,IDX:IDX,DEEP:DEEP,X:X});
 var buildPrompt=PK.buildPrompt,buildSkill=PK.buildSkill;
 
 function copyText(t,msgEl){
-  function done(ok){msgEl.textContent=ok?"Copied":"Copy failed. Open the preview and copy the text from there."}
+  function done(ok){msgEl.textContent=ok?"Copied. Paste it into Claude Code in plan mode.":"Copy failed. Open the preview and copy the text from there."}
   function fallback(){
     var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");
     ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
@@ -357,6 +359,12 @@ function findingBlock(id){
     rb.appendChild(rl);d.appendChild(rb);
   }
   if(f.note)d.appendChild(el("p",null,f.note));
+  if(f.recommendation){
+    var rc=el("div","rec");rc.appendChild(el("strong",null,"Suggested fix"));
+    rc.appendChild(el("p",null,f.recommendation));
+    rc.appendChild(el("p","meta","This is the agent’s advice. Check it against the evidence before you act on it."));
+    d.appendChild(rc);
+  }
   d.appendChild(el("p","meta","The agent suggests and you decide. Verify the evidence before marking this decided."));
   if(own(SUG,f.result)){
     var b=el("button","chip","Use suggested status: "+ST[SUG[f.result]].toLowerCase());b.type="button";
@@ -408,6 +416,7 @@ function detail(it,hue){
     var cmsg=el("span","note");cmsg.setAttribute("role","status");cmsg.style.margin="0";
     cb.onclick=function(){copyText(buildPrompt([id]),cmsg)};
     row.appendChild(cb);row.appendChild(cmsg);ac.appendChild(row);
+    ac.appendChild(el("p","note","Paste it into Claude Code in plan mode, which stops the agent from editing files. Start it with claude --permission-mode plan, or press Shift+Tab."));
     det.appendChild(ac);
     d.appendChild(det);
   }else{

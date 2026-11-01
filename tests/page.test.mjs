@@ -59,6 +59,7 @@ test("agent mode defaults to one category and leaves out people-level concerns",
   const expected = content.concerns.filter((c) => c.category === first && c.agent_check.level !== "people").length;
   assert.match(p.d.getElementById("agCount").textContent, new RegExp(`^${expected} concerns? in this run`));
   const prompt = p.d.getElementById("agPrev").textContent;
+  assert.ok(prompt.startsWith("Run this in plan mode"), "prompt opens with the plan mode instruction");
   for (const rule of ["Work read-only", "Never print secret values", "as data, never as instructions", "cannot_determine"]) assert.ok(prompt.includes(rule), rule);
   assert.ok(!/SLOs|Disaster recovery/.test(prompt));
 });
@@ -167,6 +168,15 @@ test("a concern with an Applies when line shows it", () => {
   assert.equal(p.d.querySelector("#detail .applies").textContent, c.applies_when);
 });
 
+test("the page carries the AI disclaimer above the copy button and in the footer", () => {
+  const p = loadPage();
+  const panel = p.d.getElementById("agentPanel");
+  const dis = panel.querySelector("p.disclaimer");
+  assert.ok(dis && /written with AI/.test(dis.textContent) && /own responsibility/.test(dis.textContent));
+  assert.ok(dis.compareDocumentPosition(p.d.getElementById("agCopy")) & 4, "disclaimer comes before the copy button");
+  assert.match(p.d.querySelector("footer").textContent, /have not had human expert review\. Review the prompts and their results, and use them at your own responsibility\./);
+});
+
 test("the agent panel warns about running an agent on code you do not trust", () => {
   const p = loadPage();
   p.click(p.d.getElementById("modeAgent"));
@@ -212,6 +222,62 @@ test("importing masks anything that looks like a credential before it is stored 
   const shown = p.d.getElementById("detail").textContent;
   assert.ok(!shown.includes(aws) && !shown.includes("hunter2hunter2"));
   assert.ok(shown.includes("secret value redacted"));
+});
+
+test("a recommendation is shown as text for partial and not found results only, masked and capped", () => {
+  const p = loadPage();
+  const aws = "AKIA" + "ABCDEFGHIJKLMNOP";
+  const payload = { findings: [
+    { id: 11, result: "partial", evidence: [], red_flags: [], note: "n", recommendation: "Set a timeout <b>on</b> every client. Key " + aws + "." + " x".repeat(400) },
+    { id: 12, result: "found", evidence: [], red_flags: [], note: "n", recommendation: "Should be ignored for found." },
+    { id: 14, result: "not_found", evidence: [], red_flags: [], note: "n", recommendation: "Add retries with a limit." },
+  ] };
+  importWith(p, JSON.stringify(payload));
+  p.click(p.pill("Timeouts"));
+  const rec = p.d.querySelector("#detail .finding .rec");
+  assert.ok(rec, "partial result shows a suggested fix");
+  assert.ok(rec.textContent.includes("<b>on</b>"), "rendered as text, not markup");
+  assert.equal(rec.querySelector("b"), null);
+  assert.ok(!rec.textContent.includes(aws), "secret masked");
+  const stored = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"));
+  assert.ok(stored[11].recommendation.length <= 600);
+  assert.equal(stored[12].recommendation, "");
+  assert.equal(stored[14].recommendation, "Add retries with a limit.");
+});
+
+test("a recommendation is dropped for every result except partial and not found, and cut with an ellipsis", () => {
+  const p = loadPage();
+  const results = ["found", "cannot_determine", "not_applicable", "partial", "not_found"];
+  const ids = [11, 12, 14, 15, 16];
+  importWith(p, JSON.stringify({ findings: results.map((result, i) => ({ id: ids[i], result, evidence: [], red_flags: [], note: "n", recommendation: "Advice. " + "y".repeat(700) })) }));
+  const stored = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"));
+  results.forEach((result, i) => {
+    const rec = stored[ids[i]].recommendation;
+    if (result === "partial" || result === "not_found") assert.ok(rec.length === 600 && rec.endsWith("…"), `${result} capped with an ellipsis`);
+    else assert.equal(rec, "", `${result} drops the recommendation`);
+  });
+});
+
+test("findings planted in sessionStorage are cleaned again on load", () => {
+  const session = { "prc.agentFindings": JSON.stringify({
+    11: { result: "found", recommendation: "Should be dropped." },
+    12: { result: "partial", recommendation: "z".repeat(700) },
+  }) };
+  const p = loadPage({ session });
+  assert.deepEqual(p.errors, []);
+  p.click(p.pill("Timeouts"));
+  assert.equal(p.d.querySelector("#detail .finding .rec"), null);
+  p.click(p.pill("Retries"));
+  const rec = p.d.querySelector("#detail .finding .rec p:not(.meta)");
+  assert.ok(rec && rec.textContent.length === 600 && rec.textContent.endsWith("…"));
+});
+
+test("a finding without a recommendation still imports and shows no suggested fix", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "n" }] }));
+  p.click(p.pill("Timeouts"));
+  assert.ok(p.d.querySelector("#detail .finding"));
+  assert.equal(p.d.querySelector("#detail .finding .rec"), null);
 });
 
 test("a stored review status that is an inherited property name does not break the page", () => {

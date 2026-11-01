@@ -69,7 +69,8 @@ test("the page works under its own CSP and the CSP blocks injected script", { sk
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const problems = [];
   page.on("pageerror", (e) => problems.push(e.message));
-  page.on("console", (m) => { if (m.type() === "error") problems.push(m.text()); });
+  // The optional intro video files are published beside the page, so a missing one is expected here.
+  page.on("console", (m) => { if (m.type() === "error" && !/\/brag\.(jpg|mp4)$/.test(m.location().url)) problems.push(m.text()); });
   await page.addInitScript(() => document.addEventListener("securitypolicyviolation", (e) => (window.__csp = (window.__csp || []).concat(e.violatedDirective))));
   await page.goto(url);
   await page.click(".pill >> nth=0");

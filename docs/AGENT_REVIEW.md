@@ -24,21 +24,22 @@ The ground rules came out of the review rounds. They cover, in short: read-only 
 ## Result format
 
 ```json
-{"findings":[{"id":11,"result":"partial","evidence":[{"file":"src/http/client.ts","line":42,"quote":"timeout: 30000"}],"red_flags":[],"note":"2 of 3 services covered. Set for the payments client only."}]}
+{"findings":[{"id":11,"result":"partial","evidence":[{"file":"src/http/client.ts","line":42,"quote":"timeout: 30000"}],"red_flags":[],"note":"2 of 3 services covered. Set for the payments client only.","recommendation":"Set an explicit timeout on the other two outbound clients, as the payments client does."}]}
 ```
 
-`result` is one of `found`, `partial`, `not_found`, `cannot_determine`, `not_applicable`. `red_flags` lists the red flags the agent reports, each with the text exactly as listed and its own evidence. The schema is [`schema/agent-findings.schema.json`](../schema/agent-findings.schema.json).
+`result` is one of `found`, `partial`, `not_found`, `cannot_determine`, `not_applicable`. `red_flags` lists the red flags the agent reports, each with the text exactly as listed and its own evidence. `recommendation` is optional advice of up to 600 characters for a person to review. The prompt asks for it only for `partial` and `not_found`, and the page ignores it for any other result. It is masked for secrets on import like every other field and shown as plain text. The schema is [`schema/agent-findings.schema.json`](../schema/agent-findings.schema.json).
 
 ## Safety model
 
 | Risk | Mitigation | Limit |
 | --- | --- | --- |
-| The agent changes the repository | Prompt says read-only and recommends plan mode | A prompt is an instruction. Plan mode is the real control. |
+| The agent changes the repository | Prompt says read-only and, if the tool has a plan or read-only mode, asks the agent to stop until the user switches to it | A prompt is an instruction. Plan mode is the real control, and it stops file edits only: project hooks and MCP servers can still run. |
 | The agent runs code, tools or commands from the repository | Prompt forbids running, building, network access, infrastructure and cloud CLIs, database clients and CI tools | Same limit. Use a sandbox for code you do not trust. |
 | Secrets are printed or copied into findings | Prompt forbids printing secret values and asks for "secret value redacted". The page masks anything that looks like a credential in imported text before it is stored or shown | Masking is pattern based, so review findings before sharing them. Quotes are capped at 200 characters. |
 | Text in the repository redirects the agent | Prompt says to treat repository text as data | This reduces the risk but does not remove it. Use repositories you trust. |
 | The agent guesses | Prompt demands evidence and allows `cannot_determine` | An agent can still cite plausible but wrong evidence. Verify before marking decided. |
 | Pasted findings attack the page | Findings are validated, truncated, masked, and shown as plain text | None known. |
+| A recommendation carries a secret fragment, personal data or bad advice | Prompt asks for it only on `partial` and `not_found`, forbids any part of a secret, and ties it to cited evidence. The page masks it, caps it at 600 characters with an ellipsis, and shows it as plain text | Masking needs the full token, so fragments can pass. The advice can be wrong. The page says to check it against the evidence before acting. |
 | Findings leak from the browser | Kept in `sessionStorage` (this tab only, gone when it closes), with a Clear findings button | Anyone using the open tab can read them. Other tabs and other sites on the same origin cannot. |
 
 ## Limits

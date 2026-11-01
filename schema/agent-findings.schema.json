@@ -59,6 +59,11 @@
             "type": "string",
             "maxLength": 600
           },
+          "recommendation": {
+            "type": "string",
+            "maxLength": 600,
+            "description": "Advice for a person to review. Only meaningful when result is partial or not_found; the page ignores it for other results."
+          },
           "red_flags": {
             "type": "array",
             "maxItems": 6,

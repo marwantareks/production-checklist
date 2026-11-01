@@ -45,6 +45,19 @@ test("the agent findings schema accepts the example the prompt asks for", () => 
   assert.ok(v({ findings: [{ id: 120, result: "not_applicable", evidence: [], red_flags: [], note: "One deployment per customer." }] }));
   assert.ok(v({ findings: [{ id: 11, result: "partial", red_flags: [{ flag: "Calls with no timeout", evidence: [{ file: "a.ts", line: 1, quote: "fetch(u)" }] }] }] }));
   assert.ok(!v({ findings: [{ id: 11, result: "maybe" }] }));
+  assert.ok(v({ findings: [{ id: 11, result: "partial", recommendation: "Set a timeout on every client." }] }));
+  assert.ok(!v({ findings: [{ id: 11, result: "partial", recommendation: "x".repeat(601) }] }));
+});
+
+test("the prompt asks for a recommendation on partial and not found results only, as advice", () => {
+  const text = generatePrompts(content)["all-checkable-concerns.txt"];
+  for (const r of ["for partial and not_found results only", "at most 600 characters", "Do not make the change yourself", "Leave recommendation out for found, cannot_determine and not_applicable", "include no part of a secret value, prefix or length, and no personal data", "in a quote, note or recommendation", "If your tool has none, follow the ground rules below"]) assert.ok(text.includes(r), `missing: ${r}`);
+  assert.ok(text.includes('"recommendation":'), "the example shows the field");
+});
+
+test("the prompt carries the AI disclaimer right after the plan mode line", () => {
+  const text = generatePrompts(content)["all-checkable-concerns.txt"];
+  assert.ok(text.includes("follow the ground rules below, which keep you read-only.\nThis prompt was AI-generated and may be wrong. The user must review it before running it and verify every result you return."));
 });
 
 test("generated prompts include ground rules, every category and the evidence list", () => {

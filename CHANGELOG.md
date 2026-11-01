@@ -12,6 +12,9 @@ All notable changes are listed here. Dates use the year and month.
 - Build, validation, review pack export, a single-message review prompt builder and review report scripts.
 - Review log, decision records for every round and a ranked expert review plan. Human expert review is pending.
 - Content, page and browser layout tests.
+- Agent findings can carry an optional `recommendation` (up to 600 characters) for `partial` and `not_found` results. The prompt asks for it as advice based on the cited evidence, and the page masks it, ignores it for other results and shows it as plain text under "Suggested fix".
+- An AI disclaimer in agent review mode (above the copy button), in the footer and as a line in every generated prompt: written with AI, not yet expert reviewed, review the prompts and their outputs, use at your own responsibility.
+- Plan mode is now stated clearly in agent review mode: a callout above the copy button, a reminder after copying, a note beside the per-concern copy button, a note in the skill step, and an opening line in the prompt itself.
 - Plainer wording in agent review mode: a short intro, a note on the paste step, a clearer placeholder and friendlier import errors.
 - Fixed the build, validate and review scripts doing nothing on Windows.
 - Added a "What you get" section that leads with the benefits, widened the agent review text to the full box, and added build steps to the README.

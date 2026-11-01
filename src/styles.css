@@ -100,6 +100,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .fl{font-size:.85rem;color:var(--ink2)}
 .note{margin:10px 0 0;font-size:.85rem;color:var(--ink2)}
 .note.flush{margin:0}
+.plan-callout{margin:0 0 10px;padding:12px 14px;border:1px solid var(--guard);border-left-width:4px;border-radius:8px;background:var(--bg)}
+.steps p.disclaimer{margin:0 0 12px;padding:10px 12px;border-left:4px solid var(--line2);background:var(--bg);border-radius:6px;font-size:.9rem}
+.rec{margin:10px 0 0;padding:10px 12px;border-left:4px solid var(--accent);background:var(--accent-bg);border-radius:6px}
+.rec p{margin:4px 0 0}
+.plan-callout ul{margin:6px 0 8px;padding-left:20px}
 .st{display:inline-flex}.st svg{width:14px;height:14px}
 .st-decided{color:var(--ok)}.st-deferred{color:var(--defer)}.st-missing{color:var(--miss)}.st-na{color:var(--ink2)}
 .blk{margin:10px 0 0}.blk strong{font-size:.88rem}.blk p{margin:2px 0 0}

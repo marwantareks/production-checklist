@@ -2,7 +2,7 @@ import { JSDOM } from "jsdom";
 import { buildHtml } from "../scripts/build.mjs";
 
 // Loads the built page in jsdom with the browser APIs the page needs stubbed.
-export function loadPage({ html = buildHtml(), storage = {} } = {}) {
+export function loadPage({ html = buildHtml(), storage = {}, session = {} } = {}) {
   const errors = [];
   const dom = new JSDOM(html, {
     runScripts: "dangerously",
@@ -14,6 +14,7 @@ export function loadPage({ html = buildHtml(), storage = {} } = {}) {
       w.matchMedia = () => ({ matches: false });
       w.confirm = () => true;
       for (const [k, v] of Object.entries(storage)) w.localStorage.setItem(k, v);
+      for (const [k, v] of Object.entries(session)) w.sessionStorage.setItem(k, v);
       w.addEventListener("error", (e) => errors.push(e.message));
     },
   });
