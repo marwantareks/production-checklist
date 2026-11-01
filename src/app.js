@@ -164,6 +164,7 @@ function drawExtras(){
 }
 
 var CHK={code:"Agent can check from code",partial:"Agent can partly check",people:"Needs people or runtime data"};
+var CHKX={code:"The repository can show most of this, so the agent searches the code and reports evidence.",partial:"The agent can check part of this from code. The rest needs a person, such as settings kept outside the repository.",people:"The code cannot settle this. It needs a person or runtime data."};
 var RL={found:"Found",partial:"Partial",not_found:"Not found",cannot_determine:"Cannot determine",not_applicable:"Not applicable"};
 var SUG={found:"decided",not_found:"missing",not_applicable:"na"};
 var SPARK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>';
@@ -213,7 +214,7 @@ function cleanFinding(f){
     });
   }
   var rec=(f.result==="partial"||f.result==="not_found")&&typeof f.recommendation==="string"?capText(maskSecrets(f.recommendation),600):"";
-  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:maskSecrets(typeof f.note==="string"?f.note.slice(0,600):""),recommendation:rec};
+  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:typeof f.note==="string"?capText(maskSecrets(f.note),1000):"",recommendation:rec};
 }
 try{
   var rfd=sessionStorage.getItem("prc.agentFindings");
@@ -221,6 +222,7 @@ try{
 }catch(e){}
 function saveFind(){try{sessionStorage.setItem("prc.agentFindings",JSON.stringify(FIND));return true}catch(e){return false}}
 var MAX_PASTE=1000000,MAX_FINDINGS=500;
+var pasteOpen={},pasteDraft={},pasteMsg={};
 
 function importFindings(text){
   var s=text.trim();
@@ -232,22 +234,22 @@ function importFindings(text){
   var o;
   try{o=JSON.parse(s.slice(a,b+1))}catch(e){throw new Error("The results could not be read. Ask Claude Code to send the results again as JSON only, then paste the new reply.")}
   if(!o||!Array.isArray(o.findings))throw new Error("This reply has no findings in it. Make sure you copied the whole reply from Claude Code.");
-  var n=0,ig=Math.max(0,o.findings.length-MAX_FINDINGS);
+  var n=0,got=[],ig=Math.max(0,o.findings.length-MAX_FINDINGS);
   o.findings.slice(0,MAX_FINDINGS).forEach(function(f){
     var id=(f&&typeof f.id==="number")?f.id:parseInt(f&&f.id,10);
     var c=cleanFinding(f);
     if(!c||!isFinite(id)||!own(DEEP,id)){ig++;return}
-    FIND[id]=c;n++;
+    FIND[id]=c;got.push(id);n++;
   });
   if(!n)throw new Error("No valid findings were found.");
-  return {n:n,ig:ig,saved:saveFind()};
+  return {n:n,ig:ig,ids:got,saved:saveFind()};
 }
 
 var PK=PromptKit.create({C:C,IDX:IDX,DEEP:DEEP,X:X});
 var buildPrompt=PK.buildPrompt,buildSkill=PK.buildSkill;
 
-function copyText(t,msgEl){
-  function done(ok){msgEl.textContent=ok?"Copied. Paste it into Claude Code in plan mode.":"Copy failed. Open the preview and copy the text from there."}
+function copyText(t,msgEl,onOk){
+  function done(ok){msgEl.textContent=ok?"Copied. Paste it into Claude Code in plan mode.":"Copy failed. Open the preview and copy the text from there.";if(ok&&onOk)onOk()}
   function fallback(){
     var ta=document.createElement("textarea");ta.value=t;ta.setAttribute("readonly","");
     ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
@@ -316,11 +318,14 @@ document.getElementById("agSkill").onclick=function(){
   download("SKILL.md",buildSkill(ids));
   agMsg.textContent="Downloaded SKILL.md";
 };
+function importSummary(r,after){
+  return "Imported "+r.n+" finding"+(r.n===1?"":"s")+(r.ig?", ignored "+r.ig:"")+"."+(after?" "+after:"")+(r.saved?"":" This browser could not store them, so they will be lost when you close or reload the page.");
+}
 document.getElementById("agImport").onclick=function(){
   agErr.textContent="";agSum.textContent="";
   try{
     var r=importFindings(agIn.value);
-    agSum.textContent="Imported "+r.n+" finding"+(r.n===1?"":"s")+(r.ig?", ignored "+r.ig:"")+". Open a concern to see the evidence."+(r.saved?"":" This browser could not store them, so they will be lost when you close or reload the page.");
+    agSum.textContent=importSummary(r,"Open a concern to see the evidence.");
     agIn.value="";render();
   }catch(e){agErr.textContent=e.message}
 };
@@ -373,6 +378,31 @@ function findingBlock(id){
   }
   return d;
 }
+function pasteBox(id){
+  var b=el("div","paste");
+  b.appendChild(el("strong",null,"Paste Claude Code’s reply here"));
+  b.appendChild(el("p","note","When Claude Code finishes, copy its whole reply and paste it below. The finding appears on this concern."));
+  var lb=el("label","sr","Findings from Claude Code for this concern");lb.htmlFor="pasteIn";b.appendChild(lb);
+  var ta=document.createElement("textarea");ta.id="pasteIn";ta.rows=5;ta.value=pasteDraft[id]||"";
+  ta.placeholder="Paste Claude Code’s full reply here";
+  b.appendChild(ta);
+  var r=el("div","row");
+  var bt=el("button","btn","Import findings");bt.type="button";
+  var er=el("span","err");er.setAttribute("role","alert");er.textContent=pasteMsg[id]||"";pasteMsg[id]="";
+  ta.oninput=function(){pasteDraft[id]=ta.value;er.textContent=""};
+  bt.onclick=function(){
+    er.textContent="";
+    try{
+      var res=importFindings(ta.value);
+      pasteDraft[id]="";
+      if(res.ids.indexOf(id)>=0){pasteOpen[id]=false}
+      else pasteMsg[id]=importSummary(res)+" None of them is for this concern. Open the other concerns to see them.";
+      render();
+    }catch(e){er.textContent=e.message}
+  };
+  r.appendChild(bt);r.appendChild(er);b.appendChild(r);
+  return b;
+}
 function detail(it,hue){
   var id=it[0],t0=tag(id),x=X[id],dp=own(DEEP,id)?DEEP[id]:null;
   var d=el("div","detail h-"+hue);d.id="detail";
@@ -384,6 +414,7 @@ function detail(it,hue){
   if(it[3])d.appendChild(el("p","meta","Also fits: "+it[3]));
   if(dp){
     var cm=el("p","meta");cm.appendChild(el("span","chk chk-"+dp.chk,CHK[dp.chk]));d.appendChild(cm);
+    d.appendChild(el("p","meta chk-why",CHKX[dp.chk]));
     var fb=findingBlock(id);if(fb)d.appendChild(fb);
     var det=document.createElement("details");det.className="deep";det.open=!!openDeep[id];
     det.ontoggle=function(){openDeep[id]=det.open};
@@ -396,9 +427,17 @@ function detail(it,hue){
     det.appendChild(list("Good looks like",dp.good));
     if(dp.decide)det.appendChild(block("Decide between",dp.decide));
     var ac=el("div","blk");ac.appendChild(el("strong",null,"Agent check"));
+    function askBlock(intro){
+      var ab=el("div","blk");ab.appendChild(el("strong",null,"Ask people for"));
+      if(intro)ab.appendChild(el("p",null,intro));
+      var ul=document.createElement("ul");dp.ask.forEach(function(a){ul.appendChild(el("li",null,a))});ab.appendChild(ul);
+      return ab;
+    }
     if(dp.chk==="people"){
-      ac.appendChild(el("p",null,"This needs people or runtime data, so a coding agent cannot settle it from the code alone. Ask for:"));
-      var ul=document.createElement("ul");dp.ask.forEach(function(a){ul.appendChild(el("li",null,a))});ac.appendChild(ul);
+      ac.appendChild(el("p",null,"This needs people or runtime data, so a coding agent cannot settle it from the code alone."));
+      det.appendChild(ac);
+      det.appendChild(askBlock());
+      ac=el("div","blk");
     }else{
       ac.appendChild(el("p",null,"Search hints for Claude Code:"));
       var sg=el("div","sigs");dp.sig.forEach(function(s){sg.appendChild(el("code",null,s))});ac.appendChild(sg);
@@ -407,16 +446,20 @@ function detail(it,hue){
         var ul2=document.createElement("ul");dp.look.forEach(function(a){ul2.appendChild(el("li",null,a))});ac.appendChild(ul2);
       }
       if(dp.ask){
-        ac.appendChild(el("p",null,"The repository cannot show everything here. Ask people for:"));
-        var ul3=document.createElement("ul");dp.ask.forEach(function(a){ul3.appendChild(el("li",null,a))});ac.appendChild(ul3);
+        det.appendChild(ac);
+        det.appendChild(askBlock("The repository cannot show everything here."));
+        ac=el("div","blk");
       }
     }
     var row=el("div","row");row.style.marginTop="14px";row.style.gap="14px";
     var cb=el("button","btn alt","Copy Claude Code prompt for this concern");cb.type="button";
     var cmsg=el("span","note");cmsg.setAttribute("role","status");cmsg.style.margin="0";
-    cb.onclick=function(){copyText(buildPrompt([id]),cmsg)};
+    var holder=el("div","pastebox");
+    cb.onclick=function(){copyText(buildPrompt([id]),cmsg,function(){pasteOpen[id]=true;if(!holder.firstChild)holder.appendChild(pasteBox(id))})};
     row.appendChild(cb);row.appendChild(cmsg);ac.appendChild(row);
     ac.appendChild(el("p","note full","Paste it into Claude Code in plan mode, which stops the agent from editing files. Start it with claude --permission-mode plan, or press Shift+Tab."));
+    if(pasteOpen[id])holder.appendChild(pasteBox(id));
+    ac.appendChild(holder);
     det.appendChild(ac);
     d.appendChild(det);
   }else{

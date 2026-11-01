@@ -141,3 +141,8 @@ test("the single-message review prompt has four parts, lists the other concerns 
 test("the review prompt builder rejects an unknown concern id", () => {
   assert.throws(() => buildReviewPrompt({ ids: [99999], content }), /Unknown concern id/);
 });
+
+test("the prompt asks for notes of at most 1000 characters, most important facts first", () => {
+  const text = generatePrompts(content)["all-checkable-concerns.txt"];
+  assert.ok(text.includes("Keep each note to at most 1000 characters, with the most important facts first"));
+});

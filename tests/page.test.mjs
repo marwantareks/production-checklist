@@ -369,3 +369,76 @@ test("the CSP lets the page load only its own intro video and poster", async () 
   assert.match(csp, /img-src 'self' data:/);
   assert.match(csp, /media-src 'self'/);
 });
+
+test("a note is masked, then cut at 1000 characters with an ellipsis", () => {
+  const p = loadPage();
+  const aws = "AKIA" + "ABCDEFGHIJKLMNOP";
+  importWith(p, JSON.stringify({ findings: [
+    { id: 11, result: "partial", evidence: [], red_flags: [], note: "Key " + aws + " " + "w".repeat(1200) },
+    { id: 12, result: "partial", evidence: [], red_flags: [], note: "k".repeat(1000) },
+  ] }));
+  const stored = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"));
+  assert.equal(stored[11].note.length, 1000);
+  assert.ok(stored[11].note.endsWith("…"));
+  assert.ok(!stored[11].note.includes(aws), "secret masked before the cut");
+  assert.equal(stored[12].note, "k".repeat(1000), "a note of exactly 1000 characters is kept whole");
+});
+
+test("the Agent check block explains what the check level means", () => {
+  const p = loadPage();
+  p.click(p.pill("Authentication and session management"));
+  const det = p.d.getElementById("detail");
+  assert.match(det.querySelector(".chk").textContent, /partly check/);
+  assert.match(det.querySelector(".chk-why").textContent, /part of this from code\. The rest needs a person/);
+});
+
+test("the people evidence list has its own heading beside Agent check", () => {
+  const p = loadPage();
+  p.click(p.pill("Authentication and session management"));
+  const labels = [...p.d.querySelectorAll("#detail .blk > strong")].map((x) => x.textContent);
+  assert.ok(labels.includes("Agent check"));
+  assert.ok(labels.includes("Ask people for"));
+});
+
+const copyButton = (p) => [...p.d.querySelectorAll("#detail button")].find((b) => b.textContent.startsWith("Copy Claude Code prompt"));
+
+test("the paste box under a concern appears only after the prompt is copied, and imports into that concern", () => {
+  const p = loadPage();
+  p.click(p.pill("Timeouts"));
+  assert.equal(p.d.getElementById("pasteIn"), null, "hidden before copying");
+  p.d.execCommand = () => false;
+  p.click(copyButton(p));
+  assert.equal(p.d.getElementById("pasteIn"), null, "a failed copy does not open it");
+  p.d.execCommand = () => true;
+  p.click(copyButton(p));
+  const box = p.d.getElementById("pasteIn");
+  assert.ok(box, "shown after a successful copy");
+  box.value = JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "Set on one client." }] });
+  box.dispatchEvent(new p.w.Event("input", { bubbles: true }));
+  p.click([...p.d.querySelectorAll("#detail button")].find((b) => b.textContent === "Import findings"));
+  assert.match(p.d.querySelector("#detail .finding").textContent, /Set on one client\./);
+  assert.equal(p.d.getElementById("pasteIn"), null, "closes after a successful import");
+  assert.deepEqual(p.errors, []);
+});
+
+test("the paste box under a concern shows an error for unreadable text and keeps what was typed", () => {
+  const p = loadPage();
+  p.click(p.pill("Timeouts"));
+  p.d.execCommand = () => true;
+  p.click(copyButton(p));
+  p.d.getElementById("pasteIn").value = "not json";
+  p.click([...p.d.querySelectorAll("#detail button")].find((b) => b.textContent === "Import findings"));
+  assert.match(p.d.querySelector("#detail .paste .err").textContent, /doesn’t look like/);
+  assert.equal(p.d.getElementById("pasteIn").value, "not json");
+});
+
+test("a reply with no finding for this concern keeps the box open and says so", () => {
+  const p = loadPage();
+  p.click(p.pill("Timeouts"));
+  p.d.execCommand = () => true;
+  p.click(copyButton(p));
+  p.d.getElementById("pasteIn").value = JSON.stringify({ findings: [{ id: 12, result: "found", evidence: [], red_flags: [], note: "n" }] });
+  p.click([...p.d.querySelectorAll("#detail button")].find((b) => b.textContent === "Import findings"));
+  assert.ok(p.d.getElementById("pasteIn"), "still open");
+  assert.match(p.d.querySelector("#detail .paste .err").textContent, /None of them is for this concern/);
+});

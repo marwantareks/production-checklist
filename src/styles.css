@@ -246,6 +246,9 @@ label.ck{display:inline-flex;gap:8px;align-items:center;font-size:.9rem}
 .pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:300px;overflow:auto;white-space:pre-wrap;font:.8rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:8px 0 0}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
 .err{color:var(--miss);font-size:.9rem}
+.paste{margin:12px 0 0;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--bg)}
+.paste .note{margin:2px 0 8px}
+.chk-why{margin:4px 0 0}
 details.deep{margin:14px 0 0;border-top:1px solid var(--line);padding-top:10px}
 details.deep>summary{cursor:pointer;font-weight:600;font-size:.92rem}
 .blk ul{margin:4px 0 0;padding-left:20px}

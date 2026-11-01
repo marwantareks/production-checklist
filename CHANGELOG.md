@@ -17,6 +17,9 @@ All notable changes are listed here. Dates use the year and month.
 - Plan mode is now stated clearly in agent review mode: a callout above the copy button, a reminder after copying, a note beside the per-concern copy button, a note in the skill step, and an opening line in the prompt itself.
 - Plainer wording in agent review mode: a short intro, a note on the paste step, a clearer placeholder and friendlier import errors.
 - The agent prompt now tells the agent not to exit plan mode and to reply with the JSON instead, so the "Exit plan mode?" dialog no longer interrupts a review.
+- Agent notes can now be up to 1000 characters (was 600). The prompt asks the agent to keep notes within that limit, most important facts first, and the page masks a note before cutting it and shows an ellipsis where it was cut.
+- The agent check level now has a plain explanation under the badge, and the people evidence list has its own "Ask people for" heading beside "Agent check".
+- After you copy the prompt for one concern, a paste box appears under the copy button so you can import the reply without going back to the agent review panel.
 - Fixed the build, validate and review scripts doing nothing on Windows.
 - Added a "What you get" section that leads with the benefits, widened the agent review text to the full box, and added build steps to the README.
 - Reworked "What every concern includes" into "Inside every concern", covering definition, review question, trade-off, red flags, where it appears and the agent check.
