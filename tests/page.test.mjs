@@ -197,7 +197,7 @@ test("importing accepts not applicable and red flags, and offers not applicable 
   assert.equal(p.d.querySelector("#detail .fbadge").textContent, "Not applicable");
   assert.match(p.d.querySelector("#detail .finding .chip").textContent, /not applicable/i);
   p.click(p.pill("Timeouts"));
-  const flags = [...p.d.querySelectorAll("#detail .rfs li")].map((li) => li.textContent);
+  const flags = [...p.d.querySelectorAll("#detail .rfs > ul > li")].map((li) => li.textContent);
   assert.equal(flags.length, 2);
   assert.ok(flags[0].startsWith("Calls with no timeout"));
   assert.equal(flags[1], "A second flag given as plain text");
@@ -370,18 +370,18 @@ test("the CSP lets the page load only its own intro video and poster", async () 
   assert.match(csp, /media-src 'self'/);
 });
 
-test("a note is masked, then cut at 1000 characters with an ellipsis", () => {
+test("a note is masked, then cut at 1200 characters with an ellipsis", () => {
   const p = loadPage();
   const aws = "AKIA" + "ABCDEFGHIJKLMNOP";
   importWith(p, JSON.stringify({ findings: [
-    { id: 11, result: "partial", evidence: [], red_flags: [], note: "Key " + aws + " " + "w".repeat(1200) },
-    { id: 12, result: "partial", evidence: [], red_flags: [], note: "k".repeat(1000) },
+    { id: 11, result: "partial", evidence: [], red_flags: [], note: "Key " + aws + " " + "w".repeat(1500) },
+    { id: 12, result: "partial", evidence: [], red_flags: [], note: "k".repeat(1200) },
   ] }));
   const stored = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"));
-  assert.equal(stored[11].note.length, 1000);
+  assert.equal(stored[11].note.length, 1200);
   assert.ok(stored[11].note.endsWith("…"));
   assert.ok(!stored[11].note.includes(aws), "secret masked before the cut");
-  assert.equal(stored[12].note, "k".repeat(1000), "a note of exactly 1000 characters is kept whole");
+  assert.equal(stored[12].note, "k".repeat(1200), "a note of exactly 1200 characters is kept whole");
 });
 
 test("the Agent check block explains what the check level means", () => {
@@ -441,4 +441,53 @@ test("a reply with no finding for this concern keeps the box open and says so", 
   p.click([...p.d.querySelectorAll("#detail button")].find((b) => b.textContent === "Import findings"));
   assert.ok(p.d.getElementById("pasteIn"), "still open");
   assert.match(p.d.querySelector("#detail .paste .err").textContent, /None of them is for this concern/);
+});
+
+test("red flag evidence is a bullet list under the flag, one bullet per item", () => {
+  const p = loadPage();
+  const ev = (n) => ({ file: `src/f${n}.py`, line: n, quote: `q${n}` });
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], note: "n",
+    red_flags: [{ flag: "Calls with no timeout", evidence: [ev(1), ev(2), ev(3)] }, { flag: "No retries", evidence: [] }] }] }));
+  p.click(p.pill("Timeouts"));
+  const items = p.d.querySelectorAll("#detail .rfs > ul > li");
+  assert.equal(items.length, 2);
+  assert.equal(items[0].querySelectorAll("ul.ev > li").length, 3);
+  assert.equal(items[1].querySelector("ul"), null, "a flag without evidence has no empty list");
+  assert.match(items[0].querySelector("ul.ev > li").textContent, /src\/f1\.py:1/);
+});
+
+test("a note in sections renders as headings and bullets, as text only", () => {
+  const p = loadPage();
+  const note = "Coverage:\n- 3 services, 4 entry points sampled\nStrengths:\n- bcrypt at cost 12\n- <b>fixed delay</b>\nGaps:\n- No revocation\nSearched: bcrypt, argon2";
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note }] }));
+  p.click(p.pill("Timeouts"));
+  const body = p.d.querySelector("#detail .finding .nbody");
+  assert.deepEqual([...body.querySelectorAll("strong.nh")].map((x) => x.textContent), ["Coverage", "Strengths", "Gaps", "Searched"]);
+  assert.deepEqual([...body.querySelectorAll("ul")].map((u) => u.children.length), [1, 2, 1]);
+  assert.ok(body.textContent.includes("<b>fixed delay</b>") && body.querySelector("b") === null, "rendered as text, not markup");
+  assert.equal(body.querySelector("p").textContent, "bcrypt, argon2", "text after a heading on the same line is kept");
+});
+
+test("a plain paragraph note still renders as one paragraph", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "2 of 3 services covered. Set for the payments client only." }] }));
+  p.click(p.pill("Timeouts"));
+  const body = p.d.querySelector("#detail .finding .nbody");
+  assert.equal(body.children.length, 1);
+  assert.equal(body.firstChild.tagName, "P");
+  assert.equal(body.querySelector("ul"), null);
+});
+
+test("every field the page cuts ends with an ellipsis and is masked before the cut", () => {
+  const p = loadPage();
+  const aws = "AKIA" + "ABCDEFGHIJKLMNOP";
+  importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", note: "n",
+    evidence: [{ file: "f/" + "a".repeat(300), line: 1, quote: "x".repeat(190) + " " + aws + " " + "y".repeat(50) }],
+    red_flags: [{ flag: "z".repeat(300), evidence: [] }] }] }));
+  const f = JSON.parse(p.w.sessionStorage.getItem("prc.agentFindings"))[11];
+  for (const t of [f.evidence[0].file, f.evidence[0].quote, f.red_flags[0].flag]) {
+    assert.equal(t.length, 200);
+    assert.ok(t.endsWith("…"));
+  }
+  assert.ok(!f.evidence[0].quote.includes("AKIA"), "no part of the secret survives the cut");
 });

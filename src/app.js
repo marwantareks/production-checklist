@@ -191,30 +191,31 @@ function maskSecrets(t){
   t=t.replace(/\b([A-Za-z0-9_.-]*(?:password|passwd|pwd|secret|token|api[_-]?key|apikey|private[_-]?key|access[_-]?key|client[_-]?secret|authorization)[A-Za-z0-9_.-]*)(["']?\s*[:=]\s*)(?:"[^"\r\n]+"|'[^'\r\n]+'|["']?[^\s"',;]{4,}["']?)/gi,function(m,k,sep){return k+sep+SECRET_MASK});
   return t;
 }
+/* Anything cut to a limit ends with an ellipsis, and secrets are masked first so a cut can never leave half a secret behind. */
+function capText(s,n){return s.length>n?s.slice(0,n-1)+"…":s}
 function cleanEvidence(arr){
   var ev=[];
   if(Array.isArray(arr)){
     arr.slice(0,5).forEach(function(e){
       if(e&&typeof e.file==="string"){
         var ln=parseInt(e.line,10);
-        ev.push({file:maskSecrets(e.file.slice(0,200)),line:(isFinite(ln)&&ln>0)?ln:0,quote:maskSecrets(typeof e.quote==="string"?e.quote.slice(0,200):"")});
+        ev.push({file:capText(maskSecrets(e.file),200),line:(isFinite(ln)&&ln>0)?ln:0,quote:capText(maskSecrets(e.quote),200)});
       }
     });
   }
   return ev;
 }
-function capText(s,n){return s.length>n?s.slice(0,n-1)+"…":s}
 function cleanFinding(f){
   if(!f||typeof f!=="object"||typeof f.result!=="string"||!own(RL,f.result))return null;
   var rf=[];
   if(Array.isArray(f.red_flags)){
     f.red_flags.slice(0,6).forEach(function(r){
       var t=typeof r==="string"?r:(r&&typeof r.flag==="string"?r.flag:"");
-      if(t)rf.push({flag:maskSecrets(t.slice(0,200)),evidence:cleanEvidence(r&&r.evidence)});
+      if(t)rf.push({flag:capText(maskSecrets(t),200),evidence:cleanEvidence(r&&r.evidence)});
     });
   }
   var rec=(f.result==="partial"||f.result==="not_found")&&typeof f.recommendation==="string"?capText(maskSecrets(f.recommendation),600):"";
-  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:typeof f.note==="string"?capText(maskSecrets(f.note),1000):"",recommendation:rec};
+  return {result:f.result,evidence:cleanEvidence(f.evidence),red_flags:rf,note:typeof f.note==="string"?capText(maskSecrets(f.note),1200):"",recommendation:rec};
 }
 try{
   var rfd=sessionStorage.getItem("prc.agentFindings");
@@ -339,31 +340,51 @@ function list(label,arr){
   var ul=document.createElement("ul");arr.forEach(function(x){ul.appendChild(el("li",null,x))});
   b.appendChild(ul);return b;
 }
+function evidenceList(arr){
+  var ul=el("ul","ev");
+  arr.forEach(function(e){
+    var li=document.createElement("li");
+    li.appendChild(el("code",null,e.file+(e.line?":"+e.line:"")));
+    if(e.quote)li.appendChild(document.createTextNode(" “"+e.quote+"”"));
+    ul.appendChild(li);
+  });
+  return ul;
+}
+/* The prompt asks for a note in sections: a known heading on its own line, then lines that start with "- ". Anything else, including an old style paragraph, shows as plain text. All of it goes in with textContent. */
+var NOTE_HEADS={coverage:"Coverage",strengths:"Strengths",gaps:"Gaps","needs people":"Needs people",searched:"Searched"};
+function noteBody(text){
+  var box=el("div","nbody"),ul=null;
+  text.split(/\r?\n/).forEach(function(raw){
+    var line=raw.trim();if(!line)return;
+    var b=line.match(/^[-*•]\s+(.+)$/);
+    if(b){if(!ul){ul=el("ul","nl");box.appendChild(ul)}ul.appendChild(el("li",null,b[1]));return}
+    ul=null;
+    var h=line.match(/^([A-Za-z ]{3,20}):\s*(.*)$/),key=h?h[1].toLowerCase():"";
+    if(h&&own(NOTE_HEADS,key)){
+      box.appendChild(el("strong","nh",NOTE_HEADS[key]));
+      if(h[2])box.appendChild(el("p",null,h[2]));
+      return;
+    }
+    box.appendChild(el("p",null,line));
+  });
+  return box;
+}
 function findingBlock(id){
   var f=FIND[id];if(!f)return null;
   var d=el("div","finding");
   var h=el("div","fh");h.appendChild(el("strong",null,"Agent finding"));h.appendChild(el("span","fbadge fb-"+f.result,RL[f.result]));d.appendChild(h);
-  if(f.evidence.length){
-    var ul=el("ul","ev");
-    f.evidence.forEach(function(e){
-      var li=document.createElement("li");
-      li.appendChild(el("code",null,e.file+(e.line?":"+e.line:"")));
-      if(e.quote)li.appendChild(document.createTextNode(" \u201c"+e.quote+"\u201d"));
-      ul.appendChild(li);
-    });
-    d.appendChild(ul);
-  }
+  if(f.evidence.length)d.appendChild(evidenceList(f.evidence));
   if(f.red_flags&&f.red_flags.length){
     var rb=el("div","rfs");rb.appendChild(el("strong",null,"Red flags the agent reports"));
     var rl=document.createElement("ul");
     f.red_flags.forEach(function(r){
       var li=document.createElement("li");li.appendChild(document.createTextNode(r.flag));
-      r.evidence.forEach(function(e){li.appendChild(document.createTextNode(" "));li.appendChild(el("code",null,e.file+(e.line?":"+e.line:"")));if(e.quote)li.appendChild(document.createTextNode(" \u201c"+e.quote+"\u201d"))});
+      if(r.evidence.length)li.appendChild(evidenceList(r.evidence));
       rl.appendChild(li);
     });
     rb.appendChild(rl);d.appendChild(rb);
   }
-  if(f.note)d.appendChild(el("p",null,f.note));
+  if(f.note)d.appendChild(noteBody(f.note));
   if(f.recommendation){
     var rc=el("div","rec");rc.appendChild(el("strong",null,"Suggested fix"));
     rc.appendChild(el("p",null,f.recommendation));

@@ -142,7 +142,10 @@ test("the review prompt builder rejects an unknown concern id", () => {
   assert.throws(() => buildReviewPrompt({ ids: [99999], content }), /Unknown concern id/);
 });
 
-test("the prompt asks for notes of at most 1000 characters, most important facts first", () => {
+test("the prompt asks for notes in sections of at most 1200 characters, most important facts first", () => {
   const text = generatePrompts(content)["all-checkable-concerns.txt"];
-  assert.ok(text.includes("Keep each note to at most 1000 characters, with the most important facts first"));
+  assert.ok(text.includes("Keep each note to at most 1200 characters, with the most important facts first"));
+  assert.ok(text.includes("Coverage (the services covered and the number of entry points sampled), Strengths, Gaps, Needs people"));
+  assert.ok(text.includes("Put the services covered and the number of entry points sampled at the start of the note."), "the round 4 rule is kept");
+  assert.ok(text.includes('"note":"Coverage:\\n- 3 services'), "the example note shows the layout");
 });

@@ -17,7 +17,7 @@ All notable changes are listed here. Dates use the year and month.
 - Plan mode is now stated clearly in agent review mode: a callout above the copy button, a reminder after copying, a note beside the per-concern copy button, a note in the skill step, and an opening line in the prompt itself.
 - Plainer wording in agent review mode: a short intro, a note on the paste step, a clearer placeholder and friendlier import errors.
 - The agent prompt now tells the agent not to exit plan mode and to reply with the JSON instead, so the "Exit plan mode?" dialog no longer interrupts a review.
-- Agent notes can now be up to 1000 characters (was 600). The prompt asks the agent to keep notes within that limit, most important facts first, and the page masks a note before cutting it and shows an ellipsis where it was cut.
+- Agent notes can now be up to 1200 characters (was 600). The prompt asks for notes in short sections (Coverage, Strengths, Gaps, Needs people, Searched) within that limit, and the page shows them as headings and bullets, masks text before cutting it and marks every cut with an ellipsis. Red flag evidence is now a bullet list under each flag, and finding text runs the full width.
 - The agent check level now has a plain explanation under the badge, and the people evidence list has its own "Ask people for" heading beside "Agent check".
 - After you copy the prompt for one concern, a paste box appears under the copy button so you can import the reply without going back to the agent review panel.
 - Fixed the build, validate and review scripts doing nothing on Windows.

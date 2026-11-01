@@ -24,10 +24,10 @@ The ground rules came out of the review rounds. They cover, in short: read-only 
 ## Result format
 
 ```json
-{"findings":[{"id":11,"result":"partial","evidence":[{"file":"src/http/client.ts","line":42,"quote":"timeout: 30000"}],"red_flags":[],"note":"2 of 3 services covered. Set for the payments client only.","recommendation":"Set an explicit timeout on the other two outbound clients, as the payments client does."}]}
+{"findings":[{"id":11,"result":"partial","evidence":[{"file":"src/http/client.ts","line":42,"quote":"timeout: 30000"}],"red_flags":[],"note":"Coverage:\n- 3 services, 4 entry points sampled\nStrengths:\n- Timeout set on the payments client\nGaps:\n- No timeout on the other two outbound clients\nSearched:\n- timeout, deadline in src/http","recommendation":"Set an explicit timeout on the other two outbound clients, as the payments client does."}]}
 ```
 
-`result` is one of `found`, `partial`, `not_found`, `cannot_determine`, `not_applicable`. `red_flags` lists the red flags the agent reports, each with the text exactly as listed and its own evidence. `note` is up to 1000 characters; the page masks it, then cuts anything longer with an ellipsis. `recommendation` is optional advice of up to 600 characters for a person to review. The prompt asks for it only for `partial` and `not_found`, and the page ignores it for any other result. It is masked for secrets on import like every other field and shown as plain text. The schema is [`schema/agent-findings.schema.json`](../schema/agent-findings.schema.json).
+`result` is one of `found`, `partial`, `not_found`, `cannot_determine`, `not_applicable`. `red_flags` lists the red flags the agent reports, each with the text exactly as listed and its own evidence. `note` is up to 1000 characters; the page masks it, then cuts anything longer with an ellipsis. `note` is up to 1200 characters and is written as short sections (Coverage, Strengths, Gaps, Needs people, Searched), each a heading line followed by "- " lines. The page shows the sections as headings and bullets, shows older plain text as a paragraph, masks the note and cuts anything longer with an ellipsis. `recommendation` is optional advice of up to 600 characters for a person to review. The prompt asks for it only for `partial` and `not_found`, and the page ignores it for any other result. It is masked for secrets on import like every other field and shown as plain text. The schema is [`schema/agent-findings.schema.json`](../schema/agent-findings.schema.json).
 
 ## Safety model
 

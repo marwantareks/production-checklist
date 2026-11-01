@@ -257,6 +257,12 @@ details.deep>summary{cursor:pointer;font-weight:600;font-size:.92rem}
 .chk-code{background:var(--accent-bg)}
 .sigs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .finding{margin:12px 0 0;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--bg)}
+.detail .finding p{max-width:none}
+.nbody{margin:10px 0 0}
+.nh{display:block;margin:10px 0 0;font-size:.88rem}
+.nbody p{margin:2px 0 0}
+.nl{margin:4px 0 0;padding-left:20px}.nl li{margin:2px 0}
+.rfs li>.ev{margin:3px 0 0}
 .fh{display:flex;gap:10px;align-items:center;margin-bottom:4px}
 .fbadge{font-size:.8rem;font-weight:600;padding:2px 10px;border-radius:999px;border:1px solid currentColor}
 .fb-found{color:var(--ok)}.fb-partial{color:var(--guard)}.fb-not_found{color:var(--miss)}.fb-cannot_determine{color:var(--defer)}.fb-not_applicable{color:var(--ink2)}

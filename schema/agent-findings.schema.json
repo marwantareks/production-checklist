@@ -57,7 +57,7 @@
           },
           "note": {
             "type": "string",
-            "maxLength": 1000
+            "maxLength": 1200
           },
           "recommendation": {
             "type": "string",
