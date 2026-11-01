@@ -16,6 +16,7 @@ All notable changes are listed here. Dates use the year and month.
 - An AI disclaimer in agent review mode (above the copy button), in the footer and as a line in every generated prompt: written with AI, not yet expert reviewed, review the prompts and their outputs, use at your own responsibility.
 - Plan mode is now stated clearly in agent review mode: a callout above the copy button, a reminder after copying, a note beside the per-concern copy button, a note in the skill step, and an opening line in the prompt itself.
 - Plainer wording in agent review mode: a short intro, a note on the paste step, a clearer placeholder and friendlier import errors.
+- The agent prompt now tells the agent not to exit plan mode and to reply with the JSON instead, so the "Exit plan mode?" dialog no longer interrupts a review.
 - Fixed the build, validate and review scripts doing nothing on Windows.
 - Added a "What you get" section that leads with the benefits, widened the agent review text to the full box, and added build steps to the README.
 - Reworked "What every concern includes" into "Inside every concern", covering definition, review question, trade-off, red flags, where it appears and the agent check.

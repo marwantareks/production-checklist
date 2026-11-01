@@ -55,6 +55,13 @@ test("the prompt asks for a recommendation on partial and not found results only
   assert.ok(text.includes('"recommendation":'), "the example shows the field");
 });
 
+test("the prompt tells the agent to reply with the JSON instead of exiting plan mode", () => {
+  const text = generatePrompts(content)["all-checkable-concerns.txt"];
+  const rule = "Do not exit plan mode, call an exit-plan-mode tool or ask to leave it. Deliver the JSON as your reply in this message, not as a plan for approval.";
+  assert.ok(text.includes(rule));
+  assert.ok(text.indexOf(rule) < text.indexOf("When you have reviewed every concern"));
+});
+
 test("the prompt carries the AI disclaimer right after the plan mode line", () => {
   const text = generatePrompts(content)["all-checkable-concerns.txt"];
   assert.ok(text.includes("follow the ground rules below, which keep you read-only.\nThis prompt was AI-generated and may be wrong. The user must review it before running it and verify every result you return."));

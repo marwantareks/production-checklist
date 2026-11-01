@@ -85,6 +85,7 @@
     ""];
       ids.forEach(function(id){L.push(concernText(id));L.push("")});
       L.push("Output");
+      L.push("Do not exit plan mode, call an exit-plan-mode tool or ask to leave it. Deliver the JSON as your reply in this message, not as a plan for approval.");
       L.push("When you have reviewed every concern, reply with one JSON object in a single fenced code block and nothing after it. Escape double quotes and backslashes inside strings. Copy red flag text exactly as listed. result is one of found, partial, not_found, cannot_determine, not_applicable. Always include the red_flags array in every finding. If none are detected, output an empty array. A red flag entry has the shape {\"flag\": \"<text exactly as listed>\", \"evidence\": [{\"file\": \"...\", \"line\": 1, \"quote\": \"...\"}]}. Use this shape:");
       L.push('{"findings":[{"id":11,"result":"partial","evidence":[{"file":"src/http/client.ts","line":42,"quote":"timeout: 30000"}],"red_flags":[],"note":"2 of 3 services covered. Set for the payments client only.","recommendation":"Set an explicit timeout on the other two outbound clients, as the payments client does."}]}');
       L.push("Evidence may be empty for not_found, cannot_determine and not_applicable. In that case, the note lists what you searched.");
