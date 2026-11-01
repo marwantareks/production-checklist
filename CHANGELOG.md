@@ -20,6 +20,8 @@ All notable changes are listed here. Dates use the year and month.
 - Agent notes can now be up to 1200 characters (was 600). The prompt asks for notes in short sections (Coverage, Strengths, Gaps, Needs people, Searched) within that limit, and the page shows them as headings and bullets, masks text before cutting it and marks every cut with an ellipsis. Red flag evidence is now a bullet list under each flag, and finding text runs the full width.
 - The agent check level now has a plain explanation under the badge, and the people evidence list has its own "Ask people for" heading beside "Agent check".
 - After you copy the prompt for one concern, a paste box appears under the copy button so you can import the reply without going back to the agent review panel.
+- All text in a concern's detail panel now runs the full width of the panel. Paragraphs were capped at 70 characters wide.
+- An "Agent finding" filter row appears once findings are imported: All, With findings, one chip per result with its count, and No finding yet. It combines with the category, status and search filters, and the import message has a button that shows only the concerns with findings.
 - Fixed the build, validate and review scripts doing nothing on Windows.
 - Added a "What you get" section that leads with the benefits, widened the agent review text to the full box, and added build steps to the README.
 - Reworked "What every concern includes" into "Inside every concern", covering definition, review question, trade-off, red flags, where it appears and the agent check.

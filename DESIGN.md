@@ -61,7 +61,7 @@ System font stack only: `system-ui, -apple-system, "Segoe UI", Roboto, Helvetica
 - Card and detail titles: 1rem, weight 600 or 700.
 - Captions and counts: 0.8rem to 0.92rem in `--ink2`.
 - Letter spacing is slightly negative on headings (`-.015em`).
-- Reading width: detail paragraphs are capped at `70ch`, the hero lead at `52ch`.
+- Reading width: detail text runs the full width of the detail panel, and the hero lead is capped at `52ch`.
 
 ## Layout
 

@@ -491,3 +491,76 @@ test("every field the page cuts ends with an ellipsis and is masked before the c
   }
   assert.ok(!f.evidence[0].quote.includes("AKIA"), "no part of the secret survives the cut");
 });
+
+const afButtons = (p) => [...p.d.querySelectorAll("#afChips .chip")];
+const afChip = (p, start) => afButtons(p).find((b) => b.textContent.startsWith(start));
+const shown = (p) => [...p.d.querySelectorAll("#grid .pill")].map((x) => x.textContent.trim());
+const finding = (id, result) => ({ id, result, evidence: [], red_flags: [], note: "n" });
+
+test("the agent finding filter stays hidden until a finding is imported", () => {
+  const p = loadPage();
+  assert.equal(p.d.getElementById("afRow").hidden, true);
+  importWith(p, JSON.stringify({ findings: [finding(11, "partial")] }));
+  assert.equal(p.d.getElementById("afRow").hidden, false);
+});
+
+test("the agent finding filter offers chips with counts and narrows the grid", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [finding(11, "partial"), finding(12, "partial"), finding(14, "found")] }));
+  assert.deepEqual(afButtons(p).map((b) => b.textContent), ["All", "With findings (3)", "Found (1)", "Partial (2)", `No finding yet (${content.concerns.length - 3})`]);
+  p.click(afChip(p, "With findings"));
+  assert.equal(shown(p).length, 3);
+  p.click(afChip(p, "Partial"));
+  assert.equal(shown(p).length, 2);
+  assert.equal(afChip(p, "Partial").getAttribute("aria-pressed"), "true");
+  p.click(afChip(p, "No finding yet"));
+  assert.equal(shown(p).length, content.concerns.length - 3);
+  p.click(afChip(p, "All"));
+  assert.equal(shown(p).length, content.concerns.length);
+});
+
+test("the agent finding filter combines with the other filters and with search", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [finding(11, "partial"), finding(12, "found")] }));
+  p.click(afChip(p, "With findings"));
+  p.click(p.d.querySelector('#stChips .chip:nth-child(3)'));
+  assert.equal(shown(p).length, 0, "no concern is both decided and has a finding yet");
+  p.click(p.d.querySelector('#stChips .chip:nth-child(1)'));
+  p.d.getElementById("q").value = "timeouts";
+  p.d.getElementById("q").dispatchEvent(new p.w.Event("input", { bubbles: true }));
+  assert.deepEqual(shown(p).length, 1);
+});
+
+test("the agent finding filter resets when findings are cleared or a related concern is followed", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [finding(11, "partial")] }));
+  p.click(afChip(p, "Partial"));
+  assert.equal(shown(p).length, 1);
+  p.click(p.d.getElementById("agClear"));
+  assert.equal(p.d.getElementById("afRow").hidden, true);
+  assert.equal(shown(p).length, content.concerns.length, "back to every concern");
+  importWith(p, JSON.stringify({ findings: [finding(11, "partial")] }));
+  p.click(afChip(p, "Partial"));
+  p.click(p.pill("Timeouts"));
+  p.click(p.d.querySelector("#detail .rel .pill"));
+  assert.equal(afChip(p, "All").getAttribute("aria-pressed"), "true");
+});
+
+test("a chip whose concerns are gone falls back to All after a re-import", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [finding(11, "partial"), finding(12, "found")] }));
+  p.click(afChip(p, "Partial"));
+  importWith(p, JSON.stringify({ findings: [finding(11, "found")] }));
+  assert.equal(afChip(p, "Partial"), undefined);
+  assert.equal(afChip(p, "All").getAttribute("aria-pressed"), "true");
+});
+
+test("after an import, a button shows only the concerns that have findings", () => {
+  const p = loadPage();
+  importWith(p, JSON.stringify({ findings: [finding(11, "partial"), finding(12, "found")] }));
+  assert.match(p.d.getElementById("agSum").textContent, /Imported 2 findings/);
+  p.click(p.d.querySelector("#agSum button"));
+  assert.equal(shown(p).length, 2);
+  assert.equal(afChip(p, "With findings").getAttribute("aria-pressed"), "true");
+  assert.deepEqual(p.errors, []);
+});

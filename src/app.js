@@ -30,13 +30,32 @@ function tally(items){
 function allIds(){return Object.keys(IDX).map(function(k){return parseInt(k,10)})}
 function pct(n,d){return d>0?(n/d*100):0}
 
-var cat=-1,dual=false,sel=null,q="",sf="all";
-var chips=document.getElementById("chips"),stChips=document.getElementById("stChips"),grid=document.getElementById("grid"),dualBtn=document.getElementById("dualBtn"),themeBtn=document.getElementById("themeBtn"),root=document.documentElement,qIn=document.getElementById("q");
+var cat=-1,dual=false,sel=null,q="",sf="all",af="all";
+var chips=document.getElementById("chips"),stChips=document.getElementById("stChips"),grid=document.getElementById("grid"),dualBtn=document.getElementById("dualBtn"),themeBtn=document.getElementById("themeBtn"),root=document.documentElement,qIn=document.getElementById("q"),afRow=document.getElementById("afRow"),afChips=document.getElementById("afChips");
 
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function chip(label,on,fn){var b=el("button","chip",label);b.type="button";b.setAttribute("aria-pressed",on?"true":"false");b.onclick=fn;return b}
 
+/* Counts for the agent finding filter. The row only shows once a finding has been imported, and a chip that has no concerns left falls back to All. */
+function afCount(){
+  var c={any:0,none:0,r:{}};
+  allIds().forEach(function(id){var f=FIND[id];if(f){c.any++;c.r[f.result]=(c.r[f.result]||0)+1}else c.none++});
+  return c;
+}
+function drawAgentFilter(){
+  var a=afCount();
+  if(af!=="all"&&!(af==="any"?a.any:af==="none"?a.none:a.r[af]))af="all";
+  afRow.hidden=a.any===0;
+  afChips.innerHTML="";
+  if(!a.any)return;
+  function add(label,key){afChips.appendChild(chip(label,af===key,function(){af=key;render()}))}
+  add("All","all");
+  add("With findings ("+a.any+")","any");
+  Object.keys(RL).forEach(function(k){if(a.r[k])add(RL[k]+" ("+a.r[k]+")",k)});
+  if(a.none)add("No finding yet ("+a.none+")","none");
+}
 function drawChips(){
+  drawAgentFilter();
   chips.innerHTML="";
   chips.appendChild(chip("All categories",cat<0,function(){cat=-1;render()}));
   C.forEach(function(c,i){
@@ -70,7 +89,7 @@ function setStatus(id,v){
   if(b)b.focus();
 }
 function goTo(id){
-  q="";qIn.value="";dual=false;sf="all";cat=-1;sel=id;render();
+  q="";qIn.value="";dual=false;sf="all";af="all";cat=-1;sel=id;render();
   var p=grid.querySelector('.pill[aria-expanded="true"]');
   if(p){alignTo(p.closest(".sec")||p);p.focus({preventScroll:true})}
 }
@@ -83,6 +102,7 @@ function render(){
       if(dual&&!it[3])return false;
       var st=review[it[0]]||"none";
       if(sf!=="all"&&st!==sf)return false;
+      if(af!=="all"){var fd=FIND[it[0]];if(af==="none"){if(fd)return false}else if(!fd||(af!=="any"&&fd.result!==af))return false}
       if(q){var s=(it[1]+" "+it[2]).toLowerCase();if(s.indexOf(q)<0)return false}
       return true;
     });
@@ -158,7 +178,7 @@ function drawExtras(){
     tx.appendChild(el("p",null,cc[2]));
     tx.appendChild(el("span","cm",cc[3].length+" concerns, "+tc.done+" reviewed"));
     b.appendChild(t);b.appendChild(tx);
-    b.onclick=function(){q="";qIn.value="";dual=false;sf="all";cat=i;sel=null;render();jump()};
+    b.onclick=function(){q="";qIn.value="";dual=false;sf="all";af="all";cat=i;sel=null;render();jump()};
     cg.appendChild(b);
   });
 }
@@ -326,7 +346,10 @@ document.getElementById("agImport").onclick=function(){
   agErr.textContent="";agSum.textContent="";
   try{
     var r=importFindings(agIn.value);
-    agSum.textContent=importSummary(r,"Open a concern to see the evidence.");
+    agSum.textContent=importSummary(r,"Open a concern to see the evidence.")+" ";
+    var show=el("button","chip","Show concerns with findings");show.type="button";
+    show.onclick=function(){q="";qIn.value="";dual=false;sf="all";cat=-1;sel=null;af="any";render();alignTo(grid)};
+    agSum.appendChild(show);
     agIn.value="";render();
   }catch(e){agErr.textContent=e.message}
 };
