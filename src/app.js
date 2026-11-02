@@ -20,6 +20,14 @@ try{
   if(raw){var o=JSON.parse(raw);if(o&&typeof o==="object"){Object.keys(o).forEach(function(k){if(own(IDX,k)&&typeof o[k]==="string"&&own(ST,o[k]))review[k]=o[k]})}}
 }catch(e){}
 function save(){try{localStorage.setItem("prc.reviewStatus",JSON.stringify(review))}catch(e){}}
+/* The application name is an optional label so a person can keep one review file per application. It is plain text, capped, and shown with textContent only. Like the marks it is harmless, so it stays in localStorage. */
+var APP_KEY="prc.appName",MAX_APP=80;
+function cleanApp(s){if(typeof s!=="string")return "";var o="";for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);o+=(c<32||(c>126&&c<161)||c===8232||c===8233)?" ":s.charAt(i)}return o.split(" ").filter(Boolean).join(" ").slice(0,MAX_APP).trim()}
+var appName="";
+try{appName=cleanApp(localStorage.getItem(APP_KEY))}catch(e){}
+function saveApp(){try{if(appName)localStorage.setItem(APP_KEY,appName);else localStorage.removeItem(APP_KEY)}catch(e){}}
+function appSlug(){return appName.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40).replace(/-+$/,"")}
+function fileName(kind,ext){return "prc-"+kind+(appSlug()?"-"+appSlug():"")+"-"+today()+"."+ext}
 /* Concerns marked not applicable leave the denominator, so progress reflects only what applies. */
 function tally(items){
   var c={decided:0,deferred:0,missing:0,na:0,total:0};
@@ -397,7 +405,10 @@ var REVIEW_FORMAT="prc-review",REVIEW_VERSION=1,MAX_FILE=5000000;
 function today(){return new Date().toISOString().slice(0,10)}
 function plural(n,w){return n+" "+w+(n===1?"":"s")}
 function reviewFile(){
-  return JSON.stringify({format:REVIEW_FORMAT,version:REVIEW_VERSION,saved:new Date().toISOString(),review:review,findings:FIND},null,2);
+  var o={format:REVIEW_FORMAT,version:REVIEW_VERSION,saved:new Date().toISOString()};
+  if(appName)o.application=appName;
+  o.review=review;o.findings=FIND;
+  return JSON.stringify(o,null,2);
 }
 function parseReviewFile(text){
   if(text.length>MAX_FILE)throw new Error("That file is too large to be a saved review.");
@@ -419,7 +430,7 @@ function parseReviewFile(text){
     });
   }
   if(!m&&!n)throw new Error("That file has no review marks or findings in it.");
-  return {review:rv,findings:fd,m:m,n:n,ig:ig,saved:(typeof o.saved==="string"&&/^\d{4}-\d{2}-\d{2}/.test(o.saved))?o.saved.slice(0,10):""};
+  return {review:rv,findings:fd,m:m,n:n,ig:ig,app:cleanApp(o.application),saved:(typeof o.saved==="string"&&/^\d{4}-\d{2}-\d{2}/.test(o.saved))?o.saved.slice(0,10):""};
 }
 
 /* The report is for people to read and share, so agent text is escaped for Markdown and nothing in it can turn into a link, an image or markup. */
@@ -429,6 +440,7 @@ function mdEv(e){return mdCode(e.file+(e.line?":"+e.line:""))+(e.quote?" “"+md
 function buildReport(){
   var L=[],t=tally(allIds()),nf=Object.keys(FIND).length;
   L.push("# Production readiness review","");
+  if(appName)L.push("**Application:** "+mdText(appName),"");
   L.push("Created "+today()+" with the Production Readiness Checklist. Agent findings were written by an AI and have not been verified, so they can be wrong. This report can include file paths and short code quotes, so keep it private.","");
   L.push("## Summary","");
   L.push("- Reviewed: "+t.done+" of "+t.den+" ("+t.decided+" decided, "+t.deferred+" deferred, "+t.missing+" missing)"+(t.na?", plus "+t.na+" not applicable":""));
@@ -473,6 +485,10 @@ function buildReport(){
 }
 
 var svBox=document.getElementById("svBox"),svMsg=document.getElementById("svMsg"),svErr=document.getElementById("svErr"),svIn=document.getElementById("svIn"),svRem=document.getElementById("svRem"),svRemNote=document.getElementById("svRemNote");
+var svApp=document.getElementById("svApp");
+svApp.maxLength=MAX_APP;
+svApp.value=appName;
+svApp.oninput=function(){appName=cleanApp(svApp.value.slice(0,MAX_APP));saveApp()};
 function drawSave(){
   var r=remGet();
   svRem.checked=!!r;
@@ -482,13 +498,13 @@ document.getElementById("svFile").onclick=function(){
   svErr.textContent="";
   var nm=Object.keys(review).length,nf=Object.keys(FIND).length;
   if(!nm&&!nf){svMsg.textContent="Nothing to save yet. Mark a concern or import findings first.";return}
-  var name="prc-review-"+today()+".json";
+  var name=fileName("review","json");
   download(name,reviewFile(),"application/json");
   svMsg.textContent="Saved "+name+" with "+plural(nf,"finding")+" and "+plural(nm,"mark")+". It holds file paths and code quotes, so keep it somewhere private.";
 };
 document.getElementById("svReport").onclick=function(){
   svErr.textContent="";
-  var name="prc-report-"+today()+".md";
+  var name=fileName("report","md");
   download(name,buildReport(),"text/markdown");
   svMsg.textContent="Downloaded "+name+". It lists every concern. Agent text in it is unverified, and it can include file paths and code quotes.";
 };
@@ -505,9 +521,10 @@ svIn.onchange=function(){
       var hm=Object.keys(review).length,hf=Object.keys(FIND).length;
       if((hm||hf)&&!window.confirm("Replace your current "+plural(hm,"mark")+" and "+plural(hf,"finding")+" with the ones in this file?")){svMsg.textContent="Nothing was changed.";return}
       review=r.review;save();
+      appName=r.app;saveApp();svApp.value=appName;
       FIND=r.findings;var ok=saveFind();
       render();
-      svMsg.textContent="Loaded "+plural(r.n,"finding")+" and "+plural(r.m,"mark")+(r.saved?" from a review saved on "+r.saved:"")+"."+(r.ig?" Ignored "+r.ig+(r.ig===1?" entry":" entries")+" that did not match this checklist.":"")+(ok?"":" This browser could not keep the findings for this tab.");
+      svMsg.textContent="Loaded "+(r.app?"the review for "+r.app+": ":"")+plural(r.n,"finding")+" and "+plural(r.m,"mark")+(r.saved?" from a review saved on "+r.saved:"")+"."+(r.ig?" Ignored "+r.ig+(r.ig===1?" entry":" entries")+" that did not match this checklist.":"")+(ok?"":" This browser could not keep the findings for this tab.");
     }catch(e){svErr.textContent=e.message}
   };
   rd.onerror=function(){svErr.textContent="That file could not be read."};
@@ -516,6 +533,7 @@ svIn.onchange=function(){
 var svConfirm=document.getElementById("svConfirm"),svConfirmT=document.getElementById("svConfirmT");
 function clearAll(){
   review={};save();
+  appName="";saveApp();svApp.value="";
   try{localStorage.removeItem(REM_KEY)}catch(e){}
   FIND={};saveFind();
   svConfirm.hidden=true;
@@ -536,7 +554,7 @@ document.getElementById("svClrGo").onclick=function(){
   svMsg.textContent="Cleared "+plural(nm,"mark")+" and "+plural(nf,"finding")+".";
 };
 document.getElementById("svClrSave").onclick=function(){
-  var nm=Object.keys(review).length,nf=Object.keys(FIND).length,name="prc-review-"+today()+".json";
+  var nm=Object.keys(review).length,nf=Object.keys(FIND).length,name=fileName("review","json");
   if(nm||nf)download(name,reviewFile(),"application/json");
   clearAll();
   svMsg.textContent=(nm||nf?"Saved "+name+", then cleared ":"Cleared ")+plural(nm,"mark")+" and "+plural(nf,"finding")+".";

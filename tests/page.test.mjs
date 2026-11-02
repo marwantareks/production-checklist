@@ -706,6 +706,60 @@ test("the report lists every concern, a short list of what is unreviewed and the
   assert.ok(md.endsWith("\n") && !md.endsWith("\n\n"));
 });
 
+const setApp = (p, v) => { const i = p.d.getElementById("svApp"); i.value = v; i.dispatchEvent(new p.w.Event("input", { bubbles: true })); };
+const withMark = (p) => { p.click(p.pill("Retries")); p.click(p.d.querySelector('.sb[data-st="decided"]')); };
+
+test("the application name is optional and leaves the file, the report and the file names unchanged when empty", () => {
+  const p = loadPage();
+  const got = capture(p);
+  assert.equal(p.d.getElementById("svApp").value, "");
+  withMark(p);
+  p.click(p.d.getElementById("svFile"));
+  p.click(p.d.getElementById("svReport"));
+  assert.ok(!("application" in JSON.parse(got[0].text)));
+  assert.doesNotMatch(got[1].text, /Application:/);
+  assert.match(got[1].name, /^prc-report-\d{4}-\d{2}-\d{2}\.md$/);
+});
+
+test("the application name goes into the review file, the report, the file names and the browser, and loads back", async () => {
+  const a = loadPage();
+  const got = capture(a);
+  setApp(a, "  Billing   API <b>x</b> ");
+  withMark(a);
+  a.click(a.d.getElementById("svFile"));
+  a.click(a.d.getElementById("svReport"));
+  assert.match(got[0].name, /^prc-review-billing-api-b-x-b-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.match(got[1].name, /^prc-report-billing-api-b-x-b-\d{4}-\d{2}-\d{2}\.md$/);
+  assert.equal(JSON.parse(got[0].text).application, "Billing API <b>x</b>");
+  assert.match(got[1].text, /^# Production readiness review\n\n\*\*Application:\*\* Billing API \\<b\\>x\\<\/b\\>\n\n/);
+  assert.equal(a.w.localStorage.getItem("prc.appName"), "Billing API <b>x</b>");
+  const again = loadPage({ storage: { "prc.appName": a.w.localStorage.getItem("prc.appName") } });
+  assert.equal(again.d.getElementById("svApp").value, "Billing API <b>x</b>");
+  const b = loadPage();
+  await loadFile(b, got[0].text);
+  assert.equal(b.d.getElementById("svApp").value, "Billing API <b>x</b>");
+  assert.match(svText(b, "svMsg"), /^Loaded the review for Billing API <b>x<\/b>: 0 findings and 1 mark/);
+  assert.equal(b.d.querySelector("#svApp").parentNode.querySelector("b"), null, "shown as text");
+  assert.deepEqual(b.errors, []);
+});
+
+test("a loaded application name is cleaned and capped, an old file without one clears it, and Clear all removes it", async () => {
+  const p = loadPage();
+  p.w.confirm = () => true;
+  await loadFile(p, svFileOf({}, { 12: "decided" }, { application: "A\u0000\nB " + "x".repeat(200) }));
+  const v = p.d.getElementById("svApp").value;
+  assert.ok(v.startsWith("A B x") && v.length <= 80, "cleaned and capped");
+  p.d.getElementById("svMsg").textContent = "";
+  await loadFile(p, svFileOf({}, { 12: "deferred" }, { application: 42 }));
+  assert.equal(p.d.getElementById("svApp").value, "", "a file with no usable name replaces it with none");
+  assert.equal(p.w.localStorage.getItem("prc.appName"), null);
+  setApp(p, "Orders");
+  p.click(p.d.getElementById("svClearAll"));
+  p.click(p.d.getElementById("svClrGo"));
+  assert.equal(p.d.getElementById("svApp").value, "");
+  assert.equal(p.w.localStorage.getItem("prc.appName"), null);
+});
+
 test("remember keeps findings for 30 days, brings them back on load, and is turned off with the checkbox", () => {
   const p = loadPage();
   importWith(p, JSON.stringify({ findings: [{ id: 11, result: "partial", evidence: [], red_flags: [], note: "n" }] }));
