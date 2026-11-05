@@ -321,3 +321,76 @@ details.deep[open]>summary:hover{transform:none;box-shadow:none}
 .introdlg-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
 .introdlg-h h2{margin:0;font-size:1.05rem}
 .introdlg video{display:block;width:100%;max-height:calc(100vh - 140px);border-radius:8px;background:#000}
+
+/* Review workflow: filters panel, status first, floating dock */
+/* One main action per screen: the hero card button only shows once there is progress */
+.btn[hidden]{display:none}
+
+/* Start here hint, collapsed how-to */
+.modehint{text-align:center;color:var(--ink2);font-size:.92rem;margin:-6px auto 18px;max-width:640px}
+.modehint strong{color:var(--ink)}
+details.howd{padding:12px 18px;margin:20px 0 0}
+details.howd>summary{cursor:pointer;font-weight:600;font-size:1rem}
+details.howd[open]>summary{margin-bottom:8px}
+details.howd ul{margin:0;padding-left:20px}
+details.howd li{margin:4px 0}
+
+/* Filters in one place */
+.bar .fltbtn{display:inline-flex;align-items:center;gap:6px}
+.bar .fltbtn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.bar .fltbtn svg{width:14px;height:14px;transition:transform .15s}
+.bar .fltbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.fltsum{font-size:.85rem;color:var(--ink2)}
+.fltpanel{margin-top:10px;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--surface);max-height:50vh;overflow:auto}
+.fltpanel[hidden]{display:none}
+.flthead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.flthead strong{font-size:.9rem}
+.fltgrp{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:start}
+.fltgrp+.fltgrp{margin-top:10px}
+.fltgrp>.fl{padding-top:8px}
+.fltgrp .row{margin:0}
+@media (max-width:560px){.fltgrp{grid-template-columns:1fr;gap:4px}.fltgrp>.fl{padding-top:0}}
+.chip:disabled{opacity:.45;cursor:default}
+.legend.compact{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin:14px 0 0;padding:0;border:0}
+.legend.compact h3{margin:0;font-size:.85rem;color:var(--ink2);font-weight:600}
+.legend.compact ul{gap:6px 18px}
+.legend.compact li{font-size:.85rem}
+
+/* Marking is visible and quick */
+.pill:has(.st-decided){box-shadow:inset 0 -3px 0 var(--ok)}
+.pill:has(.st-deferred){box-shadow:inset 0 -3px 0 var(--defer)}
+.pill:has(.st-missing){box-shadow:inset 0 -3px 0 var(--miss)}
+.pill:has(.st-na){box-shadow:inset 0 -3px 0 var(--line2)}
+.stg.top{margin:10px 0 12px;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--bg)}
+.stg .kbhint{margin:8px 0 0;font-size:.8rem;color:var(--ink2)}
+kbd{font:inherit;font-size:.78rem;font-weight:600;padding:0 5px;border:1px solid var(--line2);border-radius:4px;background:var(--surface);color:var(--ink)}
+.stepnav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.stepnav .kbmsg{font-size:.85rem;color:var(--ink2)}
+
+/* Agent panel: less text in step 2 and 3 */
+details.more{margin:10px 0 0;border:1px solid var(--line2);border-radius:8px;background:var(--bg);padding:8px 12px}
+details.more>summary{cursor:pointer;font-weight:600;font-size:.92rem}
+details.more[open]>summary{margin-bottom:8px}
+details.more .pre{margin-top:6px}
+
+/* Lighter hero on tablets */
+@media (max-width:1000px){.sticker{display:none}}
+
+/* Floating dock for Load, Save and Reset */
+.dock{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;flex-direction:column;align-items:flex-end;gap:8px;max-width:calc(100vw - 32px)}
+.dock-btns{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;border:2px solid var(--ol);border-radius:12px;background:var(--surface);box-shadow:3px 3px 0 var(--sh)}
+.dock .chip{background:var(--surface);white-space:nowrap}
+.dock .chip{text-align:center}
+.dock .chip.danger{margin-top:4px}
+.dock-msg{max-width:340px;padding:8px 12px;border:2px solid var(--ol);border-radius:10px;background:var(--surface);color:var(--ink);font-size:.85rem;box-shadow:3px 3px 0 var(--sh)}
+.dock-msg[hidden]{display:none}
+body{padding-bottom:150px}
+@media (max-width:620px){
+  .dock{right:12px;bottom:12px}
+  .dock .chip{padding:5px 10px;font-size:.8rem}
+  .dock-msg{max-width:calc(100vw - 24px)}
+}
+@media print{.dock{display:none}}
+
+/* Touch targets */
+@media (pointer:coarse){.chip,.pill,.mode,.sb,.btn.sm,.theme{min-height:44px}}

@@ -586,11 +586,12 @@ const svFileOf = (findings = {}, review = {}, extra = {}) => JSON.stringify({ fo
 const fnd = (note = "n") => ({ result: "partial", evidence: [], red_flags: [], note });
 const check = (p, on) => { const b = p.d.getElementById("svRem"); b.checked = on; b.dispatchEvent(new p.w.Event("change", { bubbles: true })); return b; };
 
-test("the save block is its own card after Review progress and the privacy note mentions it", () => {
+test("the save block is its own card below the list, always visible, and the privacy note mentions it", () => {
   const p = loadPage();
   const box = p.d.querySelector("section#svBox");
   assert.ok(box, "its own section");
-  assert.equal(box.previousElementSibling.className, "prog", "directly after Review progress");
+  assert.ok(p.d.getElementById("grid").compareDocumentPosition(box) & 4, "after the list of concerns");
+  assert.equal(box.hidden, false, "visible before anything is marked");
   assert.equal(box.querySelector("h3").textContent, "Save your review");
   for (const id of ["svFile", "svLoad", "svReport", "svRem"]) assert.ok(box.querySelector("#" + id), id);
   assert.equal(p.d.getElementById("svRem").checked, false, "remembering is off by default");
@@ -955,4 +956,103 @@ test("Clear all removes a remembered copy even when no findings are on the page"
   assert.match(svText(p, "svConfirmT"), /^Clear 0 marks and 0 findings, and the copy remembered/);
   clickId(p, "svClrGo");
   assert.equal(p.w.localStorage.getItem("prc.rememberedFindings"), null);
+});
+
+// Review workflow: filters panel, status first, keyboard, floating dock.
+const key = (p, k) => p.d.dispatchEvent(new p.w.KeyboardEvent("keydown", { key: k, bubbles: true }));
+
+test("filters sit behind one button with a count, a summary and Clear all filters in the panel", () => {
+  const p = loadPage();
+  const btn = p.d.getElementById("fltBtn"), panel = p.d.getElementById("fltPanel"), clear = p.d.getElementById("fltClear");
+  assert.equal(panel.hidden, true);
+  assert.equal(clear.disabled, true, "nothing to clear at first");
+  p.click(btn);
+  assert.equal(panel.hidden, false);
+  assert.equal(btn.getAttribute("aria-expanded"), "true");
+  assert.ok(panel.contains(p.d.getElementById("chips")) && panel.contains(p.d.getElementById("stChips")) && panel.contains(clear));
+  p.click(p.d.querySelector("#chips .chip:nth-child(2)"));
+  assert.equal(btn.textContent.trim(), "Filters (1)");
+  assert.match(p.d.getElementById("fltSum").textContent, /^Showing: /);
+  assert.equal(clear.disabled, false);
+  p.click(clear);
+  assert.equal(btn.textContent.trim(), "Filters");
+  assert.equal(p.d.querySelectorAll("#grid .pill").length, content.concerns.length);
+});
+
+test("an open concern shows its status buttons first and marks with the D F M N keys", () => {
+  const p = loadPage();
+  p.click(p.pill("Timeouts"));
+  const det = p.d.getElementById("detail");
+  assert.equal(det.children[1].tagName, "P");
+  assert.ok(det.children[2].classList.contains("stg"), "status group comes right after the description");
+  key(p, "d");
+  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("prc.reviewStatus")), { 11: "decided" });
+  key(p, "d");
+  assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), "{}", "the same key clears it");
+  key(p, "n");
+  assert.deepEqual(JSON.parse(p.w.localStorage.getItem("prc.reviewStatus")), { 11: "na" });
+});
+
+test("keys do nothing while typing in a field or when no concern is open", () => {
+  const p = loadPage();
+  key(p, "d");
+  assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), null);
+  p.click(p.pill("Timeouts"));
+  const q = p.d.getElementById("q");
+  q.dispatchEvent(new p.w.KeyboardEvent("keydown", { key: "d", bubbles: true }));
+  assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), null);
+});
+
+test("J and K move between concerns and Next not reviewed skips marked ones", () => {
+  const p = loadPage();
+  const open = () => p.d.querySelector('#grid .pill[aria-expanded="true"]').textContent.trim();
+  p.click(p.pill("Rate limiting"));
+  const first = open();
+  key(p, "j");
+  const second = open();
+  assert.notEqual(first, second);
+  key(p, "k");
+  assert.equal(open(), first);
+  key(p, "d");
+  key(p, "j");
+  key(p, "k");
+  const nxt = [...p.d.querySelectorAll("#detail .stepnav .chip")].find((b) => b.textContent === "Next not reviewed");
+  p.click(nxt);
+  assert.notEqual(open(), first, "the marked concern is skipped");
+});
+
+test("the hero card button appears once there is progress and continues at the first unreviewed concern", () => {
+  const p = loadPage();
+  const hb = p.d.getElementById("hcBtn");
+  assert.equal(hb.hidden, true);
+  assert.equal(p.d.querySelectorAll(".nav .btn").length, 0, "no second Open the checklist button in the nav");
+  p.click(p.pill("Rate limiting"));
+  key(p, "d");
+  assert.equal(hb.hidden, false);
+  assert.equal(hb.textContent, "Continue your review");
+  p.click(hb);
+  const name = p.d.querySelector('#grid .pill[aria-expanded="true"]').textContent.trim();
+  assert.notEqual(name, "Rate limiting", "it opens a concern that has no status yet");
+});
+
+test("the dock keeps Load, Save and Reset in reach and Save review goes to the Save panel", () => {
+  const p = loadPage();
+  const dock = p.d.querySelector(".dock");
+  assert.deepEqual([...dock.querySelectorAll("button")].map((b) => b.textContent), ["Load a saved review", "Save review", "Reset review"]);
+  assert.ok(dock.contains(p.d.getElementById("resetBtn")));
+  let scrolled = 0;
+  p.w.scrollTo = () => { scrolled++; };
+  p.click(p.d.getElementById("dockSave"));
+  assert.equal(scrolled, 1, "scrolls to the panel");
+  assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), null, "and does not save a file by itself");
+});
+
+test("the agent panel keeps the disclaimer and plan mode above the buttons and folds the long safety text", () => {
+  const p = loadPage();
+  const panel = p.d.getElementById("agentPanel");
+  const more = [...panel.querySelectorAll("details.more")].find((d) => /Safety notes/.test(d.querySelector("summary").textContent));
+  assert.ok(more && /throwaway copy/.test(more.textContent));
+  assert.ok(!more.contains(panel.querySelector("p.disclaimer")), "the disclaimer is not hidden");
+  assert.ok(panel.querySelector(".plan-callout").compareDocumentPosition(p.d.getElementById("agCopy")) & 4);
+  assert.match(panel.textContent, /cannot_determine/);
 });

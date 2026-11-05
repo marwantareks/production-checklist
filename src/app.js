@@ -102,7 +102,7 @@ function goTo(id){
   if(p){alignTo(p.closest(".sec")||p);p.focus({preventScroll:true})}
 }
 function render(){
-  drawChips();drawProgress();drawExtras();drawSave();if(mode==="agent")updateAgent();grid.innerHTML="";var n=0;
+  drawChips();drawProgress();drawExtras();drawSave();drawFilters();if(mode==="agent")updateAgent();grid.innerHTML="";var n=0;
   dualBtn.setAttribute("aria-pressed",dual?"true":"false");
   C.forEach(function(c,i){
     if(cat>=0&&cat!==i)return;
@@ -131,6 +131,7 @@ function render(){
       var on=sel===id;
       p.setAttribute("aria-expanded",on?"true":"false");
       p.setAttribute("aria-label",it[1]+(st?", "+ST[st].toLowerCase():"")+(FIND[id]?", agent finding: "+RL[FIND[id].result].toLowerCase():"")+(it[3]?", fits two categories":""));
+      if(it[3])p.title="Fits two categories";
       if(on){p.setAttribute("aria-controls","detail");open=it}
       p.onclick=function(){sel=on?null:id;render();var x=grid.querySelector('.pill[aria-expanded="true"]');if(x)x.focus()};
       w.appendChild(p);
@@ -139,8 +140,25 @@ function render(){
     if(open)sec.appendChild(detail(open,c[1]));
     grid.appendChild(sec);
   });
-  if(!n)grid.appendChild(el("p","empty","No concepts match. Clear the search or turn off a filter."));
+  if(!n)grid.appendChild(el("p","empty","No concerns match. Clear the search or open Filters and turn one off."));
 }
+/* Filters sit behind one button so the sticky toolbar stays small. The button shows how many are active and a line says which. */
+var fltBtn=document.getElementById("fltBtn"),fltLbl=document.getElementById("fltLbl"),fltSum=document.getElementById("fltSum"),fltPanel=document.getElementById("fltPanel"),fltClear=document.getElementById("fltClear");
+var SFL={none:"Not reviewed",decided:"Decided",deferred:"Deferred",missing:"Missing",na:"Not applicable"};
+function drawFilters(){
+  var n=(cat>=0?1:0)+(sf!=="all"?1:0)+(af!=="all"?1:0),parts=[];
+  if(cat>=0)parts.push(C[cat][0]);
+  if(sf!=="all")parts.push(SFL[sf]);
+  if(af!=="all")parts.push("agent findings");
+  fltLbl.textContent=n?"Filters ("+n+")":"Filters";
+  fltBtn.classList.toggle("on",n>0);
+  fltSum.textContent=n?"Showing: "+parts.join(", "):"";
+  fltClear.disabled=!n;
+}
+function setFilters(open){fltPanel.hidden=!open;fltBtn.setAttribute("aria-expanded",open?"true":"false")}
+fltBtn.onclick=function(){setFilters(fltPanel.hidden)};
+fltClear.onclick=function(){cat=-1;sf="all";af="all";render()};
+fltPanel.addEventListener("keydown",function(e){if(e.key==="Escape"){setFilters(false);fltBtn.focus()}});
 dualBtn.onclick=function(){dual=!dual;render()};
 qIn.oninput=function(e){q=e.target.value.trim().toLowerCase();render()};
 document.getElementById("resetBtn").onclick=function(){
@@ -161,6 +179,11 @@ function alignTo(el){
   var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.scrollTo({top:Math.max(0,top),behavior:reduce?"auto":"smooth"});
 }
+function firstUnreviewed(){
+  for(var i=0;i<C.length;i++)for(var j=0;j<C[i][3].length;j++){var id=C[i][3][j][0];if(!review[id])return id}
+  return null;
+}
+document.getElementById("hcBtn").onclick=function(e){e.preventDefault();var n=firstUnreviewed();if(n==null)jump();else goTo(n)};
 function jump(){
   var t=document.getElementById("checklist");
   t.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
@@ -173,6 +196,9 @@ function drawExtras(){
   m[0].style.width=pct(c.decided,c.den)+"%";
   m[1].style.width=pct(c.deferred,c.den)+"%";
   m[2].style.width=pct(c.missing,c.den)+"%";
+  var hb=document.getElementById("hcBtn"),next=firstUnreviewed();
+  hb.hidden=c.done===0;
+  hb.textContent=next==null?"Review complete. Open the checklist":"Continue your review";
   document.getElementById("sTotal").textContent=TOTAL;
   document.getElementById("sCats").textContent=C.length;
   var lg=document.getElementById("lgDel");if(lg)lg.hidden=D.length===0;
@@ -363,7 +389,7 @@ function setMode(m){
 }
 modeBrowse.onclick=function(){setMode("browse")};
 modeAgent.onclick=function(){setMode("agent")};
-document.getElementById("heroAgent").onclick=function(e){e.preventDefault();setMode("agent");jump()};
+document.getElementById("heroAgent").onclick=function(e){e.preventDefault();setMode("agent");alignTo(document.querySelector(".modew"))};
 agScope.onchange=updateAgent;
 agPeople.onchange=updateAgent;
 document.getElementById("agCopy").onclick=function(){
@@ -670,6 +696,20 @@ function detail(it,hue){
   var d=el("div","detail h-"+hue);d.id="detail";
   d.appendChild(el("h3",null,it[1]));
   d.appendChild(el("p",null,it[2]));
+  var g=el("div","stg");g.appendChild(el("strong",null,"Review status"));
+  var bs=el("div","sbs");bs.setAttribute("role","group");bs.setAttribute("aria-label","Review status for "+it[1]);
+  ["decided","deferred","missing","na"].forEach(function(k){
+    var b=el("button","sb");b.type="button";b.setAttribute("data-st",k);
+    b.setAttribute("aria-pressed",review[id]===k?"true":"false");
+    var ic=el("span","st");ic.innerHTML=ICON[k];b.appendChild(ic);
+    b.appendChild(document.createTextNode(ST[k]));
+    b.onclick=function(){setStatus(id,review[id]===k?null:k)};
+    bs.appendChild(b);
+  });
+  g.appendChild(bs);
+  var kb=el("p","kbhint");
+  [["Shortcuts: "],["D","kbd"],[" decided, "],["F","kbd"],[" deferred, "],["M","kbd"],[" missing, "],["N","kbd"],[" not applicable, "],["J","kbd"],[" next concern, "],["K","kbd"],[" previous. Press a status key again to clear it."]].forEach(function(x){kb.appendChild(x[1]?el(x[1],null,x[0]):document.createTextNode(x[0]))});
+  g.appendChild(kb);g.className="stg top";d.appendChild(g);
   if(dp){d.appendChild(block("How it works",dp.how));if(dp.app)d.appendChild(el("p","meta applies",dp.app));d.appendChild(block("Where it appears",dp.where))}
   if(x){d.appendChild(block("Review question",x[0]));d.appendChild(block("Trade-off",x[1]))}
   var m=el("p","meta");m.appendChild(el("span","dot d-"+t0));m.appendChild(document.createTextNode(RN[t0]+": "+RD[t0]));d.appendChild(m);
@@ -741,19 +781,55 @@ function detail(it,hue){
     });
     r.appendChild(w);d.appendChild(r);
   }
-  var g=el("div","stg");g.appendChild(el("strong",null,"Review status"));
-  var bs=el("div","sbs");bs.setAttribute("role","group");bs.setAttribute("aria-label","Review status for "+it[1]);
-  ["decided","deferred","missing","na"].forEach(function(k){
-    var b=el("button","sb");b.type="button";b.setAttribute("data-st",k);
-    b.setAttribute("aria-pressed",review[id]===k?"true":"false");
-    var ic=el("span","st");ic.innerHTML=ICON[k];b.appendChild(ic);
-    b.appendChild(document.createTextNode(ST[k]));
-    b.onclick=function(){setStatus(id,review[id]===k?null:k)};
-    bs.appendChild(b);
-  });
-  g.appendChild(bs);d.appendChild(g);
+  var nv=el("div","stepnav"),nm=el("span","kbmsg");nm.setAttribute("role","status");
+  function nb(label,fn){var b=el("button","chip",label);b.type="button";b.onclick=fn;nv.appendChild(b)}
+  nb("Previous concern",function(){step(-1,false)});
+  nb("Next concern",function(){step(1,false)});
+  nb("Next not reviewed",function(){if(!step(1,true))nm.textContent="Every concern in this view has a status."});
+  nv.appendChild(nm);d.appendChild(nv);
   return d;
 }
+
+/* Moving between concerns. The open pill is the current one, and a concern with a status mark has a .st icon. */
+function listPills(){return Array.prototype.slice.call(grid.querySelectorAll(".sec > .pills > .pill"))}
+function step(dir,onlyNew){
+  var ps=listPills(),cur=grid.querySelector('.sec > .pills > .pill[aria-expanded="true"]'),i=ps.indexOf(cur),n=ps.length;
+  if(!cur||n<2)return false;
+  for(var k=1;k<n;k++){
+    var t=ps[((i+dir*k)%n+n)%n];
+    if(onlyNew&&t.querySelector(".st"))continue;
+    t.click();return true;
+  }
+  return false;
+}
+/* D F M N mark the open concern. J and K move. Typing in a field or using a modifier key is left alone. */
+var KEYST={d:"decided",f:"deferred",m:"missing",n:"na"};
+document.addEventListener("keydown",function(e){
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  var t=e.target,tg=t&&t.tagName;
+  if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||(t&&t.isContentEditable))return;
+  if(document.querySelector("dialog[open]"))return;
+  if(!grid.querySelector('.sec > .pills > .pill[aria-expanded="true"]'))return;
+  var k=e.key.toLowerCase();
+  if(own(KEYST,k)){var b=grid.querySelector('.sb[data-st="'+KEYST[k]+'"]');if(b){e.preventDefault();b.click()}}
+  else if(k==="j"){e.preventDefault();step(1,false)}
+  else if(k==="k"){e.preventDefault();step(-1,false)}
+});
+
+/* The dock keeps Load, Save and Reset in reach. Save review goes to the Save your review panel. Messages from that panel also show beside the dock because the panel can be off screen. */
+(function(){
+  var msg=document.getElementById("dockMsg"),timer=0;
+  document.getElementById("dockLoad").onclick=function(){document.getElementById("svLoad").click()};
+  document.getElementById("dockSave").onclick=function(){alignTo(svBox)};
+  function show(){
+    var m=svErr.textContent||svMsg.textContent;
+    if(!m)return;
+    msg.textContent=m;msg.hidden=false;
+    clearTimeout(timer);timer=setTimeout(function(){msg.hidden=true},7000);
+  }
+  var mo=new MutationObserver(show);
+  [svMsg,svErr].forEach(function(n){mo.observe(n,{childList:true,characterData:true,subtree:true})});
+})();
 
 syncTheme();render();
 

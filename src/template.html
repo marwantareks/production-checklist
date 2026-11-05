@@ -43,7 +43,6 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
 <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
 </button>
-<a class="btn" href="#checklist">Open the checklist</a>
 </div>
 </div>
 </nav>
@@ -78,7 +77,7 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 </div>
 <div class="meter" id="hMeter" role="presentation"><span class="m-ok"></span><span class="m-def"></span><span class="m-miss"></span></div>
 <div class="hc-row"><span id="hText">0 of {{CONCERN_COUNT}} reviewed</span><span id="hPct">0%</span></div>
-<a class="btn" href="#checklist">Open the checklist</a>
+<a class="btn" id="hcBtn" href="#checklist" hidden>Continue your review</a>
 </div>
 <span class="sticker sk1 h-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
 <span class="sticker sk2 h-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
@@ -90,6 +89,19 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 <div class="introdlg-h"><h2 id="introT">The checklist in 30 seconds</h2><button id="introX" class="chip" type="button" aria-label="Close the video">Close</button></div>
 <video id="introVid" controls playsinline preload="none" poster="brag.jpg">Your browser cannot play this video. <a href="brag.mp4">Open the video file</a>.</video>
 </dialog>
+
+<section class="sect" id="value" aria-labelledby="val-h">
+<div class="wrap">
+<div class="sh2"><span class="tag h-blue">Why use it</span><h2 id="val-h">What you get</h2></div>
+<div class="fgrid f5">
+<div class="fcard"><span class="tile h-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM9 12l2 2 4-4"/></svg></span><h3>Don’t miss what bites in production</h3><p>{{CONCERN_COUNT}} concerns in {{CATEGORY_COUNT_WORD}} categories cover what teams often miss until an incident, so you don’t rely on who remembers what.</p></div>
+<div class="fcard"><span class="tile h-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M6 20h12M5 7h14M5 7l-3 6a3 3 0 006 0zM19 7l-3 6a3 3 0 006 0z"/></svg></span><h3>Make every call on purpose</h3><p>A review question and a trade-off for each concern. Every outcome is decided, deferred, missing or not applicable, never an unspoken default.</p></div>
+<div class="fcard"><span class="tile h-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><h3>Know good from merely present</h3><p>Red flags and what good looks like help you judge whether a mechanism is sound, not only whether it exists.</p></div>
+<div class="fcard"><span class="tile h-coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-6-6-6M12 19h8"/></svg></span><h3>Evidence from your real code</h3><p>Claude Code reads your repository and cites the file, line and a short quote for each concern. It suggests and you decide.</p></div>
+<div class="fcard"><span class="tile h-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM12 11v4"/></svg></span><h3>Safe, free and private</h3><p>The agent is read-only and secrets are masked. Free, no sign-up, and nothing leaves your browser.</p></div>
+</div>
+</div>
+</section>
 
 <section class="sect band" id="categories" aria-labelledby="cat-h">
 <div class="wrap">
@@ -106,6 +118,7 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 <button id="modeBrowse" class="mode" type="button" aria-pressed="true">Browse</button>
 <button id="modeAgent" class="mode" type="button" aria-pressed="false">Agent review with Claude Code</button>
 </div></div>
+<p class="modehint">Not sure which to pick? <strong>Browse</strong> is for working through the concerns yourself. <strong>Agent review</strong> is for when you have a code repository and want Claude Code to look for evidence.</p>
 
 <section id="agentPanel" class="agent" aria-labelledby="ag-h" hidden>
 <h3 id="ag-h">Review your application with Claude Code</h3>
@@ -125,13 +138,30 @@ try{var t=localStorage.getItem("prc.theme");if(t==="dark"||t==="light"){document
 Then paste the prompt.</div>
 <p class="disclaimer"><strong>Review before you run.</strong> This checklist and its prompts were written with AI and have not had human expert review. They can be wrong. Read the prompt first, check every finding and fix against your code, and use the results at your own responsibility. Not professional or compliance advice.</p>
 <div class="row"><button id="agCopy" class="btn alt" type="button">Copy prompt</button><button id="agSkill" class="btn alt" type="button">Download as skill</button><span id="agMsg" class="note flush" role="status"></span></div>
+<details class="more"><summary>Safety notes, prompt preview and skill option</summary>
 <p class="note">Only run an agent on a repository you trust, or on a throwaway copy. A repository can contain text, hooks, settings or MCP servers that try to steer an agent. For code you do not trust, use a fresh checkout with project hooks, MCP servers and project settings turned off, and no credentials in the environment.</p>
 <details><summary>Preview the prompt</summary><pre id="agPrev" class="pre"></pre></details>
 <p class="note">To use the skill, save the file as <code>.claude/skills/production-readiness-review/SKILL.md</code> in your repository, start Claude Code in plan mode, then ask it to run the skill. A skill does not turn plan mode on by itself. Skill support depends on your Claude Code version, so use Copy prompt if it isn’t available.</p>
+</details>
 </li>
 <li>
 <h4>Paste the findings back</h4>
 <p class="note">When Claude Code finishes, it replies with a block of results. Copy that whole reply and paste it below. Each concern will then show what Claude Code found in your code, with the file and line it looked at. Nothing is marked for you. You check the evidence and decide.</p>
+<details class="more"><summary>What the reply looks like</summary>
+<p class="note flush">Claude Code replies with one block of JSON that holds a finding for every concern it checked. Paste the whole reply. Each result is one of: found, partial, not_found, cannot_determine, not_applicable.</p>
+<pre class="pre">{
+  "findings": [
+    {
+      "id": 11,
+      "result": "found",
+      "evidence": [
+        { "file": "src/api/client.ts", "line": 42, "quote": "timeout: 5000" }
+      ],
+      "note": "Coverage:\n- Timeouts are set on outbound calls."
+    }
+  ]
+}</pre>
+</details>
 <label for="agIn" class="sr">Findings from Claude Code</label>
 <textarea id="agIn" rows="6" placeholder="Paste Claude Code’s full reply here"></textarea>
 <div class="row"><button id="agImport" class="btn" type="button">Import findings</button><button id="agClear" class="chip" type="button">Clear findings</button><span id="agErr" class="err" role="alert"></span></div>
@@ -139,18 +169,6 @@ Then paste the prompt.</div>
 </li>
 </ol>
 <p class="note">Findings include file paths and short code quotes. They stay in this browser tab and disappear when you close it, unless you save a review file or choose to remember them in Save your review. Clear them sooner on a shared machine. The agent suggests and you decide: verify the evidence before marking anything decided.</p>
-</section>
-
-<section class="how" aria-labelledby="how-h">
-<h3 id="how-h">How to use it in a review</h3>
-<ul>
-<li>Performance and resilience: turn them into targets (latency, availability, RPO/RTO) before choosing components.</li>
-<li>Integration points: check each one for timeouts, retries, idempotency and circuit breakers.</li>
-<li>Data: settle the consistency model, locking approach and migration strategy early, since they are costly to change.</li>
-<li>Delivery and operations: decide deployment strategy, SLOs and tracing as part of the design.</li>
-<li>Security: treat it as a design input, not a late audit.</li>
-<li>Items with a dashed outline fit two categories. These cross-cutting concerns are where team ownership is most often unclear, so assign an owner.</li>
-</ul>
 </section>
 
 <section class="prog" aria-labelledby="prog-h">
@@ -163,9 +181,50 @@ Then paste the prompt.</div>
 <li><span class="sw s-na"></span><span id="nNA"></span> not applicable</li>
 <li><span class="sw s-none"></span><span id="nNone"></span> not reviewed</li>
 </ul>
-<div class="row"><span class="fl">Show</span><div id="stChips" class="row chips" role="group" aria-label="Filter by review status"></div><button id="resetBtn" class="chip" type="button">Reset review</button></div>
-<p class="note">Select a concept, then mark it decided, deferred, missing or not applicable. Concerns marked not applicable leave the progress count. Marks are saved in this browser only.</p>
+<p class="note">Open a concern, then mark it decided, deferred, missing or not applicable. Concerns marked not applicable leave the total, so 100% means everything that applies has a status. Marks are saved in this browser only.</p>
 </section>
+</div>
+
+<div class="bar">
+<div class="wrap">
+<div class="row">
+<input id="q" type="search" placeholder="Search a concern or keyword" aria-label="Search concerns">
+<button id="dualBtn" class="chip" type="button" aria-pressed="false">Fits two categories</button>
+<button id="fltBtn" class="chip fltbtn" type="button" aria-expanded="false" aria-controls="fltPanel"><span id="fltLbl">Filters</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+<span id="fltSum" class="fltsum" role="status"></span>
+</div>
+<div id="fltPanel" class="fltpanel" hidden>
+<div class="flthead"><strong>Filter the list</strong><button id="fltClear" class="chip" type="button" disabled>Clear all filters</button></div>
+<div class="fltgrp"><span class="fl">Category</span><div id="chips" class="row chips" role="group" aria-label="Filter by category"></div></div>
+<div class="fltgrp"><span class="fl">Status</span><div id="stChips" class="row chips" role="group" aria-label="Filter by review status"></div></div>
+</div>
+<div id="afRow" class="row" hidden><span class="fl">Agent finding</span><div id="afChips" class="row chips" role="group" aria-label="Filter by agent finding"></div></div>
+</div>
+</div>
+
+<div class="wrap">
+<noscript><p class="empty">This checklist needs JavaScript to display.</p></noscript>
+<section class="legend compact" aria-labelledby="lg-h">
+<h3 id="lg-h">Legend</h3>
+<ul>
+<li><span class="dot d-own"></span>Own: the architect decides</li>
+<li><span class="dot d-guard"></span>Guardrail: the architect sets the standard, teams implement</li>
+<li id="lgDel"><span class="dot d-del"></span>Delegate: team or tool detail</li>
+<li><span class="dashed"></span>Fits two categories</li>
+</ul>
+</section>
+<div id="grid" aria-live="polite"></div>
+<details class="how howd">
+<summary id="how-h">How to use it in a review</summary>
+<ul>
+<li>Performance and resilience: turn them into targets (latency, availability, RPO/RTO) before choosing components.</li>
+<li>Integration points: check each one for timeouts, retries, idempotency and circuit breakers.</li>
+<li>Data: settle the consistency model, locking approach and migration strategy early, since they are costly to change.</li>
+<li>Delivery and operations: decide deployment strategy, SLOs and tracing as part of the design.</li>
+<li>Security: treat it as a design input, not a late audit.</li>
+<li>Items with a dashed outline fit two categories. These cross-cutting concerns are where team ownership is most often unclear, so assign an owner.</li>
+</ul>
+</details>
 
 <section id="svBox" class="prog svcard" aria-labelledby="sv-h">
 <h3 id="sv-h">Save your review</h3>
@@ -181,44 +240,6 @@ Then paste the prompt.</div>
 </div>
 <p id="svMsg" class="note" role="status"></p><p id="svErr" class="err" role="alert"></p>
 </section>
-</div>
-
-<div class="bar">
-<div class="wrap">
-<div class="row">
-<input id="q" type="search" placeholder="Search a concept or keyword" aria-label="Search concepts">
-<button id="dualBtn" class="chip" type="button" aria-pressed="false">Fits two categories</button>
-</div>
-<div id="chips" class="row chips" role="group" aria-label="Filter by category"></div>
-<div id="afRow" class="row" hidden><span class="fl">Agent finding</span><div id="afChips" class="row chips" role="group" aria-label="Filter by agent finding"></div></div>
-</div>
-</div>
-
-<div class="wrap">
-<noscript><p class="empty">This checklist needs JavaScript to display.</p></noscript>
-<div id="grid" aria-live="polite"></div>
-<section class="legend" aria-labelledby="lg-h">
-<h3 id="lg-h">Legend</h3>
-<ul>
-<li><span class="dot d-own"></span>Own: the architect decides</li>
-<li><span class="dot d-guard"></span>Guardrail: the architect sets the standard, teams implement</li>
-<li id="lgDel"><span class="dot d-del"></span>Delegate: team or tool detail</li>
-<li><span class="dashed"></span>Fits two categories</li>
-</ul>
-</section>
-</div>
-</section>
-
-<section class="sect" id="value" aria-labelledby="val-h">
-<div class="wrap">
-<div class="sh2"><span class="tag h-blue">Why use it</span><h2 id="val-h">What you get</h2></div>
-<div class="fgrid f5">
-<div class="fcard"><span class="tile h-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM9 12l2 2 4-4"/></svg></span><h3>Don’t miss what bites in production</h3><p>{{CONCERN_COUNT}} concerns in {{CATEGORY_COUNT_WORD}} categories cover what teams often miss until an incident, so you don’t rely on who remembers what.</p></div>
-<div class="fcard"><span class="tile h-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M6 20h12M5 7h14M5 7l-3 6a3 3 0 006 0zM19 7l-3 6a3 3 0 006 0z"/></svg></span><h3>Make every call on purpose</h3><p>A review question and a trade-off for each concern. Every outcome is decided, deferred, missing or not applicable, never an unspoken default.</p></div>
-<div class="fcard"><span class="tile h-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><h3>Know good from merely present</h3><p>Red flags and what good looks like help you judge whether a mechanism is sound, not only whether it exists.</p></div>
-<div class="fcard"><span class="tile h-coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-6-6-6M12 19h8"/></svg></span><h3>Evidence from your real code</h3><p>Claude Code reads your repository and cites the file, line and a short quote for each concern. It suggests and you decide.</p></div>
-<div class="fcard"><span class="tile h-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM12 11v4"/></svg></span><h3>Safe, free and private</h3><p>The agent is read-only and secrets are masked. Free, no sign-up, and nothing leaves your browser.</p></div>
-</div>
 </div>
 </section>
 
@@ -272,6 +293,11 @@ Then paste the prompt.</div>
 <div class="fb"><span>© {{YEAR}} Marwan Tarek</span><span>Last updated {{UPDATED}}</span></div>
 </div>
 </footer>
+
+<div class="dock" role="group" aria-label="Review actions">
+<span id="dockMsg" class="dock-msg" role="status" hidden></span>
+<div class="dock-btns"><button id="dockLoad" class="chip" type="button">Load a saved review</button><button id="dockSave" class="chip" type="button">Save review</button><button id="resetBtn" class="chip danger" type="button">Reset review</button></div>
+</div>
 
 <script>
 {{DATA}}
