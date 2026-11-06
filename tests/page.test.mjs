@@ -1035,16 +1035,45 @@ test("the hero card button appears once there is progress and continues at the f
   assert.notEqual(name, "Rate limiting", "it opens a concern that has no status yet");
 });
 
-test("the dock keeps Load, Save and Reset in reach and Save review goes to the Save panel", () => {
+test("the dock is a small round button that opens a menu with Load, Save and Reset", () => {
   const p = loadPage();
-  const dock = p.d.querySelector(".dock");
-  assert.deepEqual([...dock.querySelectorAll("button")].map((b) => b.textContent), ["Load a saved review", "Save review", "Reset review"]);
-  assert.ok(dock.contains(p.d.getElementById("resetBtn")));
+  const fab = p.d.getElementById("dockFab"), menu = p.d.getElementById("dockMenu");
+  assert.match(fab.textContent, /Save\/Load\s*Reviews/);
+  assert.equal(menu.hidden, true, "closed at first");
+  assert.equal(fab.getAttribute("aria-expanded"), "false");
+  p.click(fab);
+  assert.equal(menu.hidden, false);
+  assert.equal(fab.getAttribute("aria-expanded"), "true");
+  assert.deepEqual([...menu.querySelectorAll("button")].map((b) => b.textContent), ["Load a saved review", "Save review", "Reset review"]);
+  assert.ok([...menu.querySelectorAll("button")].every((b) => b.querySelector("svg")), "every option has an icon");
+  assert.ok(menu.contains(p.d.getElementById("resetBtn")));
+});
+
+test("the dock menu closes after a choice, on Escape and on a click elsewhere", () => {
+  const p = loadPage();
+  const fab = p.d.getElementById("dockFab"), menu = p.d.getElementById("dockMenu");
+  p.click(fab);
+  p.click(p.d.getElementById("dockSave"));
+  assert.equal(menu.hidden, true, "closes after a choice");
+  p.click(fab);
+  p.d.getElementById("dock").dispatchEvent(new p.w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.equal(menu.hidden, true, "closes on Escape");
+  p.click(fab);
+  p.click(p.d.getElementById("grid"));
+  assert.equal(menu.hidden, true, "closes on a click elsewhere");
+  p.click(fab);
+  p.click(fab);
+  assert.equal(menu.hidden, true, "the round button toggles it");
+});
+
+test("Save review in the dock goes to the Save panel and does not save a file by itself", () => {
+  const p = loadPage();
   let scrolled = 0;
   p.w.scrollTo = () => { scrolled++; };
+  p.click(p.d.getElementById("dockFab"));
   p.click(p.d.getElementById("dockSave"));
   assert.equal(scrolled, 1, "scrolls to the panel");
-  assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), null, "and does not save a file by itself");
+  assert.equal(p.w.localStorage.getItem("prc.reviewStatus"), null);
 });
 
 test("the agent panel keeps the disclaimer and plan mode above the buttons and folds the long safety text", () => {

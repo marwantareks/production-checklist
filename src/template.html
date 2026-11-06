@@ -294,9 +294,14 @@ Then paste the prompt.</div>
 </div>
 </footer>
 
-<div class="dock" role="group" aria-label="Review actions">
+<div class="dock" id="dock">
+<button id="dockFab" class="dock-fab" type="button" aria-expanded="false" aria-controls="dockMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/></svg><span>Save/Load<br>Reviews</span></button>
+<div id="dockMenu" class="dock-menu" role="group" aria-label="Review actions" hidden>
+<button id="dockLoad" class="chip" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Load a saved review</button>
+<button id="dockSave" class="chip" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/></svg>Save review</button>
+<button id="resetBtn" class="chip danger" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Reset review</button>
+</div>
 <span id="dockMsg" class="dock-msg" role="status" hidden></span>
-<div class="dock-btns"><button id="dockLoad" class="chip" type="button">Load a saved review</button><button id="dockSave" class="chip" type="button">Save review</button><button id="resetBtn" class="chip danger" type="button">Reset review</button></div>
 </div>
 
 <script>

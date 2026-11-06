@@ -816,9 +816,16 @@ document.addEventListener("keydown",function(e){
   else if(k==="k"){e.preventDefault();step(-1,false)}
 });
 
-/* The dock keeps Load, Save and Reset in reach. Save review goes to the Save your review panel. Messages from that panel also show beside the dock because the panel can be off screen. */
+/* A small round button keeps Load, Save and Reset in reach and opens a menu with them. Save review goes to the Save your review panel. Messages from that panel also show beside the dock because the panel can be off screen. */
 (function(){
   var msg=document.getElementById("dockMsg"),timer=0;
+  var fab=document.getElementById("dockFab"),menu=document.getElementById("dockMenu"),dock=document.getElementById("dock");
+  function setDock(open){menu.hidden=!open;fab.setAttribute("aria-expanded",open?"true":"false")}
+  fab.onclick=function(){setDock(menu.hidden)};
+  /* The menu closes after a choice, on Escape and on a click anywhere else. */
+  menu.addEventListener("click",function(e){if(e.target.closest("button"))setDock(false)});
+  document.addEventListener("click",function(e){if(!menu.hidden&&!dock.contains(e.target))setDock(false)});
+  dock.addEventListener("keydown",function(e){if(e.key==="Escape"&&!menu.hidden){setDock(false);fab.focus()}});
   document.getElementById("dockLoad").onclick=function(){document.getElementById("svLoad").click()};
   document.getElementById("dockSave").onclick=function(){alignTo(svBox)};
   function show(){
